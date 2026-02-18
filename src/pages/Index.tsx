@@ -33,14 +33,14 @@ const Index = () => {
 
         {/* Center: Globe + Snake HUD overlay */}
         <div className="flex flex-col gap-3 min-h-0 overflow-hidden">
-          <div className="flex-1 relative min-h-0" style={{ background: "rgba(0,0,0,0.7)" }}>
+          <div className="flex-1 relative min-h-0" style={{ background: "#050505" }}>
             {/* Corner brackets */}
             <div className="absolute top-3 left-3 w-5 h-5 border-l border-t border-foreground/10 pointer-events-none z-10" />
             <div className="absolute top-3 right-3 w-5 h-5 border-r border-t border-foreground/10 pointer-events-none z-10" />
             <div className="absolute bottom-3 left-3 w-5 h-5 border-l border-b border-foreground/10 pointer-events-none z-10" />
             <div className="absolute bottom-3 right-3 w-5 h-5 border-r border-b border-foreground/10 pointer-events-none z-10" />
 
-          {/* Globe — transparent so HUD is primary focus */}
+            {/* Globe — semi-transparent backdrop */}
             <div className="absolute inset-0 z-0" style={{ opacity: 0.55 }}>
               <FractalSphere ripple={ripple} />
             </div>
@@ -48,8 +48,8 @@ const Index = () => {
             {/* Snake Portfolio HUD */}
             <SnakeHUD />
 
-            {/* Vault Controls overlay — top-right of box, side-by-side */}
-            <div className="absolute top-4 right-4 pointer-events-auto z-30">
+            {/* Deposit / Withdraw — top-right, side-by-side, no header */}
+            <div className="absolute top-3 right-3 pointer-events-auto z-30">
               <VaultBar />
             </div>
           </div>
