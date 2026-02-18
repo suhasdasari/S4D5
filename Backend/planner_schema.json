@@ -1,0 +1,94 @@
+{
+    "definitions": {
+        "TaskDecomposition": {
+            "type": "object",
+            "properties": {
+                "goal_id": {
+                    "type": "string"
+                },
+                "main_goal": {
+                    "type": "string"
+                },
+                "sub_tasks": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "task_id": {
+                                "type": "string"
+                            },
+                            "description": {
+                                "type": "string"
+                            },
+                            "agent": {
+                                "enum": [
+                                    "Researcher",
+                                    "Bull",
+                                    "Bear",
+                                    "Judge"
+                                ]
+                            },
+                            "status": {
+                                "enum": [
+                                    "pending",
+                                    "in_progress",
+                                    "completed",
+                                    "failed"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "task_id",
+                            "description",
+                            "agent",
+                            "status"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "goal_id",
+                "main_goal",
+                "sub_tasks"
+            ]
+        },
+        "TradeProposal": {
+            "type": "object",
+            "properties": {
+                "prop_id": {
+                    "type": "string"
+                },
+                "asset": {
+                    "type": "string"
+                },
+                "direction": {
+                    "enum": [
+                        "Long",
+                        "Short",
+                        "Neutral"
+                    ]
+                },
+                "entry_range": {
+                    "type": "string"
+                },
+                "stop_loss": {
+                    "type": "string"
+                },
+                "consensus_score": {
+                    "type": "number"
+                },
+                "rationale": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "prop_id",
+                "asset",
+                "direction",
+                "entry_range",
+                "stop_loss",
+                "consensus_score"
+            ]
+        }
+    }
+}
