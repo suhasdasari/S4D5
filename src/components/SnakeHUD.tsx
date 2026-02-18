@@ -140,9 +140,9 @@ const SnakeHUD = () => {
       const toX = (nx: number) => AXIS_LEFT + nx * plotW;
       const toY = (v: number) => 8 + plotH - ((v - minRef.current) / range) * plotH * 0.85 - plotH * 0.075;
 
-      // ── Candlestick layer (very faint — 0.05 opacity) ──
+      // ── Candlestick layer — Binance-style green/red ──
       const candles = candlesRef.current;
-      const candleW = Math.max(3, plotW / candles.length * 0.5);
+      const candleW = Math.max(4, plotW / candles.length * 0.55);
       candles.forEach((c) => {
         const cx = toX(c.x);
         const openY = toY(c.open);
@@ -150,34 +150,39 @@ const SnakeHUD = () => {
         const highY = toY(c.high);
         const lowY = toY(c.low);
         const bullish = c.close >= c.open;
-        const color = bullish ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.04)";
 
-        // Wick
+        // Wick — colored per direction
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(255,255,255,0.04)";
+        ctx.strokeStyle = bullish ? "rgba(0,200,80,0.5)" : "rgba(220,40,40,0.5)";
         ctx.lineWidth = 1;
         ctx.moveTo(cx, highY); ctx.lineTo(cx, lowY);
         ctx.stroke();
 
         // Body
         const bodyTop = Math.min(openY, closeY);
-        const bodyH = Math.max(1, Math.abs(closeY - openY));
-        ctx.fillStyle = color;
+        const bodyH = Math.max(1.5, Math.abs(closeY - openY));
+        ctx.fillStyle = bullish ? "rgba(0,210,80,0.25)" : "rgba(220,40,40,0.22)";
         ctx.fillRect(cx - candleW / 2, bodyTop, candleW, bodyH);
-        ctx.strokeStyle = "rgba(255,255,255,0.06)";
-        ctx.lineWidth = 0.5;
+        // Border outline
+        ctx.strokeStyle = bullish ? "rgba(0,230,90,0.7)" : "rgba(230,50,50,0.7)";
+        ctx.lineWidth = 0.8;
         ctx.strokeRect(cx - candleW / 2, bodyTop, candleW, bodyH);
       });
 
-      // ── Y-Axis (very faint) ──
-      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+      // ── Dark fill behind axes area ──
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.fillRect(0, 0, AXIS_LEFT, H);
+      ctx.fillRect(0, 8 + plotH, W, AXIS_BOTTOM);
+
+      // ── Y-Axis line ──
+      ctx.strokeStyle = "rgba(26,26,26,0.9)";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(AXIS_LEFT, 8); ctx.lineTo(AXIS_LEFT, 8 + plotH);
       ctx.stroke();
 
       const yTicks = 4;
-      ctx.fillStyle = "rgba(255,255,255,0.2)";
+      ctx.fillStyle = "rgba(255,255,255,0.15)";
       ctx.font = "9px 'JetBrains Mono', monospace";
       ctx.textAlign = "right";
       for (let t = 0; t <= yTicks; t++) {
@@ -185,13 +190,15 @@ const SnakeHUD = () => {
         const y = 8 + plotH - (t / yTicks) * plotH * 0.85 - plotH * 0.075;
         ctx.fillText(`$${(val / 1000).toFixed(0)}K`, AXIS_LEFT - 4, y + 3);
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(255,255,255,0.02)";
-        ctx.moveTo(AXIS_LEFT, y); ctx.lineTo(AXIS_LEFT + plotW, y);
+        ctx.strokeStyle = "rgba(26,26,26,0.6)";
+        ctx.setLineDash([3, 6]);
+        ctx.moveTo(AXIS_LEFT + 1, y); ctx.lineTo(AXIS_LEFT + plotW, y);
         ctx.stroke();
+        ctx.setLineDash([]);
       }
 
-      // ── X-Axis — timeline from initial deposit ──
-      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+      // ── X-Axis line ──
+      ctx.strokeStyle = "rgba(26,26,26,0.9)";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(AXIS_LEFT, 8 + plotH); ctx.lineTo(AXIS_LEFT + plotW, 8 + plotH);
@@ -199,7 +206,7 @@ const SnakeHUD = () => {
 
       const xTicks = 4;
       ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(255,255,255,0.2)";
+      ctx.fillStyle = "rgba(255,255,255,0.15)";
       ctx.font = "9px 'JetBrains Mono', monospace";
       const sessionStart = sessionStartRef.current.getTime();
       const sessionEnd = Date.now();
@@ -210,23 +217,25 @@ const SnakeHUD = () => {
         const label = ts.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
         ctx.fillText(label, x, 8 + plotH + 16);
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(255,255,255,0.02)";
+        ctx.strokeStyle = "rgba(26,26,26,0.5)";
+        ctx.setLineDash([3, 6]);
         ctx.moveTo(x, 8); ctx.lineTo(x, 8 + plotH);
         ctx.stroke();
+        ctx.setLineDash([]);
       }
 
       // ── Fading tail ──
       const lastVal = pts[pts.length - 1]?.value ?? BASE_VALUE;
       const prevVal = pts[pts.length - 2]?.value ?? BASE_VALUE;
-      const headRgb = lastVal >= prevVal ? "0,255,0" : "255,0,0";
+      const headRgb = lastVal >= prevVal ? "0,230,80" : "220,40,40";
 
       for (let i = 1; i < pts.length; i++) {
         const alpha = i / pts.length;
         ctx.beginPath();
         ctx.moveTo(toX(pts[i - 1].x), toY(pts[i - 1].value));
         ctx.lineTo(toX(pts[i].x), toY(pts[i].value));
-        ctx.strokeStyle = `rgba(${headRgb},${alpha * 0.7})`;
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = `rgba(${headRgb},${alpha * 0.9})`;
+        ctx.lineWidth = 2;
         ctx.stroke();
       }
 
@@ -238,7 +247,8 @@ const SnakeHUD = () => {
       ctx.lineTo(toX(pts[0].x), 8 + plotH);
       ctx.closePath();
       const grad = ctx.createLinearGradient(0, 0, 0, H);
-      grad.addColorStop(0, lastVal >= prevVal ? "rgba(0,255,0,0.08)" : "rgba(255,0,0,0.08)");
+      grad.addColorStop(0, lastVal >= prevVal ? "rgba(0,230,80,0.18)" : "rgba(220,40,40,0.18)");
+      grad.addColorStop(0.6, lastVal >= prevVal ? "rgba(0,230,80,0.04)" : "rgba(220,40,40,0.04)");
       grad.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = grad;
       ctx.fill();
@@ -247,20 +257,20 @@ const SnakeHUD = () => {
       const head = pts[pts.length - 1];
       const hx = toX(head.x);
       const hy = toY(head.value);
-      const glowRgb = lastVal >= prevVal ? "0,255,0" : "255,0,0";
-      const glowHex = lastVal >= prevVal ? "#00FF00" : "#FF0000";
+      const glowRgb = lastVal >= prevVal ? "0,230,80" : "220,40,40";
+      const glowHex = lastVal >= prevVal ? "#00E650" : "#DC2828";
 
-      [18, 11, 6].forEach((r, idx) => {
+      [22, 13, 7].forEach((r, idx) => {
         ctx.beginPath();
         ctx.arc(hx, hy, r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${glowRgb},${[0.04, 0.09, 0.18][idx]})`;
+        ctx.fillStyle = `rgba(${glowRgb},${[0.06, 0.12, 0.22][idx]})`;
         ctx.fill();
       });
       ctx.beginPath();
       ctx.arc(hx, hy, 3.5, 0, Math.PI * 2);
       ctx.fillStyle = glowHex;
       ctx.shadowColor = glowHex;
-      ctx.shadowBlur = 16;
+      ctx.shadowBlur = 20;
       ctx.fill();
       ctx.shadowBlur = 0;
 
