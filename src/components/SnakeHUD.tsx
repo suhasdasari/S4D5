@@ -326,16 +326,16 @@ const SnakeHUD = () => {
         </p>
         <p
           className="text-[9px] font-mono mt-0.5"
-          style={{ color: isUp ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)" }}
+          style={{ color: isProfit ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)" }}
         >
-          {isUp ? "▲" : "▼"} {Math.abs(((displayValue - BASE_VALUE) / BASE_VALUE) * 100).toFixed(3)}%
+          {isProfit ? "▲" : "▼"} {isProfit ? "+" : ""}{((displayValue - INITIAL_CAPITAL) / INITIAL_CAPITAL * 100).toFixed(2)}%
           &nbsp;
           <span style={{ color: isProfit ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)" }}>
             ({isProfit ? "+" : ""}{pnl.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })})
           </span>
         </p>
-        <p className="text-[8px] font-mono mt-0.5" style={{ color: "hsl(0 0% 50%)" }}>
-          Initial Capital: $1,000,000
+        <p className="text-[8px] font-mono mt-0.5 tracking-[0.1em] uppercase" style={{ color: "hsl(0 0% 45%)" }}>
+          Initial Capital: $1,000,000.00
         </p>
       </div>
     </div>

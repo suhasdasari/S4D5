@@ -1,50 +1,22 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, DollarSign, Wallet, CheckCircle } from "lucide-react";
+import { Wallet, CheckCircle } from "lucide-react";
 
 const MetricsBar = () => {
-  const cards = [
-    {
-      label: "NAV",
-      value: "$1,240,500.00",
-      icon: DollarSign,
-      sub: "Net Asset Value",
-    },
-    {
-      label: "Performance",
-      value: "+0.12%",
-      icon: TrendingUp,
-      sub: "24H",
-      positive: true,
-    },
-    {
-      label: "0G Verified",
-      value: "VERIFIED",
-      icon: CheckCircle,
-      sub: "On-Chain",
-      badge: true,
-    },
-  ];
-
   return (
     <div className="flex items-center gap-3 flex-1">
-      {cards.map((card) => (
-        <motion.div
-          key={card.label}
-          className="glass-panel px-4 py-2.5 flex items-center gap-3 flex-1 min-w-0"
-          whileHover={{ scale: 1.02 }}
-          transition={{ type: "spring", stiffness: 400, damping: 15 }}
-        >
-          <card.icon className={`w-4 h-4 shrink-0 ${card.badge ? "text-silver" : "text-muted-foreground"}`} />
-          <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{card.label}</p>
-            <p className={`text-sm font-bold truncate ${card.positive ? "text-positive" : card.badge ? "text-silver" : "text-foreground"}`}>
-              {card.value}
-            </p>
-          </div>
-          <span className="text-[10px] text-muted-foreground ml-auto shrink-0">{card.sub}</span>
-        </motion.div>
-      ))}
+      <motion.div
+        className="glass-panel px-4 py-2.5 flex items-center gap-3 flex-1 min-w-0"
+        whileHover={{ scale: 1.02 }}
+        transition={{ type: "spring", stiffness: 400, damping: 15 }}
+      >
+        <CheckCircle className="w-4 h-4 shrink-0 text-silver" />
+        <div className="min-w-0">
+          <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">0G Verified</p>
+          <p className="text-sm font-bold truncate text-silver">VERIFIED</p>
+        </div>
+        <span className="text-[10px] text-muted-foreground ml-auto shrink-0">On-Chain</span>
+      </motion.div>
     </div>
   );
 };
