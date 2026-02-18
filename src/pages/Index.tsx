@@ -5,8 +5,8 @@ import FractalSphere from "@/components/FractalSphere";
 import MarketWatch from "@/components/MarketWatch";
 import BiometricDropzone from "@/components/BiometricDropzone";
 import DecisionMatrix from "@/components/DecisionMatrix";
-import CapitalAllocation from "@/components/CapitalAllocation";
 import ProofModal from "@/components/ProofModal";
+import VaultBar from "@/components/VaultBar";
 
 const Index = () => {
   const [ripple, setRipple] = useState(false);
@@ -18,19 +18,21 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-hidden scanline-global">
+    <div className="h-screen bg-background flex flex-col overflow-hidden scanline-global">
       <TopBar />
 
-      <main className="flex-1 grid grid-cols-[300px_1fr_300px] gap-3 p-3 min-h-0">
+      <main className="flex-1 grid grid-cols-[280px_1fr_280px] gap-3 p-3 min-h-0">
         {/* Left: Agent Council */}
-        <div className="flex flex-col gap-3 min-h-0">
-          <AgentTerminal />
+        <div className="flex flex-col gap-3 min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0">
+            <AgentTerminal />
+          </div>
           <DecisionMatrix />
         </div>
 
-        {/* Center: Sphere + Intel + Vault */}
-        <div className="flex flex-col gap-3 min-h-0">
-          <div className="flex-1 relative">
+        {/* Center: Sphere + Intel */}
+        <div className="flex flex-col gap-3 min-h-0 overflow-hidden">
+          <div className="flex-1 relative min-h-0">
             <FractalSphere ripple={ripple} />
             <div className="absolute top-3 left-3 w-5 h-5 border-l border-t border-foreground/10 pointer-events-none" />
             <div className="absolute top-3 right-3 w-5 h-5 border-r border-t border-foreground/10 pointer-events-none" />
@@ -38,12 +40,13 @@ const Index = () => {
             <div className="absolute bottom-3 right-3 w-5 h-5 border-r border-b border-foreground/10 pointer-events-none" />
           </div>
           <BiometricDropzone onDeposit={handleDeposit} />
-          <CapitalAllocation />
         </div>
 
         {/* Right: Market Watch */}
         <MarketWatch onOpenProof={setProofTradeId} />
       </main>
+
+      <VaultBar />
 
       <ProofModal tradeId={proofTradeId} onClose={() => setProofTradeId(null)} />
     </div>

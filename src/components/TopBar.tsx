@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Shield, TrendingUp, DollarSign, Wallet, CheckCircle } from "lucide-react";
+import { TrendingUp, DollarSign, Wallet, CheckCircle } from "lucide-react";
 
 const MetricsBar = () => {
   const cards = [
@@ -52,9 +52,10 @@ const MetricsBar = () => {
 const TopBar = () => {
   const [connected, setConnected] = useState(false);
   const [address] = useState("0x7a3f...e91d");
+  const [balance] = useState("$124,500.00");
 
   return (
-    <header className="flex items-center gap-4 px-4 py-3 hud-border">
+    <header className="flex items-center gap-4 px-4 py-3 hud-border shrink-0">
       <div className="flex items-center gap-3 mr-4">
         <h1 className="font-display text-base tracking-[0.3em] uppercase text-foreground font-bold">
           S4D5
@@ -67,9 +68,12 @@ const TopBar = () => {
       <MetricsBar />
 
       {connected ? (
-        <div className="flex items-center gap-2 px-4 py-2 border border-foreground/10 rounded-sm shrink-0">
+        <div className="flex items-center gap-3 px-4 py-2 border border-foreground/10 rounded-sm shrink-0">
           <div className="w-2 h-2 rounded-full bg-positive shadow-[0_0_6px_hsl(120_100%_50%/0.6)]" />
+          <span className="text-[9px] uppercase tracking-wider text-positive font-display">Live</span>
           <span className="font-mono text-xs text-foreground">{address}</span>
+          <span className="text-[10px] text-muted-foreground">|</span>
+          <span className="font-mono text-xs text-foreground">{balance}</span>
         </div>
       ) : (
         <motion.button

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
@@ -8,6 +8,7 @@ interface LogEntry {
   message: string;
   timestamp: string;
   glowType?: "positive" | "negative" | null;
+  proposalId: string;
 }
 
 const AGENTS = [
@@ -58,6 +59,26 @@ export const tradeEventBus = {
   },
 };
 
+// Proposal ID counter + event bus
+let proposalCounter = 100;
+export const proposalEventBus = {
+  listeners: [] as ((id: string, status: "PASSED" | "VETOED" | null) => void)[],
+  emit(id: string, status: "PASSED" | "VETOED" | null) {
+    this.listeners.forEach((fn) => fn(id, status));
+  },
+  subscribe(fn: (id: string, status: "PASSED" | "VETOED" | null) => void) {
+    this.listeners.push(fn);
+    return () => {
+      this.listeners = this.listeners.filter((l) => l !== fn);
+    };
+  },
+};
+
+export const getNextProposalId = () => {
+  proposalCounter++;
+  return `PROP-${String(proposalCounter).padStart(4, "0")}`;
+};
+
 const getGlowType = (message: string): "positive" | "negative" | null => {
   if (/VETOED|REJECTED/i.test(message)) return "negative";
   if (/EXECUTED|APPROVED/i.test(message)) return "positive";
@@ -68,9 +89,10 @@ const AgentTerminal = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const createEntry = (agentIdx: number, msgIdx: number, time: Date): LogEntry => {
+  const createEntry = useCallback((agentIdx: number, msgIdx: number, time: Date): LogEntry => {
     const agent = AGENTS[agentIdx];
     const rawMsg = MESSAGES[agentIdx][msgIdx];
+    const propId = getNextProposalId();
     let message: string;
     let colorClass: string;
 
@@ -82,7 +104,7 @@ const AgentTerminal = () => {
       colorClass = rawMsg.approved ? "text-positive" : "text-negative";
     }
 
-    const fullMessage = `[${agent.prefix}] ${message}`;
+    const fullMessage = `[${propId}] [${agent.prefix}] ${message}`;
     const glowType = getGlowType(fullMessage);
 
     // Emit trade event for globe pulse
@@ -90,14 +112,19 @@ const AgentTerminal = () => {
       tradeEventBus.emit(glowType);
     }
 
+    // Emit proposal event for consensus HUD
+    const proposalStatus = glowType === "positive" ? "PASSED" as const : glowType === "negative" ? "VETOED" as const : null;
+    proposalEventBus.emit(propId, proposalStatus);
+
     return {
       agent: agent.name,
       colorClass,
       message: fullMessage,
       timestamp: time.toLocaleTimeString("en-US", { hour12: false }),
       glowType,
+      proposalId: propId,
     };
-  };
+  }, []);
 
   useEffect(() => {
     const initial: LogEntry[] = [];
@@ -115,7 +142,7 @@ const AgentTerminal = () => {
     }, 2500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [createEntry]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -124,7 +151,7 @@ const AgentTerminal = () => {
   }, [logs]);
 
   return (
-    <div className="glass-panel flex flex-col scanline overflow-hidden" style={{ height: "400px" }}>
+    <div className="glass-panel flex flex-col scanline overflow-hidden" style={{ height: "100%" }}>
       <div className="px-4 py-3 border-b border-foreground/5 flex items-center gap-2 shrink-0">
         <div className="w-2 h-2 rounded-full bg-foreground animate-pulse-glow" />
         <h3 className="font-display text-xs tracking-[0.3em] uppercase text-foreground">
