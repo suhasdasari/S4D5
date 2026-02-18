@@ -169,36 +169,41 @@ const SnakeHUD = () => {
         ctx.strokeRect(cx - candleW / 2, bodyTop, candleW, bodyH);
       });
 
-      // ── Dark fill behind axes area ──
-      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      // ── Dark strip behind Y-axis labels ──
+      ctx.fillStyle = "rgba(5,5,5,0.85)";
       ctx.fillRect(0, 0, AXIS_LEFT, H);
-      ctx.fillRect(0, 8 + plotH, W, AXIS_BOTTOM);
+      // ── Dark strip behind X-axis labels ──
+      ctx.fillStyle = "rgba(5,5,5,0.85)";
+      ctx.fillRect(0, 8 + plotH, W, AXIS_BOTTOM + 4);
 
-      // ── Y-Axis line ──
-      ctx.strokeStyle = "rgba(26,26,26,0.9)";
+      // ── Y-Axis line — subtle charcoal ──
+      ctx.strokeStyle = "rgba(45,45,45,1)";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(AXIS_LEFT, 8); ctx.lineTo(AXIS_LEFT, 8 + plotH);
       ctx.stroke();
 
       const yTicks = 4;
-      ctx.fillStyle = "rgba(255,255,255,0.15)";
       ctx.font = "9px 'JetBrains Mono', monospace";
       ctx.textAlign = "right";
       for (let t = 0; t <= yTicks; t++) {
         const val = minRef.current + (t / yTicks) * range;
         const y = 8 + plotH - (t / yTicks) * plotH * 0.85 - plotH * 0.075;
+        // Label — dim silver
+        ctx.fillStyle = "rgba(80,80,80,1)";
         ctx.fillText(`$${(val / 1000).toFixed(0)}K`, AXIS_LEFT - 4, y + 3);
+        // Grid line — very dark dashes
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(26,26,26,0.6)";
-        ctx.setLineDash([3, 6]);
+        ctx.strokeStyle = "rgba(30,30,30,1)";
+        ctx.lineWidth = 0.8;
+        ctx.setLineDash([2, 8]);
         ctx.moveTo(AXIS_LEFT + 1, y); ctx.lineTo(AXIS_LEFT + plotW, y);
         ctx.stroke();
         ctx.setLineDash([]);
       }
 
-      // ── X-Axis line ──
-      ctx.strokeStyle = "rgba(26,26,26,0.9)";
+      // ── X-Axis line — subtle charcoal ──
+      ctx.strokeStyle = "rgba(45,45,45,1)";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(AXIS_LEFT, 8 + plotH); ctx.lineTo(AXIS_LEFT + plotW, 8 + plotH);
@@ -206,7 +211,6 @@ const SnakeHUD = () => {
 
       const xTicks = 4;
       ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(255,255,255,0.15)";
       ctx.font = "9px 'JetBrains Mono', monospace";
       const sessionStart = sessionStartRef.current.getTime();
       const sessionEnd = Date.now();
@@ -215,10 +219,14 @@ const SnakeHUD = () => {
         const x = AXIS_LEFT + (t / xTicks) * plotW;
         const ts = new Date(sessionStart + (t / xTicks) * sessionRange);
         const label = ts.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+        // Label — dim silver
+        ctx.fillStyle = "rgba(80,80,80,1)";
         ctx.fillText(label, x, 8 + plotH + 16);
+        // Grid line — very dark dashes
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(26,26,26,0.5)";
-        ctx.setLineDash([3, 6]);
+        ctx.strokeStyle = "rgba(30,30,30,1)";
+        ctx.lineWidth = 0.8;
+        ctx.setLineDash([2, 8]);
         ctx.moveTo(x, 8); ctx.lineTo(x, 8 + plotH);
         ctx.stroke();
         ctx.setLineDash([]);
