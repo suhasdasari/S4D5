@@ -57,7 +57,7 @@ const MarketWatch = ({ onOpenProof }: { onOpenProof: (tradeId: string) => void }
       whileHover={{ scale: 1.003 }}
       transition={{ type: "spring", stiffness: 300 }}
     >
-      <div className="px-4 py-3 border-b border-foreground/5 flex items-center gap-2">
+      <div className="px-4 py-3 border-b border-foreground/5 flex items-center gap-2 shrink-0">
         <div className="w-2 h-2 rounded-full bg-foreground animate-pulse-glow" />
         <h3 className="font-display text-xs tracking-[0.3em] uppercase text-foreground">
           Market Pulse
@@ -67,8 +67,7 @@ const MarketWatch = ({ onOpenProof }: { onOpenProof: (tradeId: string) => void }
         <DataSection title="Equities" rows={STOCKS} />
         <DataSection title="Crypto" rows={CRYPTO} />
         <DataSection title="Commodities" rows={COMMODITIES} />
-
-        <div className="mb-4">
+        <div>
           <h4 className="font-display text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-2">
             Polymarket Odds
           </h4>
@@ -81,7 +80,6 @@ const MarketWatch = ({ onOpenProof }: { onOpenProof: (tradeId: string) => void }
             ))}
           </div>
         </div>
-
       </div>
     </motion.div>
   );

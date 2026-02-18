@@ -1,12 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 
 const BASE_VALUE = 1_240_500;
-const INITIAL_DEPOSIT = 1_100_000;
+const INITIAL_CAPITAL = 1_000_000;
 const MAX_POINTS = 80;
 const UPDATE_MS = 1800;
-
-const INTERVALS = ["1M", "1H", "1D", "1W", "1Mo", "1Y"] as const;
-type Interval = typeof INTERVALS[number];
 
 interface Point {
   x: number;
@@ -20,7 +17,7 @@ interface Candle {
   high: number;
   low: number;
   close: number;
-  x: number; // normalized 0-1
+  x: number;
 }
 
 // ATH event bus — globe subscribes to flash white
@@ -39,11 +36,10 @@ const SnakeHUD = () => {
   const pointsRef = useRef<Point[]>([]);
   const candlesRef = useRef<Candle[]>([]);
   const [displayValue, setDisplayValue] = useState(BASE_VALUE);
-  const prevValueRef = useRef(BASE_VALUE);
   const minRef = useRef(BASE_VALUE - 20_000);
   const maxRef = useRef(BASE_VALUE + 20_000);
-  const [selectedInterval, setSelectedInterval] = useState<Interval>("1D");
   const sessionAthRef = useRef(BASE_VALUE);
+  const sessionStartRef = useRef(new Date());
   const [headPos, setHeadPos] = useState<{ x: number; y: number } | null>(null);
   const [isUp, setIsUp] = useState(true);
 
@@ -52,18 +48,17 @@ const SnakeHUD = () => {
     const candles: Candle[] = [];
     let v = BASE_VALUE;
     const now = Date.now();
+    sessionStartRef.current = new Date(now - MAX_POINTS * UPDATE_MS);
     for (let i = 0; i < 40; i++) {
       const prev = v;
       v = Math.max(BASE_VALUE - 18_000, v + (Math.random() - 0.48) * 1_200);
-      seed.push({ x: i / 40, y: 0, value: v, time: new Date(now - (40 - i) * 5000) });
-
+      seed.push({ x: i / 40, y: 0, value: v, time: new Date(now - (40 - i) * UPDATE_MS) });
       if (i % 4 === 0) {
         const range = Math.abs(v - prev) * 2 + 800;
         candles.push({
-          open: prev,
+          open: prev, close: v,
           high: Math.max(prev, v) + Math.random() * range * 0.3,
           low: Math.min(prev, v) - Math.random() * range * 0.3,
-          close: v,
           x: i / 40,
         });
       }
@@ -85,9 +80,7 @@ const SnakeHUD = () => {
 
       setDisplayValue(next);
       setIsUp(next >= prev);
-      prevValueRef.current = last;
 
-      // ATH detection
       if (next > sessionAthRef.current) {
         sessionAthRef.current = next;
         athEventBus.emit();
@@ -103,23 +96,17 @@ const SnakeHUD = () => {
       maxRef.current = Math.max(...vals) + 2_000;
       pointsRef.current = newPts;
 
-      // Update candles occasionally
       if (Math.random() > 0.6) {
         const cands = candlesRef.current;
-        const lastPt = newPts[newPts.length - 1];
         const lastCand = cands[cands.length - 1];
         const range = Math.abs(next - (lastCand?.close ?? BASE_VALUE)) * 2 + 800;
         const newCand: Candle = {
-          open: lastCand?.close ?? BASE_VALUE,
+          open: lastCand?.close ?? BASE_VALUE, close: next,
           high: Math.max(lastCand?.close ?? BASE_VALUE, next) + Math.random() * range * 0.2,
           low: Math.min(lastCand?.close ?? BASE_VALUE, next) - Math.random() * range * 0.2,
-          close: next,
-          x: lastPt.x,
+          x: newPts[newPts.length - 1].x,
         };
-        candlesRef.current = [...cands.slice(-19), newCand].map((c, i, arr) => ({
-          ...c,
-          x: i / (arr.length - 1),
-        }));
+        candlesRef.current = [...cands.slice(-19), newCand].map((c, i, arr) => ({ ...c, x: i / (arr.length - 1) }));
       }
     }, UPDATE_MS);
     return () => clearInterval(interval);
@@ -138,10 +125,7 @@ const SnakeHUD = () => {
 
       const W = container.clientWidth;
       const H = container.clientHeight;
-      if (canvas.width !== W || canvas.height !== H) {
-        canvas.width = W;
-        canvas.height = H;
-      }
+      if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
       const ctx = canvas.getContext("2d");
       if (!ctx) { animFrame = requestAnimationFrame(draw); return; }
 
@@ -149,7 +133,6 @@ const SnakeHUD = () => {
 
       const plotW = W - AXIS_LEFT - 8;
       const plotH = H - AXIS_BOTTOM - 8;
-
       const pts = pointsRef.current;
       if (pts.length < 2) { animFrame = requestAnimationFrame(draw); return; }
 
@@ -157,7 +140,7 @@ const SnakeHUD = () => {
       const toX = (nx: number) => AXIS_LEFT + nx * plotW;
       const toY = (v: number) => 8 + plotH - ((v - minRef.current) / range) * plotH * 0.85 - plotH * 0.075;
 
-      // ── Candlestick layer (behind line) ──
+      // ── Candlestick layer (very faint — 0.05 opacity) ──
       const candles = candlesRef.current;
       const candleW = Math.max(3, plotW / candles.length * 0.5);
       candles.forEach((c) => {
@@ -167,15 +150,13 @@ const SnakeHUD = () => {
         const highY = toY(c.high);
         const lowY = toY(c.low);
         const bullish = c.close >= c.open;
-        const color = bullish ? "rgba(0,255,0,0.18)" : "rgba(255,0,0,0.18)";
-        const wickColor = bullish ? "rgba(0,255,0,0.12)" : "rgba(255,0,0,0.12)";
+        const color = bullish ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.04)";
 
         // Wick
         ctx.beginPath();
-        ctx.strokeStyle = wickColor;
+        ctx.strokeStyle = "rgba(255,255,255,0.04)";
         ctx.lineWidth = 1;
-        ctx.moveTo(cx, highY);
-        ctx.lineTo(cx, lowY);
+        ctx.moveTo(cx, highY); ctx.lineTo(cx, lowY);
         ctx.stroke();
 
         // Body
@@ -183,22 +164,20 @@ const SnakeHUD = () => {
         const bodyH = Math.max(1, Math.abs(closeY - openY));
         ctx.fillStyle = color;
         ctx.fillRect(cx - candleW / 2, bodyTop, candleW, bodyH);
-        ctx.strokeStyle = bullish ? "rgba(0,255,0,0.3)" : "rgba(255,0,0,0.3)";
+        ctx.strokeStyle = "rgba(255,255,255,0.06)";
         ctx.lineWidth = 0.5;
         ctx.strokeRect(cx - candleW / 2, bodyTop, candleW, bodyH);
       });
 
-      // ── Y-Axis ──
-      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      // ── Y-Axis (very faint) ──
+      ctx.strokeStyle = "rgba(255,255,255,0.06)";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(AXIS_LEFT, 8);
-      ctx.lineTo(AXIS_LEFT, 8 + plotH);
+      ctx.moveTo(AXIS_LEFT, 8); ctx.lineTo(AXIS_LEFT, 8 + plotH);
       ctx.stroke();
 
-      // Y tick labels
       const yTicks = 4;
-      ctx.fillStyle = "rgba(255,255,255,0.3)";
+      ctx.fillStyle = "rgba(255,255,255,0.2)";
       ctx.font = "9px 'JetBrains Mono', monospace";
       ctx.textAlign = "right";
       for (let t = 0; t <= yTicks; t++) {
@@ -206,48 +185,47 @@ const SnakeHUD = () => {
         const y = 8 + plotH - (t / yTicks) * plotH * 0.85 - plotH * 0.075;
         ctx.fillText(`$${(val / 1000).toFixed(0)}K`, AXIS_LEFT - 4, y + 3);
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(255,255,255,0.03)";
-        ctx.moveTo(AXIS_LEFT, y);
-        ctx.lineTo(AXIS_LEFT + plotW, y);
+        ctx.strokeStyle = "rgba(255,255,255,0.02)";
+        ctx.moveTo(AXIS_LEFT, y); ctx.lineTo(AXIS_LEFT + plotW, y);
         ctx.stroke();
       }
 
-      // ── X-Axis ──
-      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      // ── X-Axis — timeline from initial deposit ──
+      ctx.strokeStyle = "rgba(255,255,255,0.06)";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(AXIS_LEFT, 8 + plotH);
-      ctx.lineTo(AXIS_LEFT + plotW, 8 + plotH);
+      ctx.moveTo(AXIS_LEFT, 8 + plotH); ctx.lineTo(AXIS_LEFT + plotW, 8 + plotH);
       ctx.stroke();
 
       const xTicks = 4;
       ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(255,255,255,0.3)";
+      ctx.fillStyle = "rgba(255,255,255,0.2)";
       ctx.font = "9px 'JetBrains Mono', monospace";
+      const sessionStart = sessionStartRef.current.getTime();
+      const sessionEnd = Date.now();
+      const sessionRange = sessionEnd - sessionStart || 1;
       for (let t = 0; t <= xTicks; t++) {
         const x = AXIS_LEFT + (t / xTicks) * plotW;
-        const ptIdx = Math.floor((t / xTicks) * (pts.length - 1));
-        const pt = pts[ptIdx];
-        const label = pt ? pt.time.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }) : "";
+        const ts = new Date(sessionStart + (t / xTicks) * sessionRange);
+        const label = ts.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
         ctx.fillText(label, x, 8 + plotH + 16);
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(255,255,255,0.03)";
-        ctx.moveTo(x, 8);
-        ctx.lineTo(x, 8 + plotH);
+        ctx.strokeStyle = "rgba(255,255,255,0.02)";
+        ctx.moveTo(x, 8); ctx.lineTo(x, 8 + plotH);
         ctx.stroke();
       }
 
       // ── Fading tail ──
       const lastVal = pts[pts.length - 1]?.value ?? BASE_VALUE;
       const prevVal = pts[pts.length - 2]?.value ?? BASE_VALUE;
-      const headColor = lastVal >= prevVal ? "0,255,0" : "255,0,0";
+      const headRgb = lastVal >= prevVal ? "0,255,0" : "255,0,0";
 
       for (let i = 1; i < pts.length; i++) {
         const alpha = i / pts.length;
         ctx.beginPath();
         ctx.moveTo(toX(pts[i - 1].x), toY(pts[i - 1].value));
         ctx.lineTo(toX(pts[i].x), toY(pts[i].value));
-        ctx.strokeStyle = `rgba(${headColor},${alpha * 0.6})`;
+        ctx.strokeStyle = `rgba(${headRgb},${alpha * 0.7})`;
         ctx.lineWidth = 1.5;
         ctx.stroke();
       }
@@ -255,36 +233,34 @@ const SnakeHUD = () => {
       // ── Area fill ──
       ctx.beginPath();
       ctx.moveTo(toX(pts[0].x), toY(pts[0].value));
-      for (let i = 1; i < pts.length; i++) {
-        ctx.lineTo(toX(pts[i].x), toY(pts[i].value));
-      }
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(toX(pts[i].x), toY(pts[i].value));
       ctx.lineTo(toX(pts[pts.length - 1].x), 8 + plotH);
       ctx.lineTo(toX(pts[0].x), 8 + plotH);
       ctx.closePath();
       const grad = ctx.createLinearGradient(0, 0, 0, H);
-      grad.addColorStop(0, lastVal >= prevVal ? "rgba(0,255,0,0.07)" : "rgba(255,0,0,0.07)");
+      grad.addColorStop(0, lastVal >= prevVal ? "rgba(0,255,0,0.08)" : "rgba(255,0,0,0.08)");
       grad.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = grad;
       ctx.fill();
 
-      // ── Glowing head ──
+      // ── Glowing snake head ──
       const head = pts[pts.length - 1];
       const hx = toX(head.x);
       const hy = toY(head.value);
       const glowRgb = lastVal >= prevVal ? "0,255,0" : "255,0,0";
-      const glowHsl = lastVal >= prevVal ? "#00FF00" : "#FF0000";
+      const glowHex = lastVal >= prevVal ? "#00FF00" : "#FF0000";
 
-      [16, 10, 5].forEach((r, idx) => {
+      [18, 11, 6].forEach((r, idx) => {
         ctx.beginPath();
         ctx.arc(hx, hy, r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${glowRgb},${[0.05, 0.1, 0.2][idx]})`;
+        ctx.fillStyle = `rgba(${glowRgb},${[0.04, 0.09, 0.18][idx]})`;
         ctx.fill();
       });
       ctx.beginPath();
       ctx.arc(hx, hy, 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = glowHsl;
-      ctx.shadowColor = glowHsl;
-      ctx.shadowBlur = 14;
+      ctx.fillStyle = glowHex;
+      ctx.shadowColor = glowHex;
+      ctx.shadowBlur = 16;
       ctx.fill();
       ctx.shadowBlur = 0;
 
@@ -296,18 +272,13 @@ const SnakeHUD = () => {
     return () => cancelAnimationFrame(animFrame);
   }, []);
 
-  const handleIntervalSelect = (iv: Interval) => {
-    setSelectedInterval(iv);
-    resetPoints();
-  };
-
-  const pnl = displayValue - INITIAL_DEPOSIT;
-  const pnlPct = ((pnl / INITIAL_DEPOSIT) * 100).toFixed(3);
+  const pnl = displayValue - INITIAL_CAPITAL;
+  const isProfit = pnl >= 0;
 
   return (
     <div ref={containerRef} className="absolute inset-0 pointer-events-none z-20">
       {/* Faint grid background */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
+      <svg className="absolute inset-0 w-full h-full opacity-[0.025]" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="hud-grid" width="40" height="40" patternUnits="userSpaceOnUse">
             <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5" />
@@ -319,19 +290,19 @@ const SnakeHUD = () => {
       {/* Snake + candlestick canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
 
-      {/* Floating value label that tracks the snake head */}
+      {/* Floating ticker label pinned to snake head */}
       {headPos && (
         <div
           className="absolute pointer-events-none"
-          style={{ left: headPos.x + 10, top: headPos.y - 28 }}
+          style={{ left: headPos.x + 10, top: headPos.y - 24 }}
         >
           <span
             className="text-[9px] font-mono font-bold whitespace-nowrap px-1.5 py-0.5 rounded-sm"
             style={{
-              background: "rgba(0,0,0,0.8)",
-              border: `1px solid ${isUp ? "rgba(0,255,0,0.4)" : "rgba(255,0,0,0.4)"}`,
+              background: "rgba(0,0,0,0.85)",
+              border: `1px solid ${isUp ? "rgba(0,255,0,0.5)" : "rgba(255,0,0,0.5)"}`,
               color: isUp ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)",
-              textShadow: isUp ? "0 0 6px hsl(120 100% 50% / 0.7)" : "0 0 6px hsl(0 100% 50% / 0.7)",
+              textShadow: isUp ? "0 0 8px hsl(120 100% 50% / 0.8)" : "0 0 8px hsl(0 100% 50% / 0.8)",
             }}
           >
             ${displayValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -339,33 +310,16 @@ const SnakeHUD = () => {
         </div>
       )}
 
-      {/* Interval selector — pointer-events-auto */}
-      <div className="absolute top-4 left-14 z-30 flex items-center gap-0 pointer-events-auto">
-        {INTERVALS.map((iv, i) => (
-          <button
-            key={iv}
-            onClick={() => handleIntervalSelect(iv)}
-            className={`text-[9px] font-mono tracking-widest uppercase px-2 py-0.5 transition-colors border border-foreground/20 ${
-              selectedInterval === iv
-                ? "text-foreground bg-foreground/10 border-foreground/60"
-                : "text-muted-foreground hover:text-foreground/70 hover:border-foreground/30"
-            } ${i === 0 ? "rounded-l-sm" : ""} ${i === INTERVALS.length - 1 ? "rounded-r-sm" : ""} -ml-px`}
-          >
-            {iv}
-          </button>
-        ))}
-      </div>
-
-      {/* Portfolio value counter */}
-      <div className="absolute top-12 left-4 z-30">
-        <p className="text-[9px] font-display tracking-[0.25em] uppercase text-foreground/40 mb-0.5">
+      {/* Portfolio NAV counter — top left */}
+      <div className="absolute top-3 left-14 z-30">
+        <p className="text-[8px] font-display tracking-[0.25em] uppercase text-foreground/40 mb-0.5">
           Portfolio NAV
         </p>
         <p
-          className="text-2xl font-mono font-bold tracking-tight leading-none"
+          className="text-xl font-mono font-bold tracking-tight leading-none"
           style={{
             color: isUp ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)",
-            textShadow: isUp ? "0 0 20px rgba(0,255,0,0.4)" : "0 0 20px rgba(255,0,0,0.4)",
+            textShadow: isUp ? "0 0 18px rgba(0,255,0,0.4)" : "0 0 18px rgba(255,0,0,0.4)",
           }}
         >
           ${displayValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -375,9 +329,13 @@ const SnakeHUD = () => {
           style={{ color: isUp ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)" }}
         >
           {isUp ? "▲" : "▼"} {Math.abs(((displayValue - BASE_VALUE) / BASE_VALUE) * 100).toFixed(3)}%
+          &nbsp;
+          <span style={{ color: isProfit ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)" }}>
+            ({isProfit ? "+" : ""}{pnl.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })})
+          </span>
         </p>
-        <p className="text-[9px] font-mono mt-0.5" style={{ color: "hsl(0 0% 50%)" }}>
-          INITIAL DEPOSIT: ${INITIAL_DEPOSIT.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+        <p className="text-[8px] font-mono mt-0.5" style={{ color: "hsl(0 0% 50%)" }}>
+          Initial Capital: $1,000,000
         </p>
       </div>
     </div>
