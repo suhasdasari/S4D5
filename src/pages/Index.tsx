@@ -40,8 +40,8 @@ const Index = () => {
             <div className="absolute bottom-3 left-3 w-5 h-5 border-l border-b border-foreground/10 pointer-events-none z-10" />
             <div className="absolute bottom-3 right-3 w-5 h-5 border-r border-b border-foreground/10 pointer-events-none z-10" />
 
-            {/* Globe — semi-transparent backdrop */}
-            <div className="absolute inset-0 z-0" style={{ opacity: 0.55 }}>
+            {/* Globe — brighter backdrop */}
+            <div className="absolute inset-0 z-0" style={{ opacity: 0.82 }}>
               <FractalSphere ripple={ripple} />
             </div>
 
