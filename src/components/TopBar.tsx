@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Shield, TrendingUp, DollarSign, Wallet, CheckCircle } from "lucide-react";
 
@@ -49,6 +50,9 @@ const MetricsBar = () => {
 };
 
 const TopBar = () => {
+  const [connected, setConnected] = useState(false);
+  const [address] = useState("0x7a3f...e91d");
+
   return (
     <header className="flex items-center gap-4 px-4 py-3 hud-border">
       <div className="flex items-center gap-3 mr-4">
@@ -62,14 +66,23 @@ const TopBar = () => {
 
       <MetricsBar />
 
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="glass-panel px-4 py-2 flex items-center gap-2 text-xs font-display tracking-wider uppercase cursor-pointer shrink-0 text-foreground"
-      >
-        <Wallet className="w-4 h-4" />
-        Connect Wallet
-      </motion.button>
+      {connected ? (
+        <div className="flex items-center gap-2 px-4 py-2 border border-foreground/10 rounded-sm shrink-0">
+          <div className="w-2 h-2 rounded-full bg-positive shadow-[0_0_6px_hsl(120_100%_50%/0.6)]" />
+          <span className="font-mono text-xs text-foreground">{address}</span>
+        </div>
+      ) : (
+        <motion.button
+          onClick={() => setConnected(true)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="wallet-btn relative overflow-hidden px-4 py-2 flex items-center gap-2 text-xs font-display tracking-wider uppercase cursor-pointer shrink-0 text-foreground bg-background border border-foreground/20 rounded-sm"
+        >
+          <Wallet className="w-4 h-4" />
+          Connect Wallet
+          <span className="wallet-scan-sweep" />
+        </motion.button>
+      )}
     </header>
   );
 };

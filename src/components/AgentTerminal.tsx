@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 interface LogEntry {
   agent: string;
   colorClass: string;
   message: string;
   timestamp: string;
+  glowType?: "positive" | "negative" | null;
 }
 
 const AGENTS = [
@@ -23,10 +25,10 @@ const MESSAGES = [
     "Deploying gamma scalp on SPX 0DTE. Delta-neutral confirmed.",
   ],
   [
-    { text: "Portfolio VaR within tolerance: 2.1σ. No breach detected.", approved: true },
-    { text: "Tail risk monitor: Black Swan probability at 0.03%. Status GREEN.", approved: true },
-    { text: "Correlation matrix update — crypto-equity decorrelation detected. CAUTION.", approved: false },
-    { text: "Drawdown threshold: 4.2% of NAV. Current: 1.7%. CLEAR.", approved: true },
+    { text: "Portfolio VaR within tolerance: 2.1σ. APPROVED.", approved: true },
+    { text: "Tail risk monitor: Black Swan probability at 0.03%. APPROVED.", approved: true },
+    { text: "Correlation matrix update — crypto-equity decorrelation. VETOED.", approved: false },
+    { text: "Drawdown threshold breach detected. Trade REJECTED.", approved: false },
   ],
   [
     "SEC Form ADV filed. Status: ACCEPTED.",
@@ -35,12 +37,32 @@ const MESSAGES = [
     "Audit trail hash committed to chain. Block #18,442,107.",
   ],
   [
-    { text: "Market order: SELL 150 ETH @ $3,847.22. Fill: 100%.", approved: true },
-    { text: "Limit order queued: BUY 10,000 MATIC @ $0.89. Expiry: 4h.", approved: true },
-    { text: "Slippage report: 0.02% on last 50 trades. Within bounds.", approved: true },
+    { text: "Market order: SELL 150 ETH @ $3,847.22. EXECUTED.", approved: true },
+    { text: "Limit order queued: BUY 10,000 MATIC @ $0.89. APPROVED.", approved: true },
+    { text: "Slippage report: 0.02% on last 50 trades. EXECUTED.", approved: true },
     { text: "Cross-chain settlement REJECTED. Insufficient liquidity.", approved: false },
   ],
 ];
+
+// Export for globe pulse events
+export const tradeEventBus = {
+  listeners: [] as ((type: "positive" | "negative") => void)[],
+  emit(type: "positive" | "negative") {
+    this.listeners.forEach((fn) => fn(type));
+  },
+  subscribe(fn: (type: "positive" | "negative") => void) {
+    this.listeners.push(fn);
+    return () => {
+      this.listeners = this.listeners.filter((l) => l !== fn);
+    };
+  },
+};
+
+const getGlowType = (message: string): "positive" | "negative" | null => {
+  if (/VETOED|REJECTED/i.test(message)) return "negative";
+  if (/EXECUTED|APPROVED/i.test(message)) return "positive";
+  return null;
+};
 
 const AgentTerminal = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -60,11 +82,20 @@ const AgentTerminal = () => {
       colorClass = rawMsg.approved ? "text-positive" : "text-negative";
     }
 
+    const fullMessage = `[${agent.prefix}] ${message}`;
+    const glowType = getGlowType(fullMessage);
+
+    // Emit trade event for globe pulse
+    if (glowType) {
+      tradeEventBus.emit(glowType);
+    }
+
     return {
       agent: agent.name,
       colorClass,
-      message: `[${agent.prefix}] ${message}`,
+      message: fullMessage,
       timestamp: time.toLocaleTimeString("en-US", { hour12: false }),
+      glowType,
     };
   };
 
@@ -80,7 +111,7 @@ const AgentTerminal = () => {
     const interval = setInterval(() => {
       const agentIdx = Math.floor(Math.random() * 4);
       const msgIdx = Math.floor(Math.random() * MESSAGES[agentIdx].length);
-      setLogs((prev) => [...prev.slice(-30), createEntry(agentIdx, msgIdx, new Date())]);
+      setLogs((prev) => [...prev.slice(-19), createEntry(agentIdx, msgIdx, new Date())]);
     }, 2500);
 
     return () => clearInterval(interval);
@@ -93,8 +124,8 @@ const AgentTerminal = () => {
   }, [logs]);
 
   return (
-    <div className="glass-panel h-full flex flex-col scanline overflow-hidden">
-      <div className="px-4 py-3 border-b border-foreground/5 flex items-center gap-2">
+    <div className="glass-panel flex flex-col scanline overflow-hidden" style={{ height: "400px" }}>
+      <div className="px-4 py-3 border-b border-foreground/5 flex items-center gap-2 shrink-0">
         <div className="w-2 h-2 rounded-full bg-foreground animate-pulse-glow" />
         <h3 className="font-display text-xs tracking-[0.3em] uppercase text-foreground">
           S4D5 Internal Debate
@@ -110,13 +141,27 @@ const AgentTerminal = () => {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            className="text-[11px] leading-relaxed"
+            className={`text-[11px] leading-relaxed ${
+              log.glowType === "negative"
+                ? "glow-negative"
+                : log.glowType === "positive"
+                ? "glow-positive"
+                : ""
+            }`}
           >
             <span className="text-muted-foreground">{log.timestamp}</span>{" "}
-            <span className={log.colorClass}>[{log.agent}]</span>{" "}
-            <span className="text-foreground/70">{log.message}</span>
+            <span className={log.glowType ? "" : log.colorClass}>[{log.agent}]</span>{" "}
+            <span className={log.glowType ? "" : "text-foreground/70"}>{log.message}</span>
           </motion.div>
         ))}
+      </div>
+      <div className="px-4 py-2 border-t border-foreground/5 shrink-0">
+        <Link
+          to="/audit-trail"
+          className="text-[10px] font-display tracking-[0.2em] uppercase text-silver hover:text-foreground transition-colors"
+        >
+          [ VIEW FULL AUDIT TRAIL ]
+        </Link>
       </div>
     </div>
   );
