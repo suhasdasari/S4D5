@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 const BASE_VALUE = 1_240_500;
 const INITIAL_CAPITAL = 1_000_000;
 const MAX_POINTS = 80;
-const UPDATE_MS = 1800;
+const UPDATE_MS = 800;
 
 interface Point {
   x: number;
@@ -96,18 +96,18 @@ const SnakeHUD = () => {
       maxRef.current = Math.max(...vals) + 2_000;
       pointsRef.current = newPts;
 
-      if (Math.random() > 0.6) {
-        const cands = candlesRef.current;
-        const lastCand = cands[cands.length - 1];
-        const range = Math.abs(next - (lastCand?.close ?? BASE_VALUE)) * 2 + 800;
-        const newCand: Candle = {
-          open: lastCand?.close ?? BASE_VALUE, close: next,
-          high: Math.max(lastCand?.close ?? BASE_VALUE, next) + Math.random() * range * 0.2,
-          low: Math.min(lastCand?.close ?? BASE_VALUE, next) - Math.random() * range * 0.2,
-          x: newPts[newPts.length - 1].x,
-        };
-        candlesRef.current = [...cands.slice(-19), newCand].map((c, i, arr) => ({ ...c, x: i / (arr.length - 1) }));
-      }
+      // Always update candle every tick — perfectly in sync with snake line
+      const cands = candlesRef.current;
+      const lastCand = cands[cands.length - 1];
+      const wickRange = Math.abs(next - (lastCand?.close ?? BASE_VALUE)) * 1.5 + 400;
+      const newCand: Candle = {
+        open: lastCand?.close ?? BASE_VALUE,
+        close: next,
+        high: Math.max(lastCand?.close ?? BASE_VALUE, next) + Math.random() * wickRange * 0.15,
+        low: Math.min(lastCand?.close ?? BASE_VALUE, next) - Math.random() * wickRange * 0.15,
+        x: newPts[newPts.length - 1].x,
+      };
+      candlesRef.current = [...cands.slice(-39), newCand].map((c, i, arr) => ({ ...c, x: i / (arr.length - 1) }));
     }, UPDATE_MS);
     return () => clearInterval(interval);
   }, []);
