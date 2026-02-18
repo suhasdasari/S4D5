@@ -169,49 +169,55 @@ const SnakeHUD = () => {
         ctx.strokeRect(cx - candleW / 2, bodyTop, candleW, bodyH);
       });
 
-      // ── Dark strip behind Y-axis labels ──
-      ctx.fillStyle = "rgba(5,5,5,0.85)";
+      // ── Solid black strip behind Y-axis labels ──
+      ctx.fillStyle = "rgb(5,5,5)";
       ctx.fillRect(0, 0, AXIS_LEFT, H);
-      // ── Dark strip behind X-axis labels ──
-      ctx.fillStyle = "rgba(5,5,5,0.85)";
-      ctx.fillRect(0, 8 + plotH, W, AXIS_BOTTOM + 4);
+      // ── Solid black strip behind X-axis labels ──
+      ctx.fillStyle = "rgb(5,5,5)";
+      ctx.fillRect(0, 8 + plotH, W, AXIS_BOTTOM + 6);
 
-      // ── Y-Axis line — subtle charcoal ──
-      ctx.strokeStyle = "rgba(45,45,45,1)";
-      ctx.lineWidth = 1;
+      // ── Y-Axis line ──
+      ctx.strokeStyle = "rgba(120,120,120,1)";
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(AXIS_LEFT, 8); ctx.lineTo(AXIS_LEFT, 8 + plotH);
       ctx.stroke();
 
       const yTicks = 4;
-      ctx.font = "9px 'JetBrains Mono', monospace";
+      ctx.font = "bold 9px 'JetBrains Mono', monospace";
       ctx.textAlign = "right";
       for (let t = 0; t <= yTicks; t++) {
         const val = minRef.current + (t / yTicks) * range;
         const y = 8 + plotH - (t / yTicks) * plotH * 0.85 - plotH * 0.075;
-        // Label — dim silver
-        ctx.fillStyle = "rgba(80,80,80,1)";
-        ctx.fillText(`$${(val / 1000).toFixed(0)}K`, AXIS_LEFT - 4, y + 3);
-        // Grid line — very dark dashes
+        // Tick mark
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(30,30,30,1)";
-        ctx.lineWidth = 0.8;
-        ctx.setLineDash([2, 8]);
+        ctx.strokeStyle = "rgba(120,120,120,1)";
+        ctx.lineWidth = 1;
+        ctx.moveTo(AXIS_LEFT - 3, y); ctx.lineTo(AXIS_LEFT, y);
+        ctx.stroke();
+        // Label — clearly visible
+        ctx.fillStyle = "rgba(160,160,160,1)";
+        ctx.fillText(`$${(val / 1000).toFixed(0)}K`, AXIS_LEFT - 5, y + 3);
+        // Grid line
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(40,40,40,1)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 7]);
         ctx.moveTo(AXIS_LEFT + 1, y); ctx.lineTo(AXIS_LEFT + plotW, y);
         ctx.stroke();
         ctx.setLineDash([]);
       }
 
-      // ── X-Axis line — subtle charcoal ──
-      ctx.strokeStyle = "rgba(45,45,45,1)";
-      ctx.lineWidth = 1;
+      // ── X-Axis line ──
+      ctx.strokeStyle = "rgba(120,120,120,1)";
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(AXIS_LEFT, 8 + plotH); ctx.lineTo(AXIS_LEFT + plotW, 8 + plotH);
       ctx.stroke();
 
       const xTicks = 4;
       ctx.textAlign = "center";
-      ctx.font = "9px 'JetBrains Mono', monospace";
+      ctx.font = "bold 9px 'JetBrains Mono', monospace";
       const sessionStart = sessionStartRef.current.getTime();
       const sessionEnd = Date.now();
       const sessionRange = sessionEnd - sessionStart || 1;
@@ -219,14 +225,20 @@ const SnakeHUD = () => {
         const x = AXIS_LEFT + (t / xTicks) * plotW;
         const ts = new Date(sessionStart + (t / xTicks) * sessionRange);
         const label = ts.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
-        // Label — dim silver
-        ctx.fillStyle = "rgba(80,80,80,1)";
-        ctx.fillText(label, x, 8 + plotH + 16);
-        // Grid line — very dark dashes
+        // Tick mark
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(30,30,30,1)";
-        ctx.lineWidth = 0.8;
-        ctx.setLineDash([2, 8]);
+        ctx.strokeStyle = "rgba(120,120,120,1)";
+        ctx.lineWidth = 1;
+        ctx.moveTo(x, 8 + plotH); ctx.lineTo(x, 8 + plotH + 3);
+        ctx.stroke();
+        // Label — clearly visible
+        ctx.fillStyle = "rgba(160,160,160,1)";
+        ctx.fillText(label, x, 8 + plotH + 17);
+        // Grid line
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(40,40,40,1)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 7]);
         ctx.moveTo(x, 8); ctx.lineTo(x, 8 + plotH);
         ctx.stroke();
         ctx.setLineDash([]);
