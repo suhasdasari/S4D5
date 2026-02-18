@@ -276,7 +276,7 @@ const SnakeHUD = () => {
   const isProfit = pnl >= 0;
 
   return (
-    <div ref={containerRef} className="absolute inset-0 pointer-events-none z-20">
+    <div ref={containerRef} className="absolute inset-0 pointer-events-none z-50">
       {/* Faint grid background */}
       <svg className="absolute inset-0 w-full h-full opacity-[0.025]" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -293,16 +293,16 @@ const SnakeHUD = () => {
       {/* Floating ticker label pinned to snake head */}
       {headPos && (
         <div
-          className="absolute pointer-events-none"
+          className="absolute pointer-events-none z-50"
           style={{ left: headPos.x + 10, top: headPos.y - 24 }}
         >
           <span
             className="text-[9px] font-mono font-bold whitespace-nowrap px-1.5 py-0.5 rounded-sm"
             style={{
               background: "rgba(0,0,0,0.85)",
-              border: `1px solid ${isUp ? "rgba(0,255,0,0.5)" : "rgba(255,0,0,0.5)"}`,
-              color: isUp ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)",
-              textShadow: isUp ? "0 0 8px hsl(120 100% 50% / 0.8)" : "0 0 8px hsl(0 100% 50% / 0.8)",
+              border: `1px solid ${isProfit ? "rgba(0,255,0,0.5)" : "rgba(255,0,0,0.5)"}`,
+              color: isProfit ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)",
+              textShadow: isProfit ? "0 0 8px hsl(120 100% 50% / 0.8)" : "0 0 8px hsl(0 100% 50% / 0.8)",
             }}
           >
             ${displayValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

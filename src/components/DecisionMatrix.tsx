@@ -206,7 +206,7 @@ const DecisionMatrix = () => {
         </p>
         <div className="space-y-0.5">
           {recentTrades.slice(0, 4).map((trade, i) => (
-            <div key={`${trade.id}-${i}`} className="flex flex-col px-1.5 py-0.5 rounded hover:bg-foreground/[0.03] transition-colors">
+        <div key={`${trade.id}-${i}`} className="group relative flex flex-col px-1.5 py-0.5 rounded hover:bg-foreground/[0.03] transition-colors cursor-default">
               <div className="flex items-center justify-between text-[10px]">
                 <span className="font-mono text-muted-foreground">{trade.id}</span>
                 <span className="text-foreground/70 truncate mx-2">{trade.action}</span>
@@ -220,6 +220,14 @@ const DecisionMatrix = () => {
                   <Link to="/audit-trail" title="View Audit Trail">
                     <CheckCircle className="w-2.5 h-2.5 text-positive opacity-70 hover:opacity-100 transition-opacity" />
                   </Link>
+                </div>
+              )}
+              {/* Hover proof tooltip — always shows full hash */}
+              {trade.txHash && (
+                <div className="absolute left-0 bottom-full mb-1 hidden group-hover:flex flex-col gap-0.5 bg-black/90 border border-foreground/10 rounded px-2 py-1.5 z-50 pointer-events-none min-w-max shadow-lg">
+                  <span className="text-[9px] font-display tracking-[0.15em] uppercase text-muted-foreground">0G Verification Hash</span>
+                  <span className="text-[10px] font-mono text-positive">{trade.txHash}</span>
+                  <span className="text-[9px] text-muted-foreground/50">{trade.id} · {trade.action}</span>
                 </div>
               )}
             </div>

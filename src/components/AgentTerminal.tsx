@@ -19,8 +19,9 @@ const AGENTS = [
   { name: "EXECUTIONER",      colorClass: "dynamic",          prefix: "✕" },
 ];
 
-// All messages are purely technical — no geographic investing clichés
-const MESSAGES = [
+// Strictly technical — zero geographic clichés
+const MESSAGES: (string | { text: string; approved: boolean })[][] = [
+  // STR — Alpha Strategist: pure signal & quant logic
   [
     "Momentum divergence detected in BTC/ETH ratio — initiating rebalance protocol.",
     "Long bias confirmed on NQ futures. Probability score: 87.3%.",
@@ -28,7 +29,12 @@ const MESSAGES = [
     "Delta-neutral SPX 0DTE structure deployed. Theta burn rate acceptable.",
     "Order-flow imbalance on ES_F: 3.4:1 bid-to-ask ratio. Positioning long.",
     "Mean-reversion signal on EURUSD — Bollinger band breach at 2.7σ.",
+    "Cross-asset correlation shift detected. Risk-parity rebalance queued.",
+    "VWAP deviation on BTC/USD exceeds 1.8σ. Statistical arbitrage window open.",
+    "Yield curve inversion signal confirmed. Duration risk elevated — hedge initiated.",
+    "Options flow imbalance: 4.2:1 put/call on SPX 30-day expiry. Contrarian long bias.",
   ],
+  // RSK — Risk Officer: portfolio risk analysis
   [
     { text: "Portfolio VaR within tolerance: 2.1σ. APPROVED.", approved: true },
     { text: "Tail risk monitor: Black Swan probability 0.03%. APPROVED.", approved: true },
@@ -36,7 +42,12 @@ const MESSAGES = [
     { text: "Drawdown threshold breach detected on ETH position. Trade REJECTED.", approved: false },
     { text: "Max drawdown within 4.8% boundary. Position size: APPROVED.", approved: true },
     { text: "Sharpe ratio degradation beyond threshold. VETOED.", approved: false },
+    { text: "Beta-adjusted exposure within mandate limits. APPROVED.", approved: true },
+    { text: "Liquidity stress test passed at 3σ shock scenario. APPROVED.", approved: true },
+    { text: "Greeks exposure: net delta 0.12, vega within band. APPROVED.", approved: true },
+    { text: "Counterparty exposure limit exceeded on prime broker. VETOED.", approved: false },
   ],
+  // COM — Compliance Scribe: regulatory & audit
   [
     "SEC Form ADV filing updated. Status: ACCEPTED.",
     "KYC/AML sweep complete. 0 flags raised. All wallets verified clean.",
@@ -44,7 +55,12 @@ const MESSAGES = [
     "Audit trail hash committed to 0G chain. Block confirmed.",
     "AML screening: counterparty risk score 0.02. ACCEPTED.",
     "FATF Travel Rule compliance verified on cross-chain settlement.",
+    "FINRA best-execution obligation verified. Spread within mandate threshold.",
+    "CFTC position limit compliance confirmed. Notional within allocated band.",
+    "On-chain wallet sanction screening: OFAC clear. ACCEPTED.",
+    "MiFID II transaction reporting submitted. Acknowledgement: RECEIVED.",
   ],
+  // EXE — Executioner: order routing & settlement
   [
     { text: "Market order: SELL 150 ETH @ $3,847.22. EXECUTED.", approved: true },
     { text: "Limit order queued: BUY 10,000 MATIC @ $0.89. APPROVED.", approved: true },
@@ -52,6 +68,10 @@ const MESSAGES = [
     { text: "Cross-chain settlement REJECTED. Insufficient liquidity at target price.", approved: false },
     { text: "TWAP execution complete: BUY 500 SOL over 4H. EXECUTED.", approved: true },
     { text: "Smart order router: routed via 3 venues. EXECUTED.", approved: true },
+    { text: "DMA fill: SELL 25 BTC @ $104,720 — zero slippage. EXECUTED.", approved: true },
+    { text: "Block trade: BUY 1,000 ETH via dark pool. EXECUTED.", approved: true },
+    { text: "Partial fill detected: 72% of SOL order. REJECTED — requeuing.", approved: false },
+    { text: "VWAP order complete: SELL 500 NQ over 2H. EXECUTED.", approved: true },
   ],
 ];
 
@@ -99,7 +119,7 @@ const genTxHash = () => {
   return `0x${start}...${end}`;
 };
 
-// Audio context — same Web Audio API used by DecisionMatrix
+// Audio context
 let audioCtx: AudioContext | null = null;
 const getAudioCtx = () => {
   if (!audioCtx) audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -185,11 +205,21 @@ const AgentTerminal = () => {
   }, []);
 
   useEffect(() => {
-    const initial: LogEntry[] = [];
-    for (let i = 0; i < 8; i++) {
+    // Seed with standby entry first, then real entries
+    const standby: LogEntry = {
+      agent: "S4D5",
+      colorClass: "text-muted-foreground",
+      message: "[S4D5] STANDBY: SCANNING GLOBAL LIQUIDITY...",
+      timestamp: new Date(Date.now() - 9000).toLocaleTimeString("en-US", { hour12: false }),
+      glowType: null,
+      proposalId: "INIT",
+    };
+
+    const initial: LogEntry[] = [standby];
+    for (let i = 0; i < 7; i++) {
       const agentIdx = i % 4;
       const msgIdx = Math.floor(Math.random() * MESSAGES[agentIdx].length);
-      initial.push(createEntry(agentIdx, msgIdx, new Date(Date.now() - (8 - i) * 3000)));
+      initial.push(createEntry(agentIdx, msgIdx, new Date(Date.now() - (7 - i) * 3000)));
     }
     setLogs(initial);
 
