@@ -14,35 +14,44 @@ interface LogEntry {
 
 const AGENTS = [
   { name: "ALPHA STRATEGIST", colorClass: "text-foreground", prefix: "α" },
-  { name: "RISK OFFICER", colorClass: "dynamic", prefix: "Ω" },
-  { name: "COMPLIANCE SCRIBE", colorClass: "text-silver", prefix: "§" },
-  { name: "EXECUTIONER", colorClass: "dynamic", prefix: "✕" },
+  { name: "RISK OFFICER",     colorClass: "dynamic",          prefix: "Ω" },
+  { name: "COMPLIANCE SCRIBE",colorClass: "text-silver",      prefix: "§" },
+  { name: "EXECUTIONER",      colorClass: "dynamic",          prefix: "✕" },
 ];
 
+// All messages are purely technical — no geographic investing clichés
 const MESSAGES = [
   [
-    "Identified momentum divergence in BTC/ETH ratio. Initiating rebalance protocol.",
+    "Momentum divergence detected in BTC/ETH ratio — initiating rebalance protocol.",
     "Long bias confirmed on NQ futures. Probability score: 87.3%.",
-    "Signal lock acquired on Vol Surface — IV crush incoming T+2.",
-    "Deploying gamma scalp on SPX 0DTE. Delta-neutral confirmed.",
+    "Signal lock on Vol Surface — IV crush incoming T+2. Gamma scalp initiated.",
+    "Delta-neutral SPX 0DTE structure deployed. Theta burn rate acceptable.",
+    "Order-flow imbalance on ES_F: 3.4:1 bid-to-ask ratio. Positioning long.",
+    "Mean-reversion signal on EURUSD — Bollinger band breach at 2.7σ.",
   ],
   [
     { text: "Portfolio VaR within tolerance: 2.1σ. APPROVED.", approved: true },
-    { text: "Tail risk monitor: Black Swan probability at 0.03%. APPROVED.", approved: true },
-    { text: "Correlation matrix update — crypto-equity decorrelation. VETOED.", approved: false },
-    { text: "Drawdown threshold breach detected. Trade REJECTED.", approved: false },
+    { text: "Tail risk monitor: Black Swan probability 0.03%. APPROVED.", approved: true },
+    { text: "Correlation matrix: crypto-equity decorrelation triggers rebalance. VETOED.", approved: false },
+    { text: "Drawdown threshold breach detected on ETH position. Trade REJECTED.", approved: false },
+    { text: "Max drawdown within 4.8% boundary. Position size: APPROVED.", approved: true },
+    { text: "Sharpe ratio degradation beyond threshold. VETOED.", approved: false },
   ],
   [
-    "SEC Form ADV filed. Status: ACCEPTED.",
-    "KYC/AML sweep complete. 0 flags raised. All wallets clean.",
-    "Regulatory pulse: EU MiCA compliance updated to v2.7.",
-    "Audit trail hash committed to chain. Block #18,442,107.",
+    "SEC Form ADV filing updated. Status: ACCEPTED.",
+    "KYC/AML sweep complete. 0 flags raised. All wallets verified clean.",
+    "Regulatory pulse: EU MiCA compliance updated to v2.7. No action required.",
+    "Audit trail hash committed to 0G chain. Block confirmed.",
+    "AML screening: counterparty risk score 0.02. ACCEPTED.",
+    "FATF Travel Rule compliance verified on cross-chain settlement.",
   ],
   [
     { text: "Market order: SELL 150 ETH @ $3,847.22. EXECUTED.", approved: true },
     { text: "Limit order queued: BUY 10,000 MATIC @ $0.89. APPROVED.", approved: true },
     { text: "Slippage report: 0.02% on last 50 trades. EXECUTED.", approved: true },
-    { text: "Cross-chain settlement REJECTED. Insufficient liquidity.", approved: false },
+    { text: "Cross-chain settlement REJECTED. Insufficient liquidity at target price.", approved: false },
+    { text: "TWAP execution complete: BUY 500 SOL over 4H. EXECUTED.", approved: true },
+    { text: "Smart order router: routed via 3 venues. EXECUTED.", approved: true },
   ],
 ];
 
@@ -54,9 +63,7 @@ export const tradeEventBus = {
   },
   subscribe(fn: (type: "positive" | "negative") => void) {
     this.listeners.push(fn);
-    return () => {
-      this.listeners = this.listeners.filter((l) => l !== fn);
-    };
+    return () => { this.listeners = this.listeners.filter((l) => l !== fn); };
   },
 };
 
@@ -69,9 +76,7 @@ export const proposalEventBus = {
   },
   subscribe(fn: (id: string, status: "PASSED" | "VETOED" | null) => void) {
     this.listeners.push(fn);
-    return () => {
-      this.listeners = this.listeners.filter((l) => l !== fn);
-    };
+    return () => { this.listeners = this.listeners.filter((l) => l !== fn); };
   },
 };
 
@@ -90,11 +95,11 @@ const getGlowType = (message: string): "positive" | "negative" | null => {
 const genTxHash = () => {
   const chars = "0123456789abcdef";
   const start = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-  const end = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  const end   = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
   return `0x${start}...${end}`;
 };
 
-// Audio context utilities
+// Audio context — same Web Audio API used by DecisionMatrix
 let audioCtx: AudioContext | null = null;
 const getAudioCtx = () => {
   if (!audioCtx) audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -106,15 +111,13 @@ const playSubThud = () => {
     const ctx = getAudioCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+    osc.connect(gain); gain.connect(ctx.destination);
     osc.type = "sine";
     osc.frequency.setValueAtTime(60, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.35);
     gain.gain.setValueAtTime(0.18, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.35);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.35);
   } catch (_) {}
 };
 
@@ -123,16 +126,14 @@ const playCrystalPing = () => {
     const ctx = getAudioCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+    osc.connect(gain); gain.connect(ctx.destination);
     osc.type = "sine";
     osc.frequency.setValueAtTime(1800, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(2400, ctx.currentTime + 0.05);
     osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.3);
     gain.gain.setValueAtTime(0.1, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3);
   } catch (_) {}
 };
 
@@ -158,23 +159,18 @@ const AgentTerminal = () => {
     const fullMessage = `[${propId}] [${agent.prefix}] ${message}`;
     const glowType = getGlowType(fullMessage);
 
-    // Emit trade event for globe pulse
-    if (glowType) {
-      tradeEventBus.emit(glowType);
-    }
+    if (glowType) tradeEventBus.emit(glowType);
 
-    // Emit proposal event for consensus HUD
     const proposalStatus = glowType === "positive" ? "PASSED" as const : glowType === "negative" ? "VETOED" as const : null;
     proposalEventBus.emit(propId, proposalStatus);
 
-    // Audio feedback
-    if (/VETOED|REJECTED/i.test(fullMessage)) {
-      playSubThud();
-    } else if (/EXECUTED/i.test(fullMessage)) {
-      playCrystalPing();
+    // Audio: fire only on final EXE result
+    if (agentIdx === 3) {
+      if (/VETOED|REJECTED/i.test(fullMessage)) playSubThud();
+      else if (/EXECUTED/i.test(fullMessage)) playCrystalPing();
     }
 
-    // Attach tx hash for EXECUTED messages
+    // 0G Hash attached to EXECUTED messages
     const txHash = /EXECUTED/i.test(fullMessage) ? genTxHash() : undefined;
 
     return {
@@ -217,7 +213,7 @@ const AgentTerminal = () => {
       <div className="px-4 py-3 border-b border-foreground/5 flex items-center gap-2 shrink-0">
         <div className="w-2 h-2 rounded-full bg-foreground animate-pulse-glow" />
         <h3 className="font-display text-xs tracking-[0.3em] uppercase text-foreground">
-          S4D5 Internal Debate
+          Agent Council
         </h3>
       </div>
       <div

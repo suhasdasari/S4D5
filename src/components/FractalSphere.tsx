@@ -9,29 +9,36 @@ interface PulsingSphereProps {
   ripple: boolean;
 }
 
-// Heat zones: lat/lon converted to xyz on unit sphere
+// Heat zones: lat/lon → xyz on unit sphere
+// Colors: green = bullish zone, red = risk zone
 const HEAT_ZONES = [
-  { lat: 40.7, lon: -74.0, label: "US Equity Markets", focus: "Analyzing: US Equity Markets" },
-  { lat: 51.5, lon: -0.1,  label: "UK/EU Fixed Income", focus: "Analyzing: EU Energy Markets" },
-  { lat: 35.7, lon: 139.7, label: "JP Tech Futures", focus: "Analyzing: JP Tech Futures" },
-  { lat: 22.3, lon: 114.2, label: "HK Crypto Flows", focus: "Analyzing: HK Crypto Flows" },
-  { lat: 1.3,  lon: 103.8, label: "SG Commodities", focus: "Analyzing: SG Commodities" },
-  { lat: 48.9, lon: 2.3,   label: "EU Monetary Policy", focus: "Analyzing: EU Monetary Policy" },
+  { lat: 40.7, lon: -74.0,  focus: "Analyzing: US CPI Data Release",     color: "positive" },
+  { lat: 51.5, lon: -0.1,   focus: "Analyzing: EU Energy Supply Shock",   color: "negative" },
+  { lat: 35.7, lon: 139.7,  focus: "Analyzing: JP Yield Curve Control",   color: "negative" },
+  { lat: 22.3, lon: 114.2,  focus: "Analyzing: HK Crypto Liquidity Flow", color: "positive" },
+  { lat: 1.3,  lon: 103.8,  focus: "Analyzing: SG Commodity Derivatives", color: "positive" },
+  { lat: 48.9, lon: 2.3,    focus: "Analyzing: EU Monetary Policy Pivot", color: "negative" },
 ];
 
 const ZONE_NAMES = ["NEW YORK", "LONDON", "TOKYO", "HONG KONG", "SINGAPORE", "PARIS"];
 
 function latLonToXYZ(lat: number, lon: number, r: number) {
-  const phi = (90 - lat) * (Math.PI / 180);
+  const phi   = (90 - lat) * (Math.PI / 180);
   const theta = (lon + 180) * (Math.PI / 180);
   return {
     x: -r * Math.sin(phi) * Math.cos(theta),
-    y: r * Math.cos(phi),
-    z: r * Math.sin(phi) * Math.sin(theta),
+    y:  r * Math.cos(phi),
+    z:  r * Math.sin(phi) * Math.sin(theta),
   };
 }
 
-const HeatZones = ({ active, onHover }: { active: number | null; onHover: (i: number | null) => void }) => {
+const HeatZones = ({
+  active,
+  onHover,
+}: {
+  active: number | null;
+  onHover: (i: number | null, screenPos?: { x: number; y: number }) => void;
+}) => {
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame(({ clock }) => {
@@ -43,22 +50,32 @@ const HeatZones = ({ active, onHover }: { active: number | null; onHover: (i: nu
   return (
     <group ref={groupRef}>
       {HEAT_ZONES.map((zone, i) => {
-        const pos = latLonToXYZ(zone.lat, zone.lon, 1.52);
+        const pos      = latLonToXYZ(zone.lat, zone.lon, 1.52);
         const isActive = active === i;
+        const isPos    = zone.color === "positive";
+        const baseCol  = isPos ? "#00FF00" : "#FF0000";
+        const dimCol   = isPos ? "#004400" : "#440000";
+
         return (
           <mesh
             key={i}
             position={[pos.x, pos.y, pos.z]}
-            onPointerEnter={() => onHover(i)}
-            onPointerLeave={() => onHover(null)}
+            onPointerEnter={(e) => {
+              e.stopPropagation();
+              onHover(i);
+            }}
+            onPointerLeave={(e) => {
+              e.stopPropagation();
+              onHover(null);
+            }}
           >
-            <sphereGeometry args={[isActive ? 0.06 : 0.03, 8, 8]} />
+            <sphereGeometry args={[isActive ? 0.07 : 0.035, 10, 10]} />
             <meshStandardMaterial
-              color={isActive ? "#FFFFFF" : "#888888"}
-              emissive={isActive ? "#FFFFFF" : "#444444"}
-              emissiveIntensity={isActive ? 2 : 0.5}
+              color={isActive ? baseCol : dimCol}
+              emissive={isActive ? baseCol : dimCol}
+              emissiveIntensity={isActive ? 3.5 : 0.8}
               transparent
-              opacity={isActive ? 1 : 0.6}
+              opacity={isActive ? 1 : 0.5}
             />
           </mesh>
         );
@@ -67,6 +84,7 @@ const HeatZones = ({ active, onHover }: { active: number | null; onHover: (i: nu
   );
 };
 
+// Animated data streaks — particles fly from sphere surface
 const DataPoints = () => {
   const pointsRef = useRef<THREE.Points>(null);
   const [positions, setPositions] = useState<Float32Array>(new Float32Array(0));
@@ -74,19 +92,19 @@ const DataPoints = () => {
   useEffect(() => {
     const addPoint = () => {
       const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      const r = 1.55;
-      const x = r * Math.sin(phi) * Math.cos(theta);
-      const y = r * Math.sin(phi) * Math.sin(theta);
-      const z = r * Math.cos(phi);
+      const phi   = Math.acos(2 * Math.random() - 1);
+      const r     = 1.55;
+      const x     = r * Math.sin(phi) * Math.cos(theta);
+      const y     = r * Math.sin(phi) * Math.sin(theta);
+      const z     = r * Math.cos(phi);
 
       setPositions((prev) => {
         const maxPoints = 30;
-        const newArr = new Float32Array(Math.min(prev.length + 3, maxPoints * 3));
-        const start = Math.max(0, prev.length + 3 - maxPoints * 3);
+        const newArr    = new Float32Array(Math.min(prev.length + 3, maxPoints * 3));
+        const start     = Math.max(0, prev.length + 3 - maxPoints * 3);
         newArr.set(prev.subarray(start), 0);
         const insertAt = newArr.length - 3;
-        newArr[insertAt] = x;
+        newArr[insertAt]     = x;
         newArr[insertAt + 1] = y;
         newArr[insertAt + 2] = z;
         return newArr;
@@ -117,9 +135,9 @@ const DataPoints = () => {
 };
 
 const FractalSphereInner = ({ hovered, athFlash }: { hovered: boolean; athFlash: boolean }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRef     = useRef<THREE.Mesh>(null);
   const materialRef = useRef<any>(null);
-  const speedRef = useRef(0.2);
+  const speedRef    = useRef(0.2);
 
   useFrame(({ clock }) => {
     const targetSpeed = hovered ? 0.8 : 0.2;
@@ -130,8 +148,8 @@ const FractalSphereInner = ({ hovered, athFlash }: { hovered: boolean; athFlash:
       meshRef.current.rotation.y = clock.getElapsedTime() * speedRef.current;
     }
     if (materialRef.current) {
-      const baseDistort = athFlash ? 0.6 : 0.3;
-      materialRef.current.distort = baseDistort + Math.sin(clock.getElapsedTime() * 2) * 0.15;
+      const baseDistort             = athFlash ? 0.6 : 0.3;
+      materialRef.current.distort   = baseDistort + Math.sin(clock.getElapsedTime() * 2) * 0.15;
       materialRef.current.emissiveIntensity = athFlash ? 0.8 : 0.15;
     }
   });
@@ -180,13 +198,14 @@ const InnerGlow = () => {
 };
 
 const FractalSphere = ({ ripple }: PulsingSphereProps) => {
-  const [hovered, setHovered] = useState(false);
-  const [pulseColor, setPulseColor] = useState<string | null>(null);
-  const [activeZone, setActiveZone] = useState<number | null>(null);
+  const [hovered, setHovered]         = useState(false);
+  const [pulseColor, setPulseColor]   = useState<string | null>(null);
+  const [activeZone, setActiveZone]   = useState<number | null>(null);
   const [hoveredZone, setHoveredZone] = useState<number | null>(null);
-  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
-  const [athFlash, setAthFlash] = useState(false);
+  const [tooltipPos, setTooltipPos]   = useState<{ x: number; y: number } | null>(null);
+  const [athFlash, setAthFlash]       = useState(false);
 
+  // Auto-cycle active zone (Strategist focus)
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveZone(Math.floor(Math.random() * HEAT_ZONES.length));
@@ -240,18 +259,21 @@ const FractalSphere = ({ ripple }: PulsingSphereProps) => {
         <HeatZones active={activeZone} onHover={setHoveredZone} />
       </Canvas>
 
-      {/* Heat zone hover tooltip */}
+      {/* Heat zone hover tooltip — cursor-following */}
       {hoveredZone !== null && tooltipPos && (
         <div
           className="absolute pointer-events-none z-40"
-          style={{ left: tooltipPos.x + 14, top: tooltipPos.y - 28 }}
+          style={{ left: tooltipPos.x + 14, top: tooltipPos.y - 32 }}
         >
           <div
-            className="text-[9px] font-mono tracking-widest uppercase px-2 py-1 rounded-sm whitespace-nowrap"
+            className="text-[9px] font-mono tracking-widest uppercase px-2.5 py-1.5 rounded-sm whitespace-nowrap"
             style={{
-              background: "rgba(0,0,0,0.85)",
-              border: "1px solid rgba(255,255,255,0.2)",
-              color: "hsl(0 0% 100%)",
+              background: "rgba(0,0,0,0.92)",
+              border: `1px solid ${HEAT_ZONES[hoveredZone].color === "positive" ? "rgba(0,255,0,0.4)" : "rgba(255,0,0,0.4)"}`,
+              color: HEAT_ZONES[hoveredZone].color === "positive" ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)",
+              textShadow: HEAT_ZONES[hoveredZone].color === "positive"
+                ? "0 0 8px rgba(0,255,0,0.6)"
+                : "0 0 8px rgba(255,0,0,0.6)",
             }}
           >
             ◉ {HEAT_ZONES[hoveredZone].focus}
@@ -259,9 +281,13 @@ const FractalSphere = ({ ripple }: PulsingSphereProps) => {
         </div>
       )}
 
-      {/* Active zone label */}
+      {/* Active zone ingestion banner */}
       {activeZone !== null && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-display tracking-[0.2em] uppercase text-foreground/60 pointer-events-none">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-display tracking-[0.2em] uppercase pointer-events-none"
+          style={{
+            color: HEAT_ZONES[activeZone].color === "positive" ? "hsl(120 100% 50% / 0.7)" : "hsl(0 100% 50% / 0.7)"
+          }}
+        >
           ◎ INGESTING: {ZONE_NAMES[activeZone]}
         </div>
       )}
@@ -277,9 +303,7 @@ const FractalSphere = ({ ripple }: PulsingSphereProps) => {
       {pulseColor && (
         <div
           className="absolute inset-0 pointer-events-none animate-plasma-ripple rounded-full"
-          style={{
-            background: `radial-gradient(circle, ${pulseColor}20 0%, transparent 70%)`,
-          }}
+          style={{ background: `radial-gradient(circle, ${pulseColor}20 0%, transparent 70%)` }}
         />
       )}
     </div>
