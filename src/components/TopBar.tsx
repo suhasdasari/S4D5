@@ -80,7 +80,7 @@ const TopBar = () => {
           onClick={() => setConnected(true)}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="wallet-btn relative overflow-hidden px-4 py-2 flex items-center gap-2 text-xs font-display tracking-wider uppercase cursor-pointer shrink-0 text-foreground bg-background border border-foreground/20 rounded-sm"
+          className="wallet-btn relative overflow-hidden px-4 py-2 flex items-center gap-2 text-xs font-display tracking-wider uppercase cursor-pointer shrink-0 text-foreground bg-background border border-foreground/80 rounded-sm"
         >
           <Wallet className="w-4 h-4" />
           Connect Wallet

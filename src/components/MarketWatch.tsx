@@ -30,11 +30,6 @@ const POLYMARKET: { question: string; odds: string }[] = [
   { question: "AI Regulation Bill Passes?", odds: "41%" },
 ];
 
-const TRADES = [
-  { id: "TXN-0041", action: "BUY", asset: "ETH", amount: "50", status: "filled" },
-  { id: "TXN-0040", action: "SELL", asset: "BTC", amount: "2.5", status: "filled" },
-  { id: "TXN-0039", action: "BUY", asset: "SOL", amount: "200", status: "filled" },
-];
 
 const DataSection = ({ title, rows }: { title: string; rows: MarketRow[] }) => (
   <div className="mb-4">
@@ -87,26 +82,6 @@ const MarketWatch = ({ onOpenProof }: { onOpenProof: (tradeId: string) => void }
           </div>
         </div>
 
-        <div>
-          <h4 className="font-display text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-2">
-            Recent Trades
-          </h4>
-          <div className="space-y-1">
-            {TRADES.map((t) => (
-              <div key={t.id} className="flex items-center justify-between text-xs py-1 px-2 rounded hover:bg-white/[0.03] transition-colors">
-                <span className="text-muted-foreground">{t.id}</span>
-                <span className={t.action === "BUY" ? "text-positive" : "text-negative"}>{t.action}</span>
-                <span className="text-foreground">{t.amount} {t.asset}</span>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onOpenProof(t.id); }}
-                  className="text-[9px] uppercase tracking-wider text-muted-foreground hover:text-foreground border border-foreground/10 px-2 py-0.5 rounded-sm transition-colors"
-                >
-                  Proof of Reason
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </motion.div>
   );
