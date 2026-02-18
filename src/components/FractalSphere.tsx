@@ -281,16 +281,6 @@ const FractalSphere = ({ ripple }: PulsingSphereProps) => {
         </div>
       )}
 
-      {/* Active zone ingestion banner — technical focus label only, no city names */}
-      {activeZone !== null && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-display tracking-[0.2em] uppercase pointer-events-none"
-          style={{
-            color: HEAT_ZONES[activeZone].color === "positive" ? "hsl(120 100% 50% / 0.7)" : "hsl(0 100% 50% / 0.7)"
-          }}
-        >
-          ◎ {HEAT_ZONES[activeZone].focus}
-        </div>
-      )}
 
       {/* Ripple from deposit */}
       {ripple && (
