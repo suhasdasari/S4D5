@@ -9,6 +9,14 @@ interface BiometricDropzoneProps {
 const BiometricDropzone = ({ onDeposit }: BiometricDropzoneProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [uploaded, setUploaded] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
+
+  const handleUpload = useCallback((file: File) => {
+    setUploaded(file.name);
+    setProcessing(true);
+    onDeposit();
+    setTimeout(() => setProcessing(false), 3000);
+  }, [onDeposit]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -23,11 +31,8 @@ const BiometricDropzone = ({ onDeposit }: BiometricDropzoneProps) => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
-    if (file) {
-      setUploaded(file.name);
-      onDeposit();
-    }
-  }, [onDeposit]);
+    if (file) handleUpload(file);
+  }, [handleUpload]);
 
   const handleClick = useCallback(() => {
     const input = document.createElement("input");
@@ -35,13 +40,10 @@ const BiometricDropzone = ({ onDeposit }: BiometricDropzoneProps) => {
     input.accept = "text/*,video/*,image/*";
     input.onchange = (e: any) => {
       const file = e.target.files?.[0];
-      if (file) {
-        setUploaded(file.name);
-        onDeposit();
-      }
+      if (file) handleUpload(file);
     };
     input.click();
-  }, [onDeposit]);
+  }, [handleUpload]);
 
   return (
     <motion.div
@@ -52,7 +54,7 @@ const BiometricDropzone = ({ onDeposit }: BiometricDropzoneProps) => {
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
       className={`
-        relative cursor-pointer glass-panel h-24 flex items-center justify-center gap-4
+        relative cursor-pointer glass-panel h-24 flex flex-col justify-center gap-2
         transition-all duration-500 overflow-hidden
         ${isDragging ? "border-foreground/20" : ""}
       `}
@@ -64,22 +66,46 @@ const BiometricDropzone = ({ onDeposit }: BiometricDropzoneProps) => {
         />
       </div>
 
-      <Fingerprint
-        className={`w-8 h-8 transition-colors duration-300 ${
-          isDragging ? "text-foreground" : "text-muted-foreground"
-        }`}
-      />
-      <div>
-        <p className="font-display text-xs tracking-[0.2em] uppercase text-foreground">
-          Input Intel
-        </p>
-        <p className="text-[10px] text-muted-foreground mt-1 max-w-xs">
-          {uploaded
-            ? `✓ ${uploaded}`
-            : "Feed the Agent: Upload insider news, SEC filings, or market rumors."}
-        </p>
+      <div className="flex items-center gap-4 px-4">
+        <Fingerprint
+          className={`w-8 h-8 transition-colors duration-300 ${
+            isDragging ? "text-foreground" : "text-muted-foreground"
+          }`}
+        />
+        <div className="flex-1">
+          <p className="font-display text-xs tracking-[0.2em] uppercase text-foreground">
+            Input Intel
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-1 max-w-xs">
+            {uploaded
+              ? `✓ ${uploaded}`
+              : "Feed the Agent: Upload insider news, SEC filings, or market rumors."}
+          </p>
+        </div>
+        <Upload className="w-4 h-4 text-muted-foreground" />
       </div>
-      <Upload className="w-4 h-4 text-muted-foreground" />
+
+      {/* Processing progress bar */}
+      {processing && (
+        <div className="px-4">
+          <div className="h-1 rounded-full overflow-hidden bg-foreground/5">
+            <motion.div
+              initial={{ width: "0%" }}
+              animate={{ width: "100%" }}
+              transition={{ duration: 3, ease: "linear" }}
+              className="h-full rounded-full"
+              style={{
+                background: "linear-gradient(90deg, hsl(0 0% 100%), hsl(0 0% 63%), hsl(0 0% 100%))",
+                backgroundSize: "200% 100%",
+                animation: "shimmer 1s linear infinite",
+              }}
+            />
+          </div>
+          <p className="text-[9px] text-muted-foreground mt-1 font-display tracking-wider uppercase">
+            Processing Intelligence...
+          </p>
+        </div>
+      )}
     </motion.div>
   );
 };

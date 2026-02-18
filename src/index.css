@@ -160,3 +160,49 @@
   0% { transform: scale(0); opacity: 0.8; }
   100% { transform: scale(4); opacity: 0; }
 }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes wallet-scan {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
+/* Global scanline overlay */
+.scanline-global {
+  position: relative;
+}
+
+.scanline-global::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    hsl(0 0% 100% / 0.008) 2px,
+    hsl(0 0% 100% / 0.008) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Wallet scan hover effect */
+.wallet-btn .wallet-scan-sweep {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 30%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.15), transparent);
+  transform: translateX(-100%);
+  pointer-events: none;
+}
+
+.wallet-btn:hover .wallet-scan-sweep {
+  animation: wallet-scan 1.2s ease-in-out infinite;
+}

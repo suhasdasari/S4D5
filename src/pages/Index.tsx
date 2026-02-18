@@ -18,15 +18,13 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-background flex flex-col overflow-hidden scanline-global">
       <TopBar />
 
       <main className="flex-1 grid grid-cols-[300px_1fr_300px] gap-3 p-3 min-h-0">
         {/* Left: Agent Council */}
         <div className="flex flex-col gap-3 min-h-0">
-          <div className="flex-1 min-h-0">
-            <AgentTerminal />
-          </div>
+          <AgentTerminal />
           <DecisionMatrix />
         </div>
 
