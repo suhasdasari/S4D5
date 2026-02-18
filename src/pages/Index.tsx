@@ -48,8 +48,8 @@ const Index = () => {
             {/* Snake Portfolio HUD */}
             <SnakeHUD />
 
-            {/* Vault Controls overlay — top-right of box */}
-            <div className="absolute top-4 right-14 flex flex-col gap-2 pointer-events-auto z-30">
+            {/* Vault Controls overlay — top-right of box, side-by-side */}
+            <div className="absolute top-4 right-4 pointer-events-auto z-30">
               <VaultBar />
             </div>
           </div>

@@ -9,6 +9,7 @@ interface LogEntry {
   timestamp: string;
   glowType?: "positive" | "negative" | null;
   proposalId: string;
+  txHash?: string;
 }
 
 const AGENTS = [
@@ -85,6 +86,56 @@ const getGlowType = (message: string): "positive" | "negative" | null => {
   return null;
 };
 
+// Generate a fake 0G Labs tx hash
+const genTxHash = () => {
+  const chars = "0123456789abcdef";
+  const start = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  const end = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  return `0x${start}...${end}`;
+};
+
+// Audio context utilities
+let audioCtx: AudioContext | null = null;
+const getAudioCtx = () => {
+  if (!audioCtx) audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  return audioCtx;
+};
+
+const playSubThud = () => {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(60, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.35);
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.35);
+  } catch (_) {}
+};
+
+const playCrystalPing = () => {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(1800, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(2400, ctx.currentTime + 0.05);
+    osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+  } catch (_) {}
+};
+
 const AgentTerminal = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -116,6 +167,16 @@ const AgentTerminal = () => {
     const proposalStatus = glowType === "positive" ? "PASSED" as const : glowType === "negative" ? "VETOED" as const : null;
     proposalEventBus.emit(propId, proposalStatus);
 
+    // Audio feedback
+    if (/VETOED|REJECTED/i.test(fullMessage)) {
+      playSubThud();
+    } else if (/EXECUTED/i.test(fullMessage)) {
+      playCrystalPing();
+    }
+
+    // Attach tx hash for EXECUTED messages
+    const txHash = /EXECUTED/i.test(fullMessage) ? genTxHash() : undefined;
+
     return {
       agent: agent.name,
       colorClass,
@@ -123,6 +184,7 @@ const AgentTerminal = () => {
       timestamp: time.toLocaleTimeString("en-US", { hour12: false }),
       glowType,
       proposalId: propId,
+      txHash,
     };
   }, []);
 
@@ -179,6 +241,14 @@ const AgentTerminal = () => {
             <span className="text-muted-foreground">{log.timestamp}</span>{" "}
             <span className={log.glowType ? "" : log.colorClass}>[{log.agent}]</span>{" "}
             <span className={log.glowType ? "" : "text-foreground/70"}>{log.message}</span>
+            {log.txHash && (
+              <span
+                className="ml-2 text-[9px] font-mono"
+                style={{ color: "hsl(0 0% 50%)", letterSpacing: "0.05em" }}
+              >
+                ↳ 0G:{log.txHash}
+              </span>
+            )}
           </motion.div>
         ))}
       </div>

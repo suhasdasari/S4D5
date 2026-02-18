@@ -18,9 +18,10 @@ const NODES: StatusNode[] = [
   { label: "RISK", key: "risk" },
   { label: "COMP", key: "comp" },
   { label: "EXEC", key: "exec" },
+  { label: "SOU", key: "sou" },
 ];
 
-type NodeState = "grey" | "green" | "red";
+type NodeState = "grey" | "green" | "red" | "pulse";
 
 const DecisionMatrix = () => {
   const [states, setStates] = useState<Record<string, NodeState>>({
@@ -28,6 +29,7 @@ const DecisionMatrix = () => {
     risk: "grey",
     comp: "grey",
     exec: "grey",
+    sou: "pulse",
   });
   const [activeProposal, setActiveProposal] = useState<string>("PROP-0100");
   const [flashStatus, setFlashStatus] = useState<{ text: string; type: "PASSED" | "VETOED" } | null>(null);
@@ -37,11 +39,11 @@ const DecisionMatrix = () => {
     { id: "PROP-0096", action: "BUY SOL", asset: "200 SOL", status: "VETOED" },
   ]);
 
-  // Animate lights grey → green/red as agents debate
+  // Animate non-SOU lights grey → green/red as agents debate
   useEffect(() => {
     const interval = setInterval(() => {
       setStates((prev) => {
-        const keys = Object.keys(prev);
+        const keys = ["strat", "risk", "comp", "exec"];
         const randomKey = keys[Math.floor(Math.random() * keys.length)];
         const newState: NodeState = Math.random() > 0.3 ? "green" : "red";
         return { ...prev, [randomKey]: newState };
@@ -54,15 +56,13 @@ const DecisionMatrix = () => {
   useEffect(() => {
     const unsub = proposalEventBus.subscribe((id, status) => {
       if (!status) {
-        // New proposal opened — reset all to grey
         setActiveProposal(id);
-        setStates({ strat: "grey", risk: "grey", comp: "grey", exec: "grey" });
+        setStates({ strat: "grey", risk: "grey", comp: "grey", exec: "grey", sou: "pulse" });
         return;
       }
       setActiveProposal(id);
       setFlashStatus({ text: status, type: status });
 
-      // Add to recent trades
       const assets = ["ETH", "BTC", "SOL", "MATIC", "NQ"];
       const actions = ["BUY", "SELL"];
       setRecentTrades((prev) => [
@@ -79,7 +79,10 @@ const DecisionMatrix = () => {
     return unsub;
   }, []);
 
-  const dotColor = (state: NodeState) => {
+  const dotColor = (key: string, state: NodeState) => {
+    if (key === "sou") {
+      return "bg-positive animate-[soul-pulse_2.5s_ease-in-out_infinite] shadow-[0_0_10px_hsl(120_100%_50%/0.5)]";
+    }
     if (state === "green") return "bg-positive shadow-[0_0_8px_hsl(120_100%_50%/0.6)]";
     if (state === "red") return "bg-negative shadow-[0_0_8px_hsl(0_100%_50%/0.6)]";
     return "bg-muted-foreground/30";
@@ -94,13 +97,13 @@ const DecisionMatrix = () => {
         <span className="text-[10px] font-mono text-foreground/60">ACTIVE: {activeProposal}</span>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-1">
         {NODES.map((node) => (
           <div key={node.key} className="flex flex-col items-center gap-1.5">
             <div
-              className={`w-3 h-3 rounded-full transition-all duration-500 ${dotColor(states[node.key])}`}
+              className={`w-3 h-3 rounded-full transition-all duration-500 ${dotColor(node.key, states[node.key])}`}
             />
-            <span className="text-[10px] font-display tracking-wider text-muted-foreground">
+            <span className="text-[9px] font-display tracking-wider text-muted-foreground">
               [{node.label}]
             </span>
           </div>
@@ -130,11 +133,7 @@ const DecisionMatrix = () => {
             <div key={`${trade.id}-${i}`} className="flex items-center justify-between text-[10px] px-1.5 py-0.5 rounded hover:bg-foreground/[0.03] transition-colors">
               <span className="font-mono text-muted-foreground">{trade.id}</span>
               <span className="text-foreground/70">{trade.action}</span>
-              <span
-                className={
-                  trade.status === "PASSED" ? "text-positive" : "text-negative"
-                }
-              >
+              <span className={trade.status === "PASSED" ? "text-positive" : "text-negative"}>
                 {trade.status}
               </span>
             </div>
