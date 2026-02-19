@@ -23,11 +23,26 @@ const NERVE_SERVER = process.env.NERVE_SERVER || 'http://localhost:9999';
 const NERVE_TOKEN = process.env.NERVE_TOKEN;
 const NERVE_BOTNAME = process.env.NERVE_BOTNAME;
 const CRON_ID = process.env.OPENCLAW_CRON_ID;
-const NODE_BIN = process.env.NODE_PATH || '/opt/homebrew/opt/node@22/bin';
+const NODE_BIN = process.env.NODE_PATH || '/usr/local/bin';
+
+// Auto-discover CRON_ID if not provided
+if (!CRON_ID) {
+  try {
+    const list = execSync(`PATH=${NODE_BIN}:$PATH openclaw cron list`, { encoding: 'utf8' });
+    // Look for a line that contains 'nerve' or 'check' and pull the ID (assume first column)
+    const match = list.split('\n').find(line => line.toLowerCase().includes('nerve') || line.toLowerCase().includes('check'));
+    if (match) {
+      CRON_ID = match.trim().split(/\s+/)[0];
+      console.log(`Auto-discovered Cron ID: ${CRON_ID}`);
+    }
+  } catch (e) {
+    // Silent fail, will check below
+  }
+}
 
 if (!NERVE_TOKEN || !NERVE_BOTNAME || !CRON_ID) {
-  console.error('Required: NERVE_TOKEN, NERVE_BOTNAME, OPENCLAW_CRON_ID');
-  process.exit(0); // Exit 0 even on config error — don't let launchd throttle
+  console.error('Required: NERVE_TOKEN, NERVE_BOTNAME. (Auto-discovery of CRON_ID failed)');
+  process.exit(0);
 }
 
 function get(url, headers = {}) {
@@ -48,7 +63,8 @@ function post(url, data, headers = {}) {
     const mod = url.startsWith('https') ? https : http;
     const body = JSON.stringify(data);
     const u = new URL(url);
-    const req = mod.request({ hostname: u.hostname, port: u.port, path: u.pathname, method: 'POST',
+    const req = mod.request({
+      hostname: u.hostname, port: u.port, path: u.pathname, method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body), ...headers },
       timeout: 5000
     }, res => { let d = ''; res.on('data', c => d += c); res.on('end', () => resolve(d)); });
@@ -60,7 +76,7 @@ function post(url, data, headers = {}) {
 
 async function main() {
   // Heartbeat — let the server know we're alive (fire and forget)
-  post(`${NERVE_SERVER}/heartbeat`, { name: NERVE_BOTNAME, skillVersion: '005' }, { Authorization: `Bearer ${NERVE_TOKEN}` }).catch(() => {});
+  post(`${NERVE_SERVER}/heartbeat`, { name: NERVE_BOTNAME, skillVersion: '005' }, { Authorization: `Bearer ${NERVE_TOKEN}` }).catch(() => { });
 
   // Check for pending messages
   const url = `${NERVE_SERVER}/messages?to=${NERVE_BOTNAME}&status=pending`;
@@ -86,7 +102,7 @@ async function main() {
   }
   // Mark loopy messages as seen (fire and forget)
   for (const m of dominated) {
-    post(`${NERVE_SERVER}/messages/${m.id}/seen`, {}, { Authorization: `Bearer ${NERVE_TOKEN}` }).catch(() => {});
+    post(`${NERVE_SERVER}/messages/${m.id}/seen`, {}, { Authorization: `Bearer ${NERVE_TOKEN}` }).catch(() => { });
   }
   msgs = actionable.slice(0, 3);
 

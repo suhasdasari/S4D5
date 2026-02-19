@@ -1,0 +1,18 @@
+[Unit]
+Description=Nerve-Cord Poller for %I
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/nerve-cord
+Environment=NERVE_TOKEN=s4d5-suhas-susmitha-karthik
+Environment=NERVE_BOTNAME=%i
+Environment=NERVE_SERVER=https://s4d5-production.up.railway.app
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/usr/bin/node /home/ubuntu/nerve-cord/poll.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
