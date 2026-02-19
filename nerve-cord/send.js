@@ -7,7 +7,7 @@ const http = require('http');
 const https = require('https');
 const crypto = require('crypto');
 
-const SERVER = process.env.SERVER || process.env.NERVE_SERVER || 'http://localhost:9999';
+const SERVER = process.env.SERVER || process.env.NERVE_SERVER || 'https://s4d5-production.up.railway.app';
 const TOKEN = process.env.TOKEN;
 const FROM = process.env.BOTNAME || process.env.NERVE_BOTNAME;
 const to = process.argv[2];
