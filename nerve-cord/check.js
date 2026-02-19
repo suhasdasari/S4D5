@@ -7,8 +7,8 @@ const http = require('http');
 const https = require('https');
 
 const SERVER = process.env.SERVER || process.env.NERVE_SERVER || 'https://s4d5-production.up.railway.app';
-const TOKEN = process.env.TOKEN;
-const BOTNAME = process.env.BOTNAME;
+const TOKEN = process.env.TOKEN || process.env.NERVE_TOKEN;
+const BOTNAME = process.env.BOTNAME || process.env.NERVE_BOTNAME;
 
 if (!TOKEN || !BOTNAME) { console.error('TOKEN and BOTNAME required'); process.exit(1); }
 

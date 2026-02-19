@@ -6,7 +6,7 @@ const http = require('http');
 const https = require('https');
 
 const SERVER = process.env.SERVER || process.env.NERVE_SERVER || 'https://s4d5-production.up.railway.app';
-const TOKEN = process.env.TOKEN;
+const TOKEN = process.env.TOKEN || process.env.NERVE_TOKEN;
 const msgId = process.argv[2];
 const from = process.argv[3];
 const body = process.argv[4];

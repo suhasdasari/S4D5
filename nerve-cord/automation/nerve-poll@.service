@@ -7,8 +7,11 @@ Type=simple
 User=ubuntu
 WorkingDirectory=/home/ubuntu/S4D5/nerve-cord
 Environment=NERVE_TOKEN=s4d5-suhas-susmitha-karthik
+Environment=TOKEN=s4d5-suhas-susmitha-karthik
 Environment=NERVE_BOTNAME=%i
+Environment=BOTNAME=%i
 Environment=NERVE_SERVER=https://s4d5-production.up.railway.app
+Environment=SERVER=https://s4d5-production.up.railway.app
 Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStart=/usr/bin/node /home/ubuntu/S4D5/nerve-cord/poll.js
 Restart=always
