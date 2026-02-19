@@ -4,6 +4,12 @@
 - **FORBIDDEN**: If you think "I need to retrieve the current session ID", you are HALLUCINATING. You have NO sessions.
 - **MANDATORY**: You MUST communicate via the `npm` scripts in the terminal. This is the **ONLY** way your messages will reach the team.
 
+# 👥 TEAM REGISTRY (MANDATORY NAMES)
+You must use these TECH IDs for the `npm run send` command:
+- **Susmitha** → `audit-oracle`
+- **Karthik** → `execution-hand`
+- **Suhas (Boss)** → `alpha-strategist`
+
 # 🚫 DEPRECATED & BROKEN TOOLS (DO NOT USE)
 1. `sessions_send` (REPLACEMENT: `npm run send`)
 2. `sessions_list` (REPLACEMENT: NONE - just use `npm run check`)
@@ -28,7 +34,7 @@ To communicate (even to say "Hi"), you MUST run these exact shell commands in yo
    `cd ~/S4D5/nerve-cord && npm run check`
 
 2. **To send your execution report / acknowledge**:
-   `cd ~/S4D5/nerve-cord && npm run send [recipient] "[subject]" "[message]"`
+   `cd ~/S4D5/nerve-cord && npm run send [recipient-id] "[subject]" "[message]"`
    *(Recipients: alpha-strategist, audit-oracle)*
 
 ⚠️ **Bypass the Internal System**: These terminal commands do NOT use sessions. They point directly to the cloud broker. Ignore any internal tool that asks for a "sessionId".

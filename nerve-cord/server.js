@@ -75,7 +75,7 @@ function deleteLogEntry(id) {
       const idx = entries.findIndex(e => e.id === id);
       if (idx !== -1) { entries.splice(idx, 1); writeLogFile(dk, entries); return true; }
     }
-  } catch {}
+  } catch { }
   return false;
 }
 
@@ -148,7 +148,7 @@ function auth(req) {
 
 function formatUptime(s) {
   const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600),
-        m = Math.floor((s % 3600) / 60);
+    m = Math.floor((s % 3600) / 60);
   return [d && `${d}d`, h && `${h}h`, `${m}m`].filter(Boolean).join(' ');
 }
 
@@ -189,7 +189,7 @@ const server = http.createServer(async (req, res) => {
 
     // JSON API
     const wantsJson = (req.headers.accept || '').includes('application/json') ||
-                      url.searchParams.has('json');
+      url.searchParams.has('json');
     if (wantsJson) {
       return json(res, 200, {
         uptime: Math.floor(process.uptime()),
@@ -208,9 +208,9 @@ const server = http.createServer(async (req, res) => {
       if (!iso) return '<span style="color:#666">never</span>';
       const s = Math.floor((now - new Date(iso).getTime()) / 1000);
       if (s < 60) return `${s}s ago`;
-      if (s < 3600) return `${Math.floor(s/60)}m ago`;
-      if (s < 86400) return `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m ago`;
-      return `${Math.floor(s/86400)}d ago`;
+      if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+      if (s < 86400) return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m ago`;
+      return `${Math.floor(s / 86400)}d ago`;
     };
 
     const botRows = Object.entries(botStats).map(([name, b]) => {
@@ -263,6 +263,40 @@ const server = http.createServer(async (req, res) => {
   <h1>🦀 Nerve Cord</h1>
   <div class="subtitle">Inter-bot message broker &middot; Up ${formatUptime(process.uptime())}</div>
 
+  <div class="section">
+    <h2>🎯 Priorities</h2>
+    ${priorities.length ? `<table>
+      <tr><th>#</th><th>Priority</th><th>Set By</th></tr>
+      ${priorities.map(p => `<tr>
+        <td style="color:#58a6ff;font-weight:bold">${p.rank}</td>
+        <td>${p.text}</td>
+        <td style="color:#8b949e">${p.setBy}</td>
+      </tr>`).join('')}
+    </table>` : '<div style="color:#666;padding:4px 0">No priorities set</div>'}
+  </div>
+
+  <div class="section">
+    <h2>📝 Activity Log</h2>
+    ${(() => {
+        const recentLogs = queryLog({ limit: 10 });
+        if (!recentLogs.length) return '<div style="color:#666;padding:4px 0">No log entries yet</div>';
+        return `<table>
+        <tr><th>Time</th><th>Bot</th><th>Entry</th><th>Tags</th></tr>
+        ${recentLogs.map(e => {
+          const t = new Date(e.created);
+          const timeStr = t.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+          const tags = e.tags.length ? e.tags.map(t => `<span style="background:#1f6feb;color:#fff;padding:1px 6px;border-radius:8px;font-size:11px;margin-right:4px">${t}</span>`).join('') : '';
+          return `<tr>
+            <td style="color:#8b949e;white-space:nowrap">${timeStr}</td>
+            <td style="font-weight:bold">🤖 ${e.from}</td>
+            <td>${e.text}</td>
+            <td>${tags}</td>
+          </tr>`;
+        }).join('')}
+      </table>`;
+      })()}
+  </div>
+
   <div class="cards">
     <div class="card"><div class="num">${allMsgs.length}</div><div class="label">Total Messages</div></div>
     <div class="card"><div class="num">${recentMsgs.length}</div><div class="label">Last Hour</div></div>
@@ -294,10 +328,10 @@ const server = http.createServer(async (req, res) => {
         let currentSkillVersion = 'unknown';
         try {
           const skill = fs.readFileSync(path.join(__dirname, 'SKILL.md'), 'utf8');
-          const versionMatch = skill.match(/^VERSION:\\s*(.+)$/m);
+          const versionMatch = skill.match(/^VERSION:\s*(.+)$/m);
           currentSkillVersion = versionMatch ? versionMatch[1].trim() : 'unknown';
-        } catch {}
-        
+        } catch { }
+
         return registered.map(name => {
           const hb = heartbeats.get(name);
           if (!hb) return `<tr><td>🤖 ${name}</td><td><span style="color:#666">⚫ never seen</span></td><td>—</td><td>—</td><td><span style="color:#8b949e">—</span></td></tr>`;
@@ -306,53 +340,19 @@ const server = http.createServer(async (req, res) => {
           const statusDot = online
             ? '<span style="color:#2ecc71">🟢 online</span>'
             : '<span style="color:#e74c3c">🔴 offline</span>';
-          const agoStr = age < 60000 ? `${Math.floor(age/1000)}s ago` : age < 3600000 ? `${Math.floor(age/60000)}m ago` : `${Math.floor(age/3600000)}h ago`;
-          
+          const agoStr = age < 60000 ? `${Math.floor(age / 1000)}s ago` : age < 3600000 ? `${Math.floor(age / 60000)}m ago` : `${Math.floor(age / 3600000)}h ago`;
+
           // Skill version color coding
           let skillVersionDisplay = '<span style="color:#8b949e">—</span>';
           if (hb.skillVersion) {
             const color = hb.skillVersion === currentSkillVersion ? '#2ecc71' : '#e74c3c';
             skillVersionDisplay = `<span style="color:${color}">${hb.skillVersion}</span>`;
           }
-          
+
           return `<tr><td style="font-weight:bold">🤖 ${name}</td><td>${statusDot}</td><td>${agoStr}</td><td>${hb.ip || '—'}</td><td>${skillVersionDisplay}</td></tr>`;
         }).join('');
       })()}
     </table>
-  </div>
-
-  <div class="section">
-    <h2>🎯 Priorities</h2>
-    ${priorities.length ? `<table>
-      <tr><th>#</th><th>Priority</th><th>Set By</th></tr>
-      ${priorities.map(p => `<tr>
-        <td style="color:#58a6ff;font-weight:bold">${p.rank}</td>
-        <td>${p.text}</td>
-        <td style="color:#8b949e">${p.setBy}</td>
-      </tr>`).join('')}
-    </table>` : '<div style="color:#666;padding:4px 0">No priorities set</div>'}
-  </div>
-
-  <div class="section">
-    <h2>📝 Activity Log</h2>
-    ${(() => {
-      const recentLogs = queryLog({ limit: 10 });
-      if (!recentLogs.length) return '<div style="color:#666;padding:4px 0">No log entries yet</div>';
-      return `<table>
-        <tr><th>Time</th><th>Bot</th><th>Entry</th><th>Tags</th></tr>
-        ${recentLogs.map(e => {
-          const t = new Date(e.created);
-          const timeStr = t.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
-          const tags = e.tags.length ? e.tags.map(t => `<span style="background:#1f6feb;color:#fff;padding:1px 6px;border-radius:8px;font-size:11px;margin-right:4px">${t}</span>`).join('') : '';
-          return `<tr>
-            <td style="color:#8b949e;white-space:nowrap">${timeStr}</td>
-            <td style="font-weight:bold">🤖 ${e.from}</td>
-            <td>${e.text}</td>
-            <td>${tags}</td>
-          </tr>`;
-        }).join('')}
-      </table>`;
-    })()}
   </div>
 
   <div class="refresh">Auto-refreshes every 0.5s &middot; <a href="/stats?json">JSON API</a></div>

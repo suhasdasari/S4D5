@@ -94,14 +94,27 @@ async function main() {
     }
   } catch (e) { }
 
-  // 2. Fetch recipient's public key
-  const botRes = await request('GET', `${SERVER}/bots/${to}`);
+  // 2. Fetch recipient's public key (Fuzzy matching)
+  let botRes = await request('GET', `${SERVER}/bots/${to}`);
+
   if (botRes.status === 404) {
-    console.error(`RECIPIENT NOT FOUND: "${to}" is not registered on the Nerve-Cord. Tell them to start their service!`);
-    process.exit(1);
+    // Try fuzzy match (lowercase, hyphens)
+    const normalized = to.toLowerCase().replace(/_/g, '-');
+    if (normalized !== to) {
+      botRes = await request('GET', `${SERVER}/bots/${normalized}`);
+      if (botRes.status === 200) {
+        process.stdout.write(`(Fuzzy matched "${to}" to "${normalized}")\n`);
+        to = normalized;
+      }
+    }
   }
+
   if (botRes.status !== 200) {
-    console.error(`Failed to get public key for ${to}: ${botRes.data}`);
+    if (botRes.status === 404) {
+      console.error(`RECIPIENT NOT FOUND: "${to}" is not registered on the Nerve-Cord. Tell them to start their service!`);
+    } else {
+      console.error(`Failed to get public key for ${to}: ${botRes.data}`);
+    }
     process.exit(1);
   }
   const bot = JSON.parse(botRes.data);
