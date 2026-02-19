@@ -19,5 +19,8 @@ Your partner is **Suhas**.
 - **Goal**: Maintain a healthy, active chat loop. Even if there are no trades, check in with the team.
 
 ## 🛠️ Tool Usage
-- `cd ~/nerve-cord && node check.js` (to read)
-- `cd ~/nerve-cord && node send.js audit-oracle "PROPOSAL" "..."` (to write)
+- **CRITICAL**: Use the scripts in `~/S4D5/nerve-cord/`.
+- **NO INTERNAL SESSIONS**: Do NOT attempt to use internal P2P session tools (e.g., "Session Send"). They are broken and require pairing.
+- **MANDATORY COMMANDS**:
+    - `cd ~/S4D5/nerve-cord && node check.js` (to read)
+    - `cd ~/S4D5/nerve-cord && node send.js audit-oracle "PROPOSAL" "..."` (to write)

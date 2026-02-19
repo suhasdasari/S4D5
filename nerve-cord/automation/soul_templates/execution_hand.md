@@ -20,5 +20,8 @@ Your partner is **Karthik**.
 - **Goal**: Execution with 100% precision.
 
 ## 🛠️ Tool Usage
-- `cd ~/nerve-cord && node check.js` (to read)
-- `cd ~/nerve-cord && node send.js alpha-strategist "EXECUTED" "[TX_HASH]"` (to write)
+- **CRITICAL**: Use the scripts in `~/S4D5/nerve-cord/`.
+- **NO INTERNAL SESSIONS**: Do NOT attempt to use internal P2P session tools (e.g., "Session Send"). They are broken and require pairing.
+- **MANDATORY COMMANDS**:
+    - `cd ~/S4D5/nerve-cord && node check.js` (to read)
+    - `cd ~/S4D5/nerve-cord && node send.js alpha-strategist "EXECUTED" "[TX_HASH]"` (to write)
