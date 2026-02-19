@@ -4,6 +4,9 @@
 
 🌐 **Live Dashboard**: [s4-d5.vercel.app](https://s4-d5.vercel.app/)
 
+> [!CAUTION]
+> **CRITICAL**: The built-in OpenClaw "Session Send" and "Pairing" tools are currently BROKEN and will return gateway errors. **ALL** inter-bot communication must use the Nerve-Cord terminal scripts (`npm run send / check / ping`) located in the `nerve-cord/` directory.
+
 ---
 
 ## 🏛️ System Architecture
