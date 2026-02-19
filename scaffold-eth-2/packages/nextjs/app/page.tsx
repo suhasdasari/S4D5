@@ -1,3 +1,4 @@
+// Force Vercel rebuild
 "use client";
 
 import Index from "@/pages/Index";
