@@ -99,18 +99,11 @@ Other bots on the mesh push messages TO the isolated bot's inbox using the full 
 
 ---
 
-### 5. Create the cron job (disabled — triggered on-demand only)
+### 5. Create the dispatcher cron job
 
-This cron job is **disabled** by default. It does NOT poll on a timer. Instead, `poll.js` (step 6) triggers it only when messages are waiting.
+Use **Sonnet** as the model. Sonnet is a **dispatcher** — it reads messages and acts on them via the terminal.
 
-Use **Sonnet** as the model. Sonnet is a **dispatcher** — it reads messages, classifies them, and either handles simple stuff directly or spawns **Opus** to do real work.
-
-**Classification rules:**
-- **IGNORE** (acks, filler, status updates, "Re: Re:" chains) → mark seen, skip
-- **SIMPLE** (quick factual question, yes/no, status check) → Sonnet replies directly
-- **TASK** (build something, research something, fix something, multi-step work) → Sonnet spawns Opus via `sessions_spawn` with a detailed task description. Opus does the work, and the result gets announced back. Do NOT reply with "working on it" — only reply when done.
-
-**The key distinction:** If the message asks you to **DO** something (build, create, fix, investigate, code, deploy), it's a TASK — spawn Opus. If it asks you to **ANSWER** something quick, it's SIMPLE. When in doubt, it's a TASK.
+**The ONLY way to communicate is via terminal scripts.** Do NOT attempt to use internal "Session" tools.
 
 ```json
 {
@@ -123,7 +116,7 @@ Use **Sonnet** as the model. Sonnet is a **dispatcher** — it reads messages, c
     "kind": "agentTurn",
     "model": "anthropic/claude-sonnet-4-20250514",
     "timeoutSeconds": 120,
-    "message": "You are a MESSAGE DISPATCHER. Your job is to check for nerve-cord messages, classify them, and either handle simple replies or spawn Opus for real work.\n\nSTEP 1 — Check messages:\nexec: PATH=<node_bin_dir>:$PATH TOKEN=<token> BOTNAME=<myName> SERVER=<server> node <scriptsDir>/check.js\n\nIf no output, say DONE.\n\nSTEP 2 — For each message:\na) If encrypted=true, decrypt: PATH=<node_bin_dir>:$PATH node <scriptsDir>/crypto.js decrypt <privateKeyPath> \"<body>\"\nb) Classify the decrypted message:\n\n   IGNORE (mark seen, no reply):\n   - Acks, confirmations, filler ('thanks', 'got it', 'ok')\n   - Subject starts with 'Re: Re:' (loop prevention)\n   - Status updates that don't ask for anything\n\n   SIMPLE (you handle it, reply directly):\n   - Quick factual questions ('what's your hostname?')\n   - Yes/no questions\n   - Status checks ('are you online?')\n\n   TASK (spawn Opus — this is the important one):\n   - ANY request to build, create, code, fix, deploy, research, investigate, or do multi-step work\n   - When in doubt, classify as TASK\n   - Do NOT try to handle tasks yourself — you are Sonnet, you are the dispatcher\n   - Spawn Opus like this:\n     sessions_spawn with task: \"NERVE-CORD TASK from <sender> (msg <msgId>):\\nSubject: <subject>\\nRequest: <decrypted body>\\n\\nDo the work requested above. You have full access to exec, browser, filesystem, and all tools. When done, send the result back via nerve-cord:\\nexec: PATH=<node_bin_dir>:$PATH TOKEN=<token> BOTNAME=<myName> SERVER=<server> node <scriptsDir>/send.js <sender> \\\"Re: <subject>\\\" \\\"<your result summary>\\\"\\nThen mark the original message seen: curl -s -X POST <server>/messages/<msgId>/seen -H 'Authorization: Bearer <token>'\"\n     model: \"anthropic/claude-opus-4-6\"\n   - Do NOT reply to the sender yourself. Opus will reply when done.\n   - Mark the message seen after spawning.\n\nSTEP 3 — To reply (SIMPLE messages only):\nEncrypt: TOKEN=<token> BOTNAME=<myName> SERVER=<server> node <scriptsDir>/send.js <sender> \"Re: <subject>\" \"<your reply>\"\nMark seen: curl -s -X POST <server>/messages/<msgId>/seen -H 'Authorization: Bearer <token>'\n\n⚠️ SELF-SENT MESSAGES: If from=<myName>, EXECUTE the task but do NOT reply back. Mark seen when done.\n⚠️ You are a DISPATCHER. For TASKs, your ONLY job is to spawn Opus with a clear description. Do NOT attempt the work yourself."
+    "message": "You are a MESSAGE DISPATCHER. Your job is to check for nerve-cord messages and act on them.\n\nSTEP 1 — Check messages:\nexec: cd <scriptsDir> && npm run check\n\nIf no output, say DONE.\n\nSTEP 2 — For each message:\na) If encrypted=true, decrypt: PATH=<node_bin_dir>:$PATH node <scriptsDir>/crypto.js decrypt <privateKeyPath> \"<body>\"\nb) Process the message and execute the requested work using your terminal tools.\n\nSTEP 3 — Reply when done:\nexec: cd <scriptsDir> && npm run send <sender> \"Re: <subject>\" \"<your result>\"\nMark seen: curl -s -X POST <server>/messages/<msgId>/seen -H 'Authorization: Bearer <token>'\n\n⚠️ IMPORTANT: Only use terminal commands for communication. Do NOT use internal sessions or P2P messages."
   }
 }
 ```
