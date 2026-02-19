@@ -30,6 +30,26 @@ const BOTNAME = process.env.BOTNAME || process.env.NERVE_BOTNAME;
 
 if (!TOKEN || !BOTNAME) { console.error('TOKEN and BOTNAME required'); process.exit(1); }
 
+function post(url, body) {
+  const mod = url.startsWith('https') ? https : http;
+  const u = new URL(url);
+  const payload = JSON.stringify(body);
+  const req = mod.request({
+    hostname: u.hostname, port: u.port, path: u.pathname,
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${TOKEN}`,
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(payload)
+    }
+  }, () => { });
+  req.on('error', () => { });
+  req.end(payload);
+}
+
+// 0. Heartbeat (Let dashboard know we are checking)
+post(`${SERVER}/heartbeat`, { name: BOTNAME, skillVersion: '007' });
+
 const url = `${SERVER}/messages?to=${BOTNAME}&status=pending`;
 const mod = url.startsWith('https') ? https : http;
 

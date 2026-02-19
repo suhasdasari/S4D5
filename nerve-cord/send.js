@@ -84,7 +84,22 @@ function encrypt(publicKeyPem, plaintext) {
   return combined.toString('base64');
 }
 
+const NAME_MAP = {
+  'susmitha': 'audit-oracle',
+  'karthik': 'execution-hand',
+  'suhas': 'alpha-strategist',
+  'auditoracle': 'audit-oracle',
+  'executionhand': 'execution-hand',
+  'alphastrategist': 'alpha-strategist'
+};
+
 async function main() {
+  // 0. Heartbeat (Let dashboard know we are active)
+  try {
+    const skillVersion = '007'; // Track system version
+    await request('POST', `${SERVER}/heartbeat`, { name: FROM, skillVersion });
+  } catch (e) { }
+
   // 1. Auto-Register (Self-Heal)
   try {
     const pubPath = require('path').join(__dirname, 'keys', `${FROM}.pub`);
@@ -94,20 +109,17 @@ async function main() {
     }
   } catch (e) { }
 
-  // 2. Fetch recipient's public key (Fuzzy matching)
-  let botRes = await request('GET', `${SERVER}/bots/${to}`);
-
-  if (botRes.status === 404) {
-    // Try fuzzy match (lowercase, hyphens)
-    const normalized = to.toLowerCase().replace(/_/g, '-');
-    if (normalized !== to) {
-      botRes = await request('GET', `${SERVER}/bots/${normalized}`);
-      if (botRes.status === 200) {
-        process.stdout.write(`(Fuzzy matched "${to}" to "${normalized}")\n`);
-        to = normalized;
-      }
-    }
+  // 2. Fetch recipient's public key (Robust matching)
+  let recipientId = to.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (NAME_MAP[recipientId]) {
+    process.stdout.write(`(Mapping "${to}" to "${NAME_MAP[recipientId]}")\n`);
+    recipientId = NAME_MAP[recipientId];
+  } else {
+    // Fallback to fuzzy match logic if not in explicit map
+    recipientId = to.toLowerCase().replace(/_/g, '-');
   }
+
+  let botRes = await request('GET', `${SERVER}/bots/${recipientId}`);
 
   if (botRes.status !== 200) {
     if (botRes.status === 404) {

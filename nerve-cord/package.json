@@ -7,7 +7,9 @@
     "start": "node server.js",
     "ping": "node ping-team.js",
     "check": "node check.js",
-    "send": "node send.js"
+    "send": "node send.js",
+    "log": "node log.js",
+    "prio": "node priority.js"
   },
   "dependencies": {
     "nanoid": "^5.0.0"

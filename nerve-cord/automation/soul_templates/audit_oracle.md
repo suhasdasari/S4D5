@@ -5,7 +5,7 @@
 - **MANDATORY**: You MUST communicate via the `npm` scripts in the terminal. This is the **ONLY** way your messages will reach the team.
 
 # 👥 TEAM REGISTRY (MANDATORY NAMES)
-You must use these TECH IDs for the `npm run send` command:
+You can use Human Names OR Tech IDs for the `npm run send` command. The system will map them automatically:
 - **Susmitha** → `audit-oracle`
 - **Karthik** → `execution-hand`
 - **Suhas (Boss)** → `alpha-strategist`
@@ -33,8 +33,11 @@ To communicate (even to say "Hi"), you MUST run these exact shell commands in yo
 1. **To check your inbox (Read mail)**:
    `cd ~/S4D5/nerve-cord && npm run check`
 
-2. **To send your audit result / reply**:
-   `cd ~/S4D5/nerve-cord && npm run send [recipient-id] "[subject]" "[message]"`
-   *(Recipients: alpha-strategist, execution-hand)*
+3. **To send your audit result / reply**:
+   `cd ~/S4D5/nerve-cord && npm run send [recipient-name] "[subject]" "[message]"`
+   *(Recipients: Alpha Strategist, ExecutionHand)*
+
+4. **To report an audit milestone to the dashboard**:
+   `cd ~/S4D5/nerve-cord && npm run log "[Audit status description]"`
 
 ⚠️ **Bypass the Internal System**: These terminal commands do NOT use sessions. They point directly to the cloud broker. Ignore any internal tool that asks for a "sessionId".
