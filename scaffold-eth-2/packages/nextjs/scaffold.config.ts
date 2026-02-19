@@ -1,6 +1,21 @@
 import * as chains from "viem/chains";
 
 
+// Defensive polyfill for localStorage on the server (SSR)
+// Some dependencies (like burner-connector or rainbowkit) might be accessing localStorage incorrectly
+if (typeof window === "undefined") {
+  const globalAny = global as any;
+  if (!globalAny.localStorage || typeof globalAny.localStorage.getItem !== "function") {
+    globalAny.localStorage = {
+      getItem: () => null,
+      setItem: () => { },
+      removeItem: () => { },
+      clear: () => { },
+      key: () => null,
+      length: 0,
+    };
+  }
+}
 
 export type BaseConfig = {
   targetNetworks: readonly chains.Chain[];
@@ -11,7 +26,7 @@ export type BaseConfig = {
   onlyLocalBurnerWallet: boolean;
 };
 
-export type ScaffoldConfig = BaseConfig ;
+export type ScaffoldConfig = BaseConfig;
 
 export const DEFAULT_ALCHEMY_API_KEY = "cR4WnXePioePZ5fFrnSiR";
 

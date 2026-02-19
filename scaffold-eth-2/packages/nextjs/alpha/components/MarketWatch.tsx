@@ -33,14 +33,14 @@ const POLYMARKET: { question: string; odds: string }[] = [
 
 const DataSection = ({ title, rows }: { title: string; rows: MarketRow[] }) => (
   <div className="mb-4">
-    <h4 className="font-display text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-2">
+    <h4 className="font-display text-[10px] tracking-[0.25em] uppercase text-white/80 mb-2">
       {title}
     </h4>
     <div className="space-y-1">
       {rows.map((row) => (
         <div key={row.symbol} className="flex items-center justify-between text-xs py-1 px-2 rounded hover:bg-white/[0.03] transition-colors">
-          <span className="font-semibold text-foreground">{row.symbol}</span>
-          <span className="text-foreground/60">{row.price}</span>
+          <span className="font-semibold text-white">{row.symbol}</span>
+          <span className="text-white/80">{row.price}</span>
           <span className={row.positive ? "text-positive" : "text-negative"}>
             {row.change}
           </span>
@@ -57,9 +57,9 @@ const MarketWatch = ({ onOpenProof }: { onOpenProof: (tradeId: string) => void }
       whileHover={{ scale: 1.003 }}
       transition={{ type: "spring", stiffness: 300 }}
     >
-      <div className="px-4 py-3 border-b border-foreground/5 flex items-center gap-2 shrink-0">
-        <div className="w-2 h-2 rounded-full bg-foreground animate-pulse-glow" />
-        <h3 className="font-display text-xs tracking-[0.3em] uppercase text-foreground">
+      <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2 shrink-0">
+        <div className="w-2 h-2 rounded-full bg-white animate-pulse-glow" />
+        <h3 className="font-display text-xs tracking-[0.3em] uppercase text-white">
           Market Pulse
         </h3>
       </div>
@@ -68,14 +68,14 @@ const MarketWatch = ({ onOpenProof }: { onOpenProof: (tradeId: string) => void }
         <DataSection title="Crypto" rows={CRYPTO} />
         <DataSection title="Commodities" rows={COMMODITIES} />
         <div>
-          <h4 className="font-display text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-2">
+          <h4 className="font-display text-[10px] tracking-[0.25em] uppercase text-white/80 mb-2">
             Polymarket Odds
           </h4>
           <div className="space-y-2">
             {POLYMARKET.map((p) => (
               <div key={p.question} className="text-xs px-2 py-1.5 rounded hover:bg-white/[0.03] transition-colors">
-                <div className="text-foreground/60 mb-1">{p.question}</div>
-                <div className="font-bold text-foreground">{p.odds}</div>
+                <div className="text-white/80 mb-1">{p.question}</div>
+                <div className="font-bold text-white">{p.odds}</div>
               </div>
             ))}
           </div>

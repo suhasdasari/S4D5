@@ -68,21 +68,20 @@ const BiometricDropzone = ({ onDeposit }: BiometricDropzoneProps) => {
 
       <div className="flex items-center gap-4 px-4">
         <Fingerprint
-          className={`w-8 h-8 transition-colors duration-300 ${
-            isDragging ? "text-foreground" : "text-muted-foreground"
-          }`}
+          className={`w-8 h-8 transition-colors duration-300 ${isDragging ? "text-white" : "text-white/60"
+            }`}
         />
         <div className="flex-1">
-          <p className="font-display text-xs tracking-[0.2em] uppercase text-foreground">
+          <p className="font-display text-xs tracking-[0.2em] uppercase text-white">
             Input Intel
           </p>
-          <p className="text-[10px] text-muted-foreground mt-1 max-w-xs">
+          <p className="text-[10px] text-white/70 mt-1 max-w-xs">
             {uploaded
               ? `✓ ${uploaded}`
               : "Feed the Agent: Upload insider news, SEC filings, or market rumors."}
           </p>
         </div>
-        <Upload className="w-4 h-4 text-muted-foreground" />
+        <Upload className="w-4 h-4 text-white/60" />
       </div>
 
       {/* Processing progress bar */}

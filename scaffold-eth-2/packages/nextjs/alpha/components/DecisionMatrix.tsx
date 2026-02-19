@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { proposalEventBus } from "./AgentTerminal";
 import { CheckCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 // Strict 4-node sequence: STR → RSK → COM → EXE
 const NODES = [
@@ -39,7 +39,7 @@ const playSubThud = () => {
     gain.gain.setValueAtTime(0.18, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
     osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.35);
-  } catch (_) {}
+  } catch (_) { }
 };
 
 const playCrystalPing = () => {
@@ -55,7 +55,7 @@ const playCrystalPing = () => {
     gain.gain.setValueAtTime(0.1, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
     osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3);
-  } catch (_) {}
+  } catch (_) { }
 };
 
 const genTxHash = () => {
@@ -158,22 +158,22 @@ const DecisionMatrix = () => {
       runSequence(id, vetoAt);
     });
     return () => { unsub(); clearAllTimers(); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const dotColor = (state: NodeState) => {
     if (state === "green") return "bg-positive shadow-[0_0_8px_hsl(120_100%_50%/0.7)]";
-    if (state === "red")   return "bg-negative shadow-[0_0_8px_hsl(0_100%_50%/0.7)]";
-    return "bg-foreground/20";
+    if (state === "red") return "bg-negative shadow-[0_0_8px_hsl(0_100%_50%/0.7)]";
+    return "bg-white/20";
   };
 
   return (
     <div className="glass-panel px-4 py-3 flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-display">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-white/80 font-display">
           Consensus State
         </p>
-        <span className="text-[10px] font-mono text-foreground/60">ACTIVE: {activeProposal}</span>
+        <span className="text-[10px] font-mono text-white/80">ACTIVE: {activeProposal}</span>
       </div>
 
       {/* Sequential lights: STR → RSK → COM → EXE */}
@@ -181,7 +181,7 @@ const DecisionMatrix = () => {
         {NODES.map((node, idx) => (
           <div key={node.key} className="flex flex-col items-center gap-1.5 flex-1">
             <div className={`w-3 h-3 rounded-full transition-all duration-300 ${dotColor(states[node.key])}`} />
-            <span className="text-[9px] font-display tracking-wider text-muted-foreground">[{node.label}]</span>
+            <span className="text-[9px] font-display tracking-wider text-white/70">[{node.label}]</span>
           </div>
         ))}
       </div>
@@ -189,11 +189,10 @@ const DecisionMatrix = () => {
       {/* Flash status */}
       {flashStatus && (
         <div
-          className={`text-center text-[11px] font-display tracking-[0.25em] uppercase font-bold py-1 rounded-sm animate-fade-in ${
-            flashStatus.type === "PASSED"
-              ? "text-positive bg-positive/10 border border-positive/20"
-              : "text-negative bg-negative/10 border border-negative/20"
-          }`}
+          className={`text-center text-[11px] font-display tracking-[0.25em] uppercase font-bold py-1 rounded-sm animate-fade-in ${flashStatus.type === "PASSED"
+            ? "text-positive bg-positive/10 border border-positive/20"
+            : "text-negative bg-negative/10 border border-negative/20"
+            }`}
         >
           ▶ {flashStatus.text}
         </div>
@@ -201,33 +200,31 @@ const DecisionMatrix = () => {
 
       {/* Recent Trades — single source of truth */}
       <div>
-        <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground font-display mb-1.5">
+        <p className="text-[9px] uppercase tracking-[0.2em] text-white/80 font-display mb-1.5">
           Recent Trades
         </p>
         <div className="space-y-0.5">
           {recentTrades.slice(0, 4).map((trade, i) => (
-        <div key={`${trade.id}-${i}`} className="group relative flex flex-col px-1.5 py-0.5 rounded hover:bg-foreground/[0.03] transition-colors cursor-default">
+            <div key={`${trade.id}-${i}`} className="group relative flex flex-col px-1.5 py-0.5 rounded hover:bg-white/[0.03] transition-colors cursor-default">
               <div className="flex items-center justify-between text-[10px]">
-                <span className="font-mono text-muted-foreground">{trade.id}</span>
-                <span className="text-foreground/70 truncate mx-2">{trade.action}</span>
+                <span className="font-mono text-white/80">{trade.id}</span>
+                <span className="text-white/90 truncate mx-2">{trade.action}</span>
                 <span className={trade.status === "PASSED" ? "text-positive shrink-0" : "text-negative shrink-0"}>
                   {trade.status}
                 </span>
               </div>
-              {trade.txHash && (
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-[9px] font-mono text-muted-foreground/60">0G:{trade.txHash}</span>
-                  <Link to="/audit-trail" title="View Audit Trail">
-                    <CheckCircle className="w-2.5 h-2.5 text-positive opacity-70 hover:opacity-100 transition-opacity" />
-                  </Link>
-                </div>
-              )}
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="text-[9px] font-mono text-white/60">0G:{trade.txHash}</span>
+                <Link href="/audit-trail" title="View Audit Trail">
+                  <CheckCircle className="w-2.5 h-2.5 text-positive opacity-70 hover:opacity-100 transition-opacity" />
+                </Link>
+              </div>
               {/* Hover proof tooltip — always shows full hash */}
               {trade.txHash && (
-                <div className="absolute left-0 bottom-full mb-1 hidden group-hover:flex flex-col gap-0.5 bg-black/90 border border-foreground/10 rounded px-2 py-1.5 z-50 pointer-events-none min-w-max shadow-lg">
-                  <span className="text-[9px] font-display tracking-[0.15em] uppercase text-muted-foreground">0G Verification Hash</span>
+                <div className="absolute left-0 bottom-full mb-1 hidden group-hover:flex flex-col gap-0.5 bg-black/90 border border-white/20 rounded px-2 py-1.5 z-50 pointer-events-none min-w-max shadow-lg">
+                  <span className="text-[9px] font-display tracking-[0.15em] uppercase text-white/80">0G Verification Hash</span>
                   <span className="text-[10px] font-mono text-positive">{trade.txHash}</span>
-                  <span className="text-[9px] text-muted-foreground/50">{trade.id} · {trade.action}</span>
+                  <span className="text-[9px] text-white/70">{trade.id} · {trade.action}</span>
                 </div>
               )}
             </div>

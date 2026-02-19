@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 interface LogEntry {
   agent: string;
@@ -13,10 +13,10 @@ interface LogEntry {
 }
 
 const AGENTS = [
-  { name: "ALPHA STRATEGIST", colorClass: "text-foreground", prefix: "α" },
-  { name: "RISK OFFICER",     colorClass: "dynamic",          prefix: "Ω" },
-  { name: "COMPLIANCE SCRIBE",colorClass: "text-silver",      prefix: "§" },
-  { name: "EXECUTIONER",      colorClass: "dynamic",          prefix: "✕" },
+  { name: "ALPHA STRATEGIST", colorClass: "text-white", prefix: "α" },
+  { name: "RISK OFFICER", colorClass: "dynamic", prefix: "Ω" },
+  { name: "COMPLIANCE SCRIBE", colorClass: "text-white", prefix: "§" },
+  { name: "EXECUTIONER", colorClass: "dynamic", prefix: "✕" },
 ];
 
 // Strictly technical — zero geographic clichés
@@ -100,6 +100,17 @@ export const proposalEventBus = {
   },
 };
 
+export const systemLogBus = {
+  listeners: [] as ((msg: string) => void)[],
+  emit(msg: string) {
+    this.listeners.forEach((fn) => fn(msg));
+  },
+  subscribe(fn: (msg: string) => void) {
+    this.listeners.push(fn);
+    return () => { this.listeners = this.listeners.filter((l) => l !== fn); };
+  },
+};
+
 export const getNextProposalId = () => {
   proposalCounter++;
   return `PROP-${String(proposalCounter).padStart(4, "0")}`;
@@ -115,7 +126,7 @@ const getGlowType = (message: string): "positive" | "negative" | null => {
 const genTxHash = () => {
   const chars = "0123456789abcdef";
   const start = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-  const end   = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  const end = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
   return `0x${start}...${end}`;
 };
 
@@ -138,7 +149,7 @@ const playSubThud = () => {
     gain.gain.setValueAtTime(0.18, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
     osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.35);
-  } catch (_) {}
+  } catch (_) { }
 };
 
 const playCrystalPing = () => {
@@ -154,7 +165,7 @@ const playCrystalPing = () => {
     gain.gain.setValueAtTime(0.1, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
     osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3);
-  } catch (_) {}
+  } catch (_) { }
 };
 
 const AgentTerminal = () => {
@@ -226,10 +237,27 @@ const AgentTerminal = () => {
     const interval = setInterval(() => {
       const agentIdx = Math.floor(Math.random() * 4);
       const msgIdx = Math.floor(Math.random() * MESSAGES[agentIdx].length);
-      setLogs((prev) => [...prev.slice(-19), createEntry(agentIdx, msgIdx, new Date())]);
+      const newEntry = createEntry(agentIdx, msgIdx, new Date());
+      setLogs((prev) => [...prev.slice(-19), newEntry]);
     }, 2500);
 
-    return () => clearInterval(interval);
+    // Subscribe to system logs
+    const sysUnsub = systemLogBus.subscribe((msg) => {
+      const entry: LogEntry = {
+        agent: "SYSTEM",
+        colorClass: "text-accent-foreground",
+        message: `[SYS] ${msg}`,
+        timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
+        glowType: null,
+        proposalId: "SYS-CMD",
+      };
+      setLogs((prev) => [...prev.slice(-19), entry]);
+    });
+
+    return () => {
+      clearInterval(interval);
+      sysUnsub();
+    };
   }, [createEntry]);
 
   useEffect(() => {
@@ -240,11 +268,13 @@ const AgentTerminal = () => {
 
   return (
     <div className="glass-panel flex flex-col scanline overflow-hidden" style={{ height: "100%" }}>
-      <div className="px-4 py-3 border-b border-foreground/5 flex items-center gap-2 shrink-0">
-        <div className="w-2 h-2 rounded-full bg-foreground animate-pulse-glow" />
-        <h3 className="font-display text-xs tracking-[0.3em] uppercase text-foreground">
-          Agent Council
-        </h3>
+      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between shrink-0 bg-black/40">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-white animate-pulse-glow" />
+          <span className="font-display text-xs tracking-[0.25em] uppercase text-white/90">
+            Agent Council
+          </span>
+        </div>
       </div>
       <div
         ref={scrollRef}
@@ -256,21 +286,20 @@ const AgentTerminal = () => {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            className={`text-[11px] leading-relaxed ${
-              log.glowType === "negative"
-                ? "glow-negative"
-                : log.glowType === "positive"
+            className={`text-[11px] leading-relaxed ${log.glowType === "negative"
+              ? "glow-negative"
+              : log.glowType === "positive"
                 ? "glow-positive"
                 : ""
-            }`}
+              }`}
           >
-            <span className="text-muted-foreground">{log.timestamp}</span>{" "}
+            <span className="text-white/60">{log.timestamp}</span>{" "}
             <span className={log.glowType ? "" : log.colorClass}>[{log.agent}]</span>{" "}
-            <span className={log.glowType ? "" : "text-foreground/70"}>{log.message}</span>
+            <span className={log.glowType ? "" : "text-white/90"}>{log.message}</span>
             {log.txHash && (
               <span
                 className="ml-2 text-[9px] font-mono"
-                style={{ color: "hsl(0 0% 50%)", letterSpacing: "0.05em" }}
+                style={{ color: "hsl(0 0% 75%)", letterSpacing: "0.05em" }}
               >
                 ↳ 0G:{log.txHash}
               </span>
@@ -280,7 +309,7 @@ const AgentTerminal = () => {
       </div>
       <div className="px-4 py-2 border-t border-foreground/5 shrink-0">
         <Link
-          to="/audit-trail"
+          href="/audit-trail"
           className="text-[10px] font-display tracking-[0.2em] uppercase text-silver hover:text-foreground transition-colors"
         >
           [ VIEW FULL AUDIT TRAIL ]

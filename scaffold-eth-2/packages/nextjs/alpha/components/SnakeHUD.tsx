@@ -196,11 +196,11 @@ const SnakeHUD = () => {
         ctx.moveTo(AXIS_LEFT - 3, y); ctx.lineTo(AXIS_LEFT, y);
         ctx.stroke();
         // Label — clearly visible
-        ctx.fillStyle = "rgba(160,160,160,1)";
+        ctx.fillStyle = "rgba(220,220,220,1)";
         ctx.fillText(`$${(val / 1000).toFixed(0)}K`, AXIS_LEFT - 5, y + 3);
         // Grid line
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(40,40,40,1)";
+        ctx.strokeStyle = "rgba(60,60,60,1)";
         ctx.lineWidth = 1;
         ctx.setLineDash([3, 7]);
         ctx.moveTo(AXIS_LEFT + 1, y); ctx.lineTo(AXIS_LEFT + plotW, y);
@@ -209,7 +209,7 @@ const SnakeHUD = () => {
       }
 
       // ── X-Axis line ──
-      ctx.strokeStyle = "rgba(120,120,120,1)";
+      ctx.strokeStyle = "rgba(160,160,160,1)";
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(AXIS_LEFT, 8 + plotH); ctx.lineTo(AXIS_LEFT + plotW, 8 + plotH);
@@ -227,16 +227,16 @@ const SnakeHUD = () => {
         const label = ts.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
         // Tick mark
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(120,120,120,1)";
+        ctx.strokeStyle = "rgba(160,160,160,1)";
         ctx.lineWidth = 1;
         ctx.moveTo(x, 8 + plotH); ctx.lineTo(x, 8 + plotH + 3);
         ctx.stroke();
         // Label — clearly visible
-        ctx.fillStyle = "rgba(160,160,160,1)";
+        ctx.fillStyle = "rgba(220,220,220,1)";
         ctx.fillText(label, x, 8 + plotH + 17);
         // Grid line
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(40,40,40,1)";
+        ctx.strokeStyle = "rgba(60,60,60,1)";
         ctx.lineWidth = 1;
         ctx.setLineDash([3, 7]);
         ctx.moveTo(x, 8); ctx.lineTo(x, 8 + plotH);
@@ -308,7 +308,7 @@ const SnakeHUD = () => {
   return (
     <div ref={containerRef} className="absolute inset-0 pointer-events-none z-50">
       {/* Faint grid background */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.025]" xmlns="http://www.w3.org/2000/svg">
+      <svg className="absolute inset-0 w-full h-full opacity-[0.05]" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="hud-grid" width="40" height="40" patternUnits="userSpaceOnUse">
             <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5" />
@@ -342,7 +342,7 @@ const SnakeHUD = () => {
 
       {/* Portfolio NAV counter — top left */}
       <div className="absolute top-3 left-14 z-30">
-        <p className="text-[8px] font-display tracking-[0.25em] uppercase text-foreground/40 mb-0.5">
+        <p className="text-[8px] font-display tracking-[0.25em] uppercase text-silver mb-0.5">
           Portfolio NAV
         </p>
         <p
@@ -364,7 +364,7 @@ const SnakeHUD = () => {
             ({isProfit ? "+" : ""}{pnl.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })})
           </span>
         </p>
-        <p className="text-[8px] font-mono mt-0.5 tracking-[0.1em] uppercase" style={{ color: "hsl(0 0% 45%)" }}>
+        <p className="text-[8px] font-mono mt-0.5 tracking-[0.1em] uppercase text-muted-foreground">
           Initial Capital: $1,000,000.00
         </p>
       </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { ArrowLeft, Search } from "lucide-react";
 
 interface LogEntry {
@@ -76,17 +76,17 @@ const AuditTrail = () => {
 
   const filteredLogs = search
     ? logs.filter(
-        (log) =>
-          log.message.toLowerCase().includes(search.toLowerCase()) ||
-          log.agent.toLowerCase().includes(search.toLowerCase()) ||
-          log.proposalId.toLowerCase().includes(search.toLowerCase())
-      )
+      (log) =>
+        log.message.toLowerCase().includes(search.toLowerCase()) ||
+        log.agent.toLowerCase().includes(search.toLowerCase()) ||
+        log.proposalId.toLowerCase().includes(search.toLowerCase())
+    )
     : logs;
 
   return (
     <div className="h-screen bg-background flex flex-col scanline-global overflow-hidden">
       <header className="flex items-center gap-4 px-4 py-3 hud-border shrink-0">
-        <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+        <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="w-4 h-4" />
           <span className="font-display text-xs tracking-[0.2em] uppercase">Back to Dashboard</span>
         </Link>
@@ -116,13 +116,12 @@ const AuditTrail = () => {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.2 }}
-            className={`text-[11px] leading-relaxed font-mono px-2 py-1 rounded ${
-              log.glowType === "negative"
-                ? "glow-negative"
-                : log.glowType === "positive"
+            className={`text-[11px] leading-relaxed font-mono px-2 py-1 rounded ${log.glowType === "negative"
+              ? "glow-negative"
+              : log.glowType === "positive"
                 ? "glow-positive"
                 : "text-foreground/70"
-            }`}
+              }`}
           >
             <span className="text-muted-foreground">{log.timestamp}</span>{" "}
             <span>[{log.agent}]</span>{" "}
