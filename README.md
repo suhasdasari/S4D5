@@ -126,7 +126,7 @@ Dashboard: `http://localhost:9999/stats`
 | Component | URL |
 |-----------|-----|
 | **Frontend Dashboard** | [s4-d5.vercel.app](https://s4-d5.vercel.app/) |
-| **Nerve-Cord** | *Coming soon — Railway/Render deployment* |
+| **Nerve-Cord** | [s4d5-production.up.railway.app](https://s4d5-production.up.railway.app) |
 
 ---
 
