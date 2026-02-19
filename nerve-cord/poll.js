@@ -12,18 +12,16 @@
 //   OPENCLAW_CRON_ID  — the cron job ID to trigger
 //
 // Optional env:
-//   NERVE_SERVER      — nerve-cord server (default: http://localhost:9999)
-//   NODE_PATH         — path to node binary dir (for openclaw CLI)
-
 const http = require('http');
 const https = require('https');
 const { execSync } = require('child_process');
-
 const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 
 // Manual .env loader (dependency-free)
 try {
-  const envPath = require('path').join(__dirname, '.env');
+  const envPath = path.join(__dirname, '.env');
   if (fs.existsSync(envPath)) {
     fs.readFileSync(envPath, 'utf8').split('\n').forEach(line => {
       const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
@@ -37,11 +35,35 @@ try {
   }
 } catch (e) { }
 
-const NERVE_SERVER = process.env.NERVE_SERVER || 'https://s4d5-production.up.railway.app';
-const NERVE_TOKEN = process.env.NERVE_TOKEN;
-const NERVE_BOTNAME = process.env.NERVE_BOTNAME;
+const NERVE_SERVER = process.env.NERVE_SERVER || process.env.SERVER || 'https://s4d5-production.up.railway.app';
+const NERVE_TOKEN = process.env.NERVE_TOKEN || process.env.TOKEN;
+const NERVE_BOTNAME = process.env.NERVE_BOTNAME || process.env.BOTNAME;
 const CRON_ID = process.env.OPENCLAW_CRON_ID;
-const NODE_BIN = process.env.NODE_PATH || '/usr/local/bin';
+const NODE_BIN = process.env.NODE_PATH || '/usr/bin';
+
+if (!NERVE_TOKEN || !NERVE_BOTNAME) {
+  console.error('Required: NERVE_TOKEN, NERVE_BOTNAME');
+  process.exit(0);
+}
+
+// 1. Ensure keys exist
+const keysDir = path.join(__dirname, 'keys');
+const keyPath = path.join(keysDir, `${NERVE_BOTNAME}.json`);
+const pubPath = path.join(keysDir, `${NERVE_BOTNAME}.pub`);
+const privPath = path.join(keysDir, `${NERVE_BOTNAME}.key`);
+
+if (!fs.existsSync(keyPath)) {
+  console.log(`Generating keys for ${NERVE_BOTNAME}...`);
+  if (!fs.existsSync(keysDir)) fs.mkdirSync(keysDir, { recursive: true });
+  const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+  });
+  fs.writeFileSync(keyPath, JSON.stringify({ publicKey, privateKey }), { mode: 0o600 });
+  fs.writeFileSync(pubPath, publicKey);
+  fs.writeFileSync(privPath, privateKey, { mode: 0o600 });
+}
 
 // Auto-discover CRON_ID if not provided
 if (!CRON_ID) {
@@ -92,9 +114,25 @@ function post(url, data, headers = {}) {
   });
 }
 
+let isRegistered = false;
+
 async function main() {
+  const auth = { Authorization: `Bearer ${NERVE_TOKEN}` };
+
+  // 1. Register if needed (fire once per process run)
+  if (!isRegistered) {
+    try {
+      const pubKey = fs.readFileSync(pubPath, 'utf8');
+      await post(`${NERVE_SERVER}/bots`, { name: NERVE_BOTNAME, publicKey: pubKey }, auth);
+      console.log(`Bot ${NERVE_BOTNAME} registered.`);
+      isRegistered = true;
+    } catch (e) {
+      console.error(`Registration failed: ${e.message}`);
+    }
+  }
+
   // Heartbeat — let the server know we're alive (fire and forget)
-  post(`${NERVE_SERVER}/heartbeat`, { name: NERVE_BOTNAME, skillVersion: '005' }, { Authorization: `Bearer ${NERVE_TOKEN}` }).catch(() => { });
+  post(`${NERVE_SERVER}/heartbeat`, { name: NERVE_BOTNAME, skillVersion: '006' }, auth).catch(() => { });
 
   // Check for pending messages
   const url = `${NERVE_SERVER}/messages?to=${NERVE_BOTNAME}&status=pending`;

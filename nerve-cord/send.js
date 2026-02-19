@@ -85,8 +85,21 @@ function encrypt(publicKeyPem, plaintext) {
 }
 
 async function main() {
-  // 1. Fetch recipient's public key
+  // 1. Auto-Register (Self-Heal)
+  try {
+    const pubPath = require('path').join(__dirname, 'keys', `${FROM}.pub`);
+    if (fs.existsSync(pubPath)) {
+      const pubKey = fs.readFileSync(pubPath, 'utf8');
+      await request('POST', `${SERVER}/bots`, { name: FROM, publicKey: pubKey });
+    }
+  } catch (e) { }
+
+  // 2. Fetch recipient's public key
   const botRes = await request('GET', `${SERVER}/bots/${to}`);
+  if (botRes.status === 404) {
+    console.error(`RECIPIENT NOT FOUND: "${to}" is not registered on the Nerve-Cord. Tell them to start their service!`);
+    process.exit(1);
+  }
   if (botRes.status !== 200) {
     console.error(`Failed to get public key for ${to}: ${botRes.data}`);
     process.exit(1);
@@ -94,7 +107,7 @@ async function main() {
   const bot = JSON.parse(botRes.data);
   const publicKey = bot.publicKey;
 
-  // 2. Encrypt the message
+  // 3. Encrypt the message
   const encryptedBody = encrypt(publicKey, message);
 
   // 3. Send it
