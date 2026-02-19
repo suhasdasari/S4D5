@@ -19,7 +19,7 @@ const http = require('http');
 const https = require('https');
 const { execSync } = require('child_process');
 
-const NERVE_SERVER = process.env.NERVE_SERVER || 'http://localhost:9999';
+const NERVE_SERVER = process.env.NERVE_SERVER || 'https://s4d5-production.up.railway.app';
 const NERVE_TOKEN = process.env.NERVE_TOKEN;
 const NERVE_BOTNAME = process.env.NERVE_BOTNAME;
 const CRON_ID = process.env.OPENCLAW_CRON_ID;
