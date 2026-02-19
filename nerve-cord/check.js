@@ -6,6 +6,24 @@
 const http = require('http');
 const https = require('https');
 
+const fs = require('fs');
+
+// Manual .env loader (dependency-free)
+try {
+  const envPath = require('path').join(__dirname, '.env');
+  if (fs.existsSync(envPath)) {
+    fs.readFileSync(envPath, 'utf8').split('\n').forEach(line => {
+      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+      if (match) {
+        const key = match[1];
+        let value = match[2] || '';
+        if (value.length > 0 && value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
+        if (!process.env[key]) process.env[key] = value;
+      }
+    });
+  }
+} catch (e) { }
+
 const SERVER = process.env.SERVER || process.env.NERVE_SERVER || 'https://s4d5-production.up.railway.app';
 const TOKEN = process.env.TOKEN || process.env.NERVE_TOKEN;
 const BOTNAME = process.env.BOTNAME || process.env.NERVE_BOTNAME;
