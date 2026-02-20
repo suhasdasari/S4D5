@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
-import { formatUnits } from "viem";
+import { formatUnits, erc20Abi } from "viem";
 
 const BASE_VALUE = 1_240_500;
 const INITIAL_CAPITAL = 1_000_000;
@@ -33,6 +33,8 @@ export const athEventBus = {
   },
 };
 
+const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"; // Base mainnet USDC
+
 const SnakeHUD = () => {
   const { address: connectedAddress } = useAccount();
 
@@ -43,7 +45,16 @@ const SnakeHUD = () => {
     chainId: 8453, // Base mainnet
   });
 
-  // Read user's share balance
+  // Read user's USDC balance in wallet (not in vault) - using USDC contract directly
+  const { data: userWalletUsdcBalance } = useReadContract({
+    address: USDC_ADDRESS,
+    abi: erc20Abi,
+    functionName: "balanceOf",
+    args: [connectedAddress as `0x${string}`],
+    chainId: 8453,
+  });
+
+  // Read user's share balance in vault
   const { data: userShares } = useScaffoldReadContract({
     contractName: "S4D5Vault",
     functionName: "balanceOf",
@@ -61,8 +72,11 @@ const SnakeHUD = () => {
   // Convert USDC (6 decimals) to display value
   const totalVaultFunds = totalAssets ? Number(formatUnits(totalAssets, 6)) : 10;
   
-  // Calculate user's funds (shares * totalAssets / totalSupply)
-  const userFunds = userShares && totalAssets && totalSupply && totalSupply > 0n
+  // User's USDC balance in wallet
+  const userWalletBalance = userWalletUsdcBalance ? Number(formatUnits(userWalletUsdcBalance, 6)) : 0;
+  
+  // Calculate user's funds in vault (shares * totalAssets / totalSupply)
+  const userFundsInVault = userShares && totalAssets && totalSupply && totalSupply > 0n
     ? Number(formatUnits((userShares * totalAssets) / totalSupply, 6))
     : 0;
 
@@ -381,10 +395,10 @@ const SnakeHUD = () => {
         </div>
       )}
 
-      {/* Total Vault Funds counter — top left */}
+      {/* User Balance in Wallet counter — top left */}
       <div className="absolute top-3 left-14 z-30">
         <p className="text-[8px] font-display tracking-[0.25em] uppercase text-silver mb-0.5">
-          Total Vault Funds
+          User Balance in Wallet
         </p>
         <p
           className="text-xl font-mono font-bold tracking-tight leading-none"
@@ -393,21 +407,11 @@ const SnakeHUD = () => {
             textShadow: isUp ? "0 0 18px rgba(0,255,0,0.4)" : "0 0 18px rgba(255,0,0,0.4)",
           }}
         >
-          ${totalVaultFunds.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          ${userWalletBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC
         </p>
-        <p
-          className="text-[9px] font-mono mt-0.5"
-          style={{ color: isRealProfit ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)" }}
-        >
-          {isRealProfit ? "▲" : "▼"} {isRealProfit ? "+" : ""}{realPnlPercent.toFixed(2)}%
-          &nbsp;
-          <span style={{ color: isRealProfit ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)" }}>
-            ({isRealProfit ? "+" : ""}${realPnl.toFixed(2)})
-          </span>
-        </p>
-        {connectedAddress && userFunds > 0 && (
+        {connectedAddress && userFundsInVault > 0 && (
           <p className="text-[8px] font-mono mt-1.5 tracking-[0.1em] uppercase text-white/90 border-t border-white/20 pt-1">
-            Your Funds: ${userFunds.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            In Vault: ${userFundsInVault.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         )}
         <p className="text-[8px] font-mono mt-0.5 tracking-[0.1em] uppercase text-muted-foreground">
