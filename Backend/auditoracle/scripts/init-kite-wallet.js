@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Initialize Kite AI wallet for Alpha Strategist agent
+ * Initialize Kite AI wallet for AuditOracle agent
  * REUSES existing Base wallet (same private key, different chain)
  * 
  * Usage: node scripts/init-kite-wallet.js
@@ -9,7 +9,7 @@
 const { KiteWalletManager } = require('../lib/kite-wallet');
 
 async function main() {
-  console.log('=== Alpha Strategist - Kite Wallet Initialization ===\n');
+  console.log('=== AuditOracle - Kite Wallet Initialization ===\n');
   console.log('ℹ️  Using existing Base wallet for Kite chain (multi-chain identity)\n');
 
   const walletManager = new KiteWalletManager();
