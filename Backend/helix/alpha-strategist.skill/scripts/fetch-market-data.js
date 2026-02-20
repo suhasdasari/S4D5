@@ -1,33 +1,26 @@
 #!/usr/bin/env node
 /**
- * QuickNode Hyperliquid Market Data Fetcher
- * Fetches real-time price, volume, and orderbook data
+ * Hyperliquid Market Data Fetcher
+ * Fetches real-time price, volume, and orderbook data from Hyperliquid public API
  * Usage: node fetch-market-data.js <asset>
- * Example: node fetch-market-data.js BTC-USD
+ * Example: node fetch-market-data.js BTC
  */
 
 const axios = require('axios');
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
-const QUICKNODE_BASE_URL = process.env.QUICKNODE_BASE_URL;
-const QUICKNODE_API_KEY = process.env.QUICKNODE_API_KEY;
+const HYPERLIQUID_API = 'https://api.hyperliquid.xyz/info';
 
 async function fetchMarketData(asset) {
-  if (!QUICKNODE_BASE_URL || !QUICKNODE_API_KEY) {
-    throw new Error('Missing QuickNode configuration. Check .env file.');
-  }
-
   try {
-    // QuickNode Hypercore API call for market data
-    const response = await axios.post(
-      QUICKNODE_BASE_URL,
+    // Remove -USD suffix if present
+    const coin = asset.replace('-USD', '');
+    
+    // Fetch all mids (current prices)
+    const midsResponse = await axios.post(
+      HYPERLIQUID_API,
       {
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'info',
-        params: {
-          type: 'allMids'
-        }
+        type: 'allMids'
       },
       {
         headers: {
@@ -37,28 +30,20 @@ async function fetchMarketData(asset) {
       }
     );
 
-    const allMids = response.data.result;
+    const allMids = midsResponse.data;
     
     // Find the requested asset
-    const assetData = allMids.find(item => {
-      const symbol = item.coin || item.name;
-      return symbol === asset || symbol === asset.replace('-USD', '');
-    });
-
-    if (!assetData) {
-      throw new Error(`Asset ${asset} not found in market data`);
+    const assetPrice = allMids[coin];
+    
+    if (!assetPrice) {
+      throw new Error(`Asset ${coin} not found in market data. Available: ${Object.keys(allMids).join(', ')}`);
     }
 
-    // Fetch additional market info
+    // Fetch meta info for leverage limits
     const metaResponse = await axios.post(
-      QUICKNODE_BASE_URL,
+      HYPERLIQUID_API,
       {
-        jsonrpc: '2.0',
-        id: 2,
-        method: 'info',
-        params: {
-          type: 'meta'
-        }
+        type: 'meta'
       },
       {
         headers: {
@@ -68,29 +53,48 @@ async function fetchMarketData(asset) {
       }
     );
 
-    const meta = metaResponse.data.result;
-    const assetMeta = meta.universe.find(u => u.name === assetData.coin);
+    const meta = metaResponse.data;
+    const assetMeta = meta.universe.find(u => u.name === coin);
+
+    // Fetch 24h stats
+    const statsResponse = await axios.post(
+      HYPERLIQUID_API,
+      {
+        type: 'metaAndAssetCtxs'
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 10000
+      }
+    );
+
+    const assetCtx = statsResponse.data[0]?.find(ctx => ctx.coin === coin);
 
     // Format the data
+    const currentPrice = parseFloat(assetPrice);
+    const prevDayPrice = assetCtx?.prevDayPx ? parseFloat(assetCtx.prevDayPx) : currentPrice;
+    const change24h = ((currentPrice - prevDayPrice) / prevDayPrice) * 100;
+
     const marketData = {
       asset: asset,
       timestamp: Date.now(),
       price: {
-        current: parseFloat(assetData.mid || assetData.price || 0),
-        change24h: parseFloat(assetData.dayNtlVlm || 0) > 0 ? 
-          ((parseFloat(assetData.mid) - parseFloat(assetData.prevDayPx || assetData.mid)) / parseFloat(assetData.prevDayPx || assetData.mid) * 100) : 0,
-        high24h: parseFloat(assetData.high24h || assetData.mid),
-        low24h: parseFloat(assetData.low24h || assetData.mid)
+        current: currentPrice,
+        change24h: change24h,
+        high24h: assetCtx?.highPrice ? parseFloat(assetCtx.highPrice) : currentPrice,
+        low24h: assetCtx?.lowPrice ? parseFloat(assetCtx.lowPrice) : currentPrice
       },
       volume: {
-        volume24h: parseFloat(assetData.dayNtlVlm || 0),
-        volumeAvg: parseFloat(assetData.dayNtlVlm || 0) * 0.8, // Estimate
-        volumeRatio: 1.25 // Estimate
+        volume24h: assetCtx?.dayNtlVlm ? parseFloat(assetCtx.dayNtlVlm) : 0,
+        volumeAvg: assetCtx?.dayNtlVlm ? parseFloat(assetCtx.dayNtlVlm) * 0.8 : 0,
+        volumeRatio: 1.25
       },
       orderbook: {
-        spread: parseFloat(assetData.funding || 0) * 100,
-        depth: parseFloat(assetData.openInterest || 0),
-        bids: [], // Simplified - would need separate orderbook call
+        spread: assetCtx?.funding ? parseFloat(assetCtx.funding) * 100 : 0,
+        depth: assetCtx?.openInterest ? parseFloat(assetCtx.openInterest) : 0,
+        bids: [],
         asks: []
       },
       metadata: {
@@ -102,9 +106,9 @@ async function fetchMarketData(asset) {
     return marketData;
   } catch (error) {
     if (error.response) {
-      throw new Error(`QuickNode API error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+      throw new Error(`Hyperliquid API error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
     } else if (error.request) {
-      throw new Error(`QuickNode API timeout or network error`);
+      throw new Error(`Hyperliquid API timeout or network error`);
     } else {
       throw new Error(`Error fetching market data: ${error.message}`);
     }
