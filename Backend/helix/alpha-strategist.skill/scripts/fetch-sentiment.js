@@ -25,7 +25,7 @@ async function fetchSentiment(keywords = ['bitcoin']) {
 
     const markets = response.data;
     
-    // Filter for relevant SHORT-TERM price prediction markets
+    // Filter for price-prediction markets with timeframes
     const relevantMarkets = markets.filter(market => {
       const question = (market.question || '').toLowerCase();
       const description = (market.description || '').toLowerCase();
@@ -38,21 +38,28 @@ async function fetchSentiment(keywords = ['bitcoin']) {
       
       if (!hasKeyword) return false;
       
-      // Exclude obviously irrelevant markets
-      const excludeKeywords = ['gta', 'game', 'election', 'president', 'trump', 'biden'];
+      // Exclude non-trading markets
+      const excludeKeywords = [
+        'nhl', 'nba', 'nfl', 'mlb', 'soccer', 'football', 'hockey', 'basketball', 'baseball', 'sports', 'game',
+        'election', 'president', 'trump', 'biden', 'politics',
+        'gta', 'gta vi', 'video game', 'movie', 'album', 'release',
+        'elon', 'musk', 'tweet', 'twitter', 'x.com'
+      ];
       const isExcluded = excludeKeywords.some(kw => question.includes(kw));
       
       if (isExcluded) return false;
       
-      // Accept any market with price-related keywords OR timeframes
-      const priceKeywords = ['price', 'hit', 'reach', 'above', 'below', 'up', 'down', '$', 'usd'];
-      const timeKeywords = ['today', 'tomorrow', 'week', 'month', 'february', 'march', 'april', 'may', 'june', '2026', '2025'];
+      // Prioritize markets with price predictions and timeframes
+      const priceKeywords = ['price', 'hit', 'reach', 'above', 'below', 'up or down'];
+      const timeKeywords = ['february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december', 
+                           'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
+                           'week', 'month', 'day', '2026', '2027', 'q1', 'q2', 'q3', 'q4'];
       
       const hasPrice = priceKeywords.some(kw => question.includes(kw));
       const hasTime = timeKeywords.some(kw => question.includes(kw));
       
-      // Accept if it has price keywords OR time keywords (more lenient)
-      return hasPrice || hasTime;
+      // Accept if it has both price and time indicators
+      return hasPrice && hasTime;
     });
 
     console.error(`Found ${relevantMarkets.length} relevant markets out of ${markets.length} total`);
