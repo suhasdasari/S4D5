@@ -39,6 +39,35 @@ async function debugPolymarket() {
       console.log('');
     });
     
+    // Also check for ethereum markets
+    const ethMarkets = markets.filter(market => {
+      const question = (market.question || '').toLowerCase();
+      return question.includes('ethereum') || question.includes('eth');
+    });
+    
+    console.log(`\nEthereum-related markets: ${ethMarkets.length}\n`);
+    
+    ethMarkets.slice(0, 5).forEach((market, i) => {
+      console.log(`${i + 1}. ${market.question}`);
+      console.log(`   ID: ${market.id}`);
+      console.log(`   Volume: ${market.volume || 0}`);
+      console.log('');
+    });
+    
+    // Show some crypto-related markets
+    const cryptoMarkets = markets.filter(market => {
+      const question = (market.question || '').toLowerCase();
+      return question.includes('crypto') || question.includes('price') || question.includes('token');
+    });
+    
+    console.log(`\nCrypto/Price-related markets: ${cryptoMarkets.length}\n`);
+    
+    cryptoMarkets.slice(0, 10).forEach((market, i) => {
+      console.log(`${i + 1}. ${market.question}`);
+      console.log(`   ID: ${market.id}`);
+      console.log('');
+    });
+    
   } catch (error) {
     console.error('Error:', error.message);
   }
