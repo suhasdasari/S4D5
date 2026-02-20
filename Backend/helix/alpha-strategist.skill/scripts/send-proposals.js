@@ -65,17 +65,23 @@ ${proposal.reasons.map(r => `- ${r.type}: ${r.detail}`).join('\n')}
 Timestamp: ${new Date(proposal.timestamp).toISOString()}`;
   }
   
-  // Send via Nerve-Cord
+  // Send via Nerve-Cord to AuditOracle for review
   try {
-    console.error(`Sending proposal to execution-hand: ${subject}`);
-    execSync(`npm run send execution-hand "${subject}" "${message}"`, {
+    console.error(`Sending proposal to audit-oracle: ${subject}`);
+    execSync(`npm run send audit-oracle "${subject}" "${message}"`, {
       cwd: path.join(__dirname, '..', '..', '..', '..', 'nerve-cord'),
       stdio: 'inherit'
     });
     console.error('✓ Sent successfully');
+    
+    // Log to Nerve-Cord dashboard
+    execSync(`npm run log "📊 Sent proposal to AuditOracle: ${subject}" "alpha-strategist,proposal"`, {
+      cwd: path.join(__dirname, '..', '..', '..', '..', 'nerve-cord'),
+      stdio: 'inherit'
+    });
   } catch (error) {
     console.error(`✗ Failed to send: ${error.message}`);
   }
 }
 
-console.log(`Sent ${result.proposals.length} proposals to execution-hand`);
+console.log(`Sent ${result.proposals.length} proposals to audit-oracle for review`);
