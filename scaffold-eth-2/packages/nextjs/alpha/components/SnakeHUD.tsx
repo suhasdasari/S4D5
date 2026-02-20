@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useAccount } from "wagmi";
+import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
+import { formatUnits } from "viem";
 
 const BASE_VALUE = 1_240_500;
 const INITIAL_CAPITAL = 1_000_000;
@@ -31,6 +34,18 @@ export const athEventBus = {
 };
 
 const SnakeHUD = () => {
+  const { address: connectedAddress } = useAccount();
+
+  // Read total assets (NAV) from vault - this is the real portfolio value
+  const { data: totalAssets } = useScaffoldReadContract({
+    contractName: "S4D5Vault",
+    functionName: "totalAssets",
+    chainId: 8453, // Base mainnet
+  });
+
+  // Convert USDC (6 decimals) to display value
+  const realNavValue = totalAssets ? Number(formatUnits(totalAssets, 6)) : 10;
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const pointsRef = useRef<Point[]>([]);
@@ -343,7 +358,7 @@ const SnakeHUD = () => {
       {/* Portfolio NAV counter — top left */}
       <div className="absolute top-3 left-14 z-30">
         <p className="text-[8px] font-display tracking-[0.25em] uppercase text-silver mb-0.5">
-          Portfolio NAV
+          Portfolio NAV {connectedAddress && "(Live)"}
         </p>
         <p
           className="text-xl font-mono font-bold tracking-tight leading-none"
@@ -352,7 +367,7 @@ const SnakeHUD = () => {
             textShadow: isUp ? "0 0 18px rgba(0,255,0,0.4)" : "0 0 18px rgba(255,0,0,0.4)",
           }}
         >
-          ${displayValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          ${realNavValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
         <p
           className="text-[9px] font-mono mt-0.5"
@@ -365,7 +380,7 @@ const SnakeHUD = () => {
           </span>
         </p>
         <p className="text-[8px] font-mono mt-0.5 tracking-[0.1em] uppercase text-muted-foreground">
-          Initial Capital: $1,000,000.00
+          {connectedAddress ? "Connected to Base Mainnet" : "Connect wallet to see your position"}
         </p>
       </div>
     </div>

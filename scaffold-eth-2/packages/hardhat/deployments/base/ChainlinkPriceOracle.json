@@ -1,0 +1,379 @@
+{
+  "address": "0x15E03b7942F6976bE340EdAc738ECF494f154Af5",
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "feed",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint8",
+          "name": "decimals",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "PriceFeedSet",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        }
+      ],
+      "name": "getPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        }
+      ],
+      "name": "getPriceFeed",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        }
+      ],
+      "name": "hasPriceFeed",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "priceFeeds",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "feed",
+          "type": "address"
+        },
+        {
+          "internalType": "uint8",
+          "name": "decimals",
+          "type": "uint8"
+        }
+      ],
+      "name": "setPriceFeed",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "tokens",
+          "type": "address[]"
+        },
+        {
+          "internalType": "address[]",
+          "name": "feeds",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint8[]",
+          "name": "decimals",
+          "type": "uint8[]"
+        }
+      ],
+      "name": "setPriceFeeds",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "tokenDecimals",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0xaf88fb2ca0db36370a2697c0445c886c9fa091a09ad86cff609481c9e96cca71",
+  "receipt": {
+    "to": null,
+    "from": "0xD88b67ca80fCBD126fF0405F0de899911d78eb78",
+    "contractAddress": "0x15E03b7942F6976bE340EdAc738ECF494f154Af5",
+    "transactionIndex": 47,
+    "gasUsed": "979503",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x575fb8c334747c4b5e32a48fe1a377736e127ca11adc8ae901a0b9c9076d67ea",
+    "transactionHash": "0xaf88fb2ca0db36370a2697c0445c886c9fa091a09ad86cff609481c9e96cca71",
+    "logs": [],
+    "blockNumber": 42407241,
+    "cumulativeGasUsed": "10671042",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 1,
+  "solcInputHash": "86689a5a14a0422203665a0451a81072",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.30+commit.73712a01\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"feed\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"decimals\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"PriceFeedSet\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"}],\"name\":\"getPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"}],\"name\":\"getPriceFeed\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"}],\"name\":\"hasPriceFeed\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"priceFeeds\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"feed\",\"type\":\"address\"},{\"internalType\":\"uint8\",\"name\":\"decimals\",\"type\":\"uint8\"}],\"name\":\"setPriceFeed\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"tokens\",\"type\":\"address[]\"},{\"internalType\":\"address[]\",\"name\":\"feeds\",\"type\":\"address[]\"},{\"internalType\":\"uint8[]\",\"name\":\"decimals\",\"type\":\"uint8[]\"}],\"name\":\"setPriceFeeds\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"tokenDecimals\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Converts token prices to USDC terms using Chainlink data feeds  Chainlink Price Feeds on Base: - ETH/USD: 0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70 - BTC/USD: 0x64c911996D3c6aC71f9b455B1E8E7266BcbD848F - More feeds: https://docs.chain.link/data-feeds/price-feeds/addresses?network=base\",\"kind\":\"dev\",\"methods\":{\"getPrice(address)\":{\"params\":{\"token\":\"Address of token to price\"},\"returns\":{\"price\":\"Price in USDC (6 decimals)\"}},\"getPriceFeed(address)\":{\"params\":{\"token\":\"Address of token\"},\"returns\":{\"_0\":\"Address of Chainlink price feed\"}},\"hasPriceFeed(address)\":{\"params\":{\"token\":\"Address of token\"},\"returns\":{\"_0\":\"True if price feed is set\"}},\"setPriceFeed(address,address,uint8)\":{\"params\":{\"decimals\":\"Token decimals (e.g., 18 for WETH, 8 for WBTC)\",\"feed\":\"Address of Chainlink price feed\",\"token\":\"Address of token\"}},\"setPriceFeeds(address[],address[],uint8[])\":{\"params\":{\"decimals\":\"Array of token decimals\",\"feeds\":\"Array of Chainlink price feed addresses\",\"tokens\":\"Array of token addresses\"}},\"transferOwnership(address)\":{\"params\":{\"newOwner\":\"Address of new owner\"}}},\"title\":\"ChainlinkPriceOracle\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"getPrice(address)\":{\"notice\":\"Get price of token in USDC terms\"},\"getPriceFeed(address)\":{\"notice\":\"Get price feed address for a token\"},\"hasPriceFeed(address)\":{\"notice\":\"Check if price feed is set for a token\"},\"setPriceFeed(address,address,uint8)\":{\"notice\":\"Set Chainlink price feed for a token\"},\"setPriceFeeds(address[],address[],uint8[])\":{\"notice\":\"Set multiple price feeds at once\"},\"transferOwnership(address)\":{\"notice\":\"Transfer ownership\"}},\"notice\":\"Production-ready price oracle using Chainlink Price Feeds\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/ChainlinkPriceOracle.sol\":\"ChainlinkPriceOracle\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\n// solhint-disable-next-line interface-starts-with-i\\ninterface AggregatorV3Interface {\\n  function decimals() external view returns (uint8);\\n\\n  function description() external view returns (string memory);\\n\\n  function version() external view returns (uint256);\\n\\n  function getRoundData(\\n    uint80 _roundId\\n  ) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound);\\n\\n  function latestRoundData()\\n    external\\n    view\\n    returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound);\\n}\\n\",\"keccak256\":\"0x257a8d28fa83d3d942547c8e129ef465e4b5f3f31171e7be4739a4c98da6b4f0\",\"license\":\"MIT\"},\"contracts/ChainlinkPriceOracle.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.20;\\n\\nimport \\\"@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol\\\";\\n\\n/**\\n * @title ChainlinkPriceOracle\\n * @notice Production-ready price oracle using Chainlink Price Feeds\\n * @dev Converts token prices to USDC terms using Chainlink data feeds\\n * \\n * Chainlink Price Feeds on Base:\\n * - ETH/USD: 0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70\\n * - BTC/USD: 0x64c911996D3c6aC71f9b455B1E8E7266BcbD848F\\n * - More feeds: https://docs.chain.link/data-feeds/price-feeds/addresses?network=base\\n */\\ncontract ChainlinkPriceOracle {\\n    // Owner can add/update price feeds\\n    address public owner;\\n    \\n    // Token address => Chainlink price feed address\\n    mapping(address => address) public priceFeeds;\\n    \\n    // Token address => decimals adjustment (to normalize to 6 decimals for USDC)\\n    mapping(address => uint8) public tokenDecimals;\\n    \\n    // Events\\n    event PriceFeedSet(address indexed token, address indexed feed, uint8 decimals, uint256 timestamp);\\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\\n    \\n    constructor() {\\n        owner = msg.sender;\\n    }\\n    \\n    modifier onlyOwner() {\\n        require(msg.sender == owner, \\\"Not owner\\\");\\n        _;\\n    }\\n    \\n    /**\\n     * @notice Get price of token in USDC terms\\n     * @param token Address of token to price\\n     * @return price Price in USDC (6 decimals)\\n     */\\n    function getPrice(address token) external view returns (uint256 price) {\\n        address feedAddress = priceFeeds[token];\\n        require(feedAddress != address(0), \\\"Price feed not set for token\\\");\\n        \\n        AggregatorV3Interface priceFeed = AggregatorV3Interface(feedAddress);\\n        \\n        // Get latest price from Chainlink\\n        (\\n            /* uint80 roundID */,\\n            int256 answer,\\n            /* uint256 startedAt */,\\n            uint256 updatedAt,\\n            /* uint80 answeredInRound */\\n        ) = priceFeed.latestRoundData();\\n        \\n        require(answer > 0, \\\"Invalid price from Chainlink\\\");\\n        require(updatedAt > 0, \\\"Price data not updated\\\");\\n        require(block.timestamp - updatedAt < 1 hours, \\\"Price data stale\\\");\\n        \\n        // Chainlink price feeds typically have 8 decimals\\n        // We need to convert to 6 decimals for USDC\\n        uint8 feedDecimals = priceFeed.decimals();\\n        uint256 rawPrice = uint256(answer);\\n        \\n        // Convert to 6 decimals (USDC standard)\\n        if (feedDecimals > 6) {\\n            price = rawPrice / (10 ** (feedDecimals - 6));\\n        } else if (feedDecimals < 6) {\\n            price = rawPrice * (10 ** (6 - feedDecimals));\\n        } else {\\n            price = rawPrice;\\n        }\\n        \\n        // Adjust for token decimals if needed\\n        // For example, if token has 18 decimals and we're pricing 1 token\\n        // we need to account for that in the final price calculation\\n        uint8 tokenDecimal = tokenDecimals[token];\\n        if (tokenDecimal > 0 && tokenDecimal != 18) {\\n            // Adjust price based on token decimals\\n            // This ensures proper valuation in totalAssets()\\n            if (tokenDecimal < 18) {\\n                price = price * (10 ** (18 - tokenDecimal));\\n            } else {\\n                price = price / (10 ** (tokenDecimal - 18));\\n            }\\n        }\\n        \\n        return price;\\n    }\\n    \\n    /**\\n     * @notice Set Chainlink price feed for a token\\n     * @param token Address of token\\n     * @param feed Address of Chainlink price feed\\n     * @param decimals Token decimals (e.g., 18 for WETH, 8 for WBTC)\\n     */\\n    function setPriceFeed(address token, address feed, uint8 decimals) external onlyOwner {\\n        require(token != address(0), \\\"Invalid token\\\");\\n        require(feed != address(0), \\\"Invalid feed\\\");\\n        require(decimals > 0 && decimals <= 18, \\\"Invalid decimals\\\");\\n        \\n        // Verify the feed is valid by calling it\\n        AggregatorV3Interface priceFeed = AggregatorV3Interface(feed);\\n        priceFeed.latestRoundData(); // Will revert if feed is invalid\\n        \\n        priceFeeds[token] = feed;\\n        tokenDecimals[token] = decimals;\\n        \\n        emit PriceFeedSet(token, feed, decimals, block.timestamp);\\n    }\\n    \\n    /**\\n     * @notice Set multiple price feeds at once\\n     * @param tokens Array of token addresses\\n     * @param feeds Array of Chainlink price feed addresses\\n     * @param decimals Array of token decimals\\n     */\\n    function setPriceFeeds(\\n        address[] calldata tokens,\\n        address[] calldata feeds,\\n        uint8[] calldata decimals\\n    ) external onlyOwner {\\n        require(\\n            tokens.length == feeds.length && tokens.length == decimals.length,\\n            \\\"Array length mismatch\\\"\\n        );\\n        \\n        for (uint256 i = 0; i < tokens.length; i++) {\\n            require(tokens[i] != address(0), \\\"Invalid token\\\");\\n            require(feeds[i] != address(0), \\\"Invalid feed\\\");\\n            require(decimals[i] > 0 && decimals[i] <= 18, \\\"Invalid decimals\\\");\\n            \\n            // Verify the feed is valid\\n            AggregatorV3Interface priceFeed = AggregatorV3Interface(feeds[i]);\\n            priceFeed.latestRoundData();\\n            \\n            priceFeeds[tokens[i]] = feeds[i];\\n            tokenDecimals[tokens[i]] = decimals[i];\\n            \\n            emit PriceFeedSet(tokens[i], feeds[i], decimals[i], block.timestamp);\\n        }\\n    }\\n    \\n    /**\\n     * @notice Check if price feed is set for a token\\n     * @param token Address of token\\n     * @return True if price feed is set\\n     */\\n    function hasPriceFeed(address token) external view returns (bool) {\\n        return priceFeeds[token] != address(0);\\n    }\\n    \\n    /**\\n     * @notice Get price feed address for a token\\n     * @param token Address of token\\n     * @return Address of Chainlink price feed\\n     */\\n    function getPriceFeed(address token) external view returns (address) {\\n        return priceFeeds[token];\\n    }\\n    \\n    /**\\n     * @notice Transfer ownership\\n     * @param newOwner Address of new owner\\n     */\\n    function transferOwnership(address newOwner) external onlyOwner {\\n        require(newOwner != address(0), \\\"Invalid new owner\\\");\\n        address oldOwner = owner;\\n        owner = newOwner;\\n        emit OwnershipTransferred(oldOwner, newOwner);\\n    }\\n}\\n\",\"keccak256\":\"0x5584debebea63b75dd3d7f15807feb2b150f3ac60876136c02960c17c8b93530\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x6080604052348015600f57600080fd5b50600080546001600160a01b03191633179055611058806100316000396000f3fe608060405234801561001057600080fd5b50600436106100935760003560e01c80638da5cb5b116100665780638da5cb5b146101555780638ee573ac146101685780639dcb511a1461019d578063f2fde38b146101c6578063fd4690b6146101d957600080fd5b80630b7983a21461009857806341976e09146100db5780635b6cca80146100fc5780636614fc5414610140575b600080fd5b6100c66100a6366004610c5f565b6001600160a01b0390811660009081526001602052604090205416151590565b60405190151581526020015b60405180910390f35b6100ee6100e9366004610c5f565b6101ec565b6040519081526020016100d2565b61012861010a366004610c5f565b6001600160a01b039081166000908152600160205260409020541690565b6040516001600160a01b0390911681526020016100d2565b61015361014e366004610ccd565b610512565b005b600054610128906001600160a01b031681565b61018b610176366004610c5f565b60026020526000908152604090205460ff1681565b60405160ff90911681526020016100d2565b6101286101ab366004610c5f565b6001602052600090815260409020546001600160a01b031681565b6101536101d4366004610c5f565b61097e565b6101536101e7366004610d85565b610a42565b6001600160a01b038082166000908152600160205260408120549091168061025b5760405162461bcd60e51b815260206004820152601c60248201527f50726963652066656564206e6f742073657420666f7220746f6b656e0000000060448201526064015b60405180910390fd5b6000819050600080826001600160a01b031663feaf968c6040518163ffffffff1660e01b815260040160a060405180830381865afa1580156102a1573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906102c59190610de6565b509350509250506000821361031c5760405162461bcd60e51b815260206004820152601c60248201527f496e76616c69642070726963652066726f6d20436861696e6c696e6b000000006044820152606401610252565b600081116103655760405162461bcd60e51b8152602060048201526016602482015275141c9a58d94819185d18481b9bdd081d5c19185d195960521b6044820152606401610252565b610e106103728242610e4e565b106103b25760405162461bcd60e51b815260206004820152601060248201526f50726963652064617461207374616c6560801b6044820152606401610252565b6000836001600160a01b031663313ce5676040518163ffffffff1660e01b8152600401602060405180830381865afa1580156103f2573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906104169190610e67565b905082600660ff8316111561044c57610430600683610e84565b61043b90600a610f84565b6104459082610f93565b965061047c565b60068260ff16101561047857610463826006610e84565b61046e90600a610f84565b6104459082610fb5565b8096505b6001600160a01b03881660009081526002602052604090205460ff1680158015906104ab57508060ff16601214155b156105065760128160ff1610156104e3576104c7816012610e84565b6104d290600a610f84565b6104dc9089610fb5565b9750610506565b6104ee601282610e84565b6104f990600a610f84565b6105039089610f93565b97505b50505050505050919050565b6000546001600160a01b0316331461053c5760405162461bcd60e51b815260040161025290610fcc565b848314801561054a57508481145b61058e5760405162461bcd60e51b8152602060048201526015602482015274082e4e4c2f240d8cadccee8d040dad2e6dac2e8c6d605b1b6044820152606401610252565b60005b858110156109755760008787838181106105ad576105ad610fef565b90506020020160208101906105c29190610c5f565b6001600160a01b0316036106085760405162461bcd60e51b815260206004820152600d60248201526c24b73b30b634b2103a37b5b2b760991b6044820152606401610252565b600085858381811061061c5761061c610fef565b90506020020160208101906106319190610c5f565b6001600160a01b0316036106765760405162461bcd60e51b815260206004820152600c60248201526b125b9d985b1a59081999595960a21b6044820152606401610252565b600083838381811061068a5761068a610fef565b905060200201602081019061069f9190611005565b60ff161180156106d9575060128383838181106106be576106be610fef565b90506020020160208101906106d39190611005565b60ff1611155b6107185760405162461bcd60e51b815260206004820152601060248201526f496e76616c696420646563696d616c7360801b6044820152606401610252565b600085858381811061072c5761072c610fef565b90506020020160208101906107419190610c5f565b9050806001600160a01b031663feaf968c6040518163ffffffff1660e01b815260040160a060405180830381865afa158015610781573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906107a59190610de6565b50505050508585838181106107bc576107bc610fef565b90506020020160208101906107d19190610c5f565b600160008a8a868181106107e7576107e7610fef565b90506020020160208101906107fc9190610c5f565b6001600160a01b039081168252602082019290925260400160002080546001600160a01b0319169290911691909117905583838381811061083f5761083f610fef565b90506020020160208101906108549190611005565b600260008a8a8681811061086a5761086a610fef565b905060200201602081019061087f9190610c5f565b6001600160a01b031681526020810191909152604001600020805460ff191660ff929092169190911790558585838181106108bc576108bc610fef565b90506020020160208101906108d19190610c5f565b6001600160a01b03168888848181106108ec576108ec610fef565b90506020020160208101906109019190610c5f565b6001600160a01b03167fbbe9a70ef9e0977daf443b1efb907d53d3e756a7360c473022d4af39364b0f0e86868681811061093d5761093d610fef565b90506020020160208101906109529190611005565b6040805160ff90921682524260208301520160405180910390a350600101610591565b50505050505050565b6000546001600160a01b031633146109a85760405162461bcd60e51b815260040161025290610fcc565b6001600160a01b0381166109f25760405162461bcd60e51b815260206004820152601160248201527024b73b30b634b2103732bb9037bbb732b960791b6044820152606401610252565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b6000546001600160a01b03163314610a6c5760405162461bcd60e51b815260040161025290610fcc565b6001600160a01b038316610ab25760405162461bcd60e51b815260206004820152600d60248201526c24b73b30b634b2103a37b5b2b760991b6044820152606401610252565b6001600160a01b038216610af75760405162461bcd60e51b815260206004820152600c60248201526b125b9d985b1a59081999595960a21b6044820152606401610252565b60008160ff16118015610b0e575060128160ff1611155b610b4d5760405162461bcd60e51b815260206004820152601060248201526f496e76616c696420646563696d616c7360801b6044820152606401610252565b6000829050806001600160a01b031663feaf968c6040518163ffffffff1660e01b815260040160a060405180830381865afa158015610b90573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610bb49190610de6565b505050506001600160a01b03858116600081815260016020908152604080832080546001600160a01b031916958a1695861790556002825291829020805460ff191660ff89169081179091558251908152429181019190915292935090917fbbe9a70ef9e0977daf443b1efb907d53d3e756a7360c473022d4af39364b0f0e910160405180910390a350505050565b80356001600160a01b0381168114610c5a57600080fd5b919050565b600060208284031215610c7157600080fd5b610c7a82610c43565b9392505050565b60008083601f840112610c9357600080fd5b50813567ffffffffffffffff811115610cab57600080fd5b6020830191508360208260051b8501011115610cc657600080fd5b9250929050565b60008060008060008060608789031215610ce657600080fd5b863567ffffffffffffffff811115610cfd57600080fd5b610d0989828a01610c81565b909750955050602087013567ffffffffffffffff811115610d2957600080fd5b610d3589828a01610c81565b909550935050604087013567ffffffffffffffff811115610d5557600080fd5b610d6189828a01610c81565b979a9699509497509295939492505050565b60ff81168114610d8257600080fd5b50565b600080600060608486031215610d9a57600080fd5b610da384610c43565b9250610db160208501610c43565b91506040840135610dc181610d73565b809150509250925092565b805169ffffffffffffffffffff81168114610c5a57600080fd5b600080600080600060a08688031215610dfe57600080fd5b610e0786610dcc565b60208701516040880151606089015192975090955093509150610e2c60808701610dcc565b90509295509295909350565b634e487b7160e01b600052601160045260246000fd5b81810381811115610e6157610e61610e38565b92915050565b600060208284031215610e7957600080fd5b8151610c7a81610d73565b60ff8281168282160390811115610e6157610e61610e38565b6001815b6001841115610ed857808504811115610ebc57610ebc610e38565b6001841615610eca57908102905b60019390931c928002610ea1565b935093915050565b600082610eef57506001610e61565b81610efc57506000610e61565b8160018114610f125760028114610f1c57610f38565b6001915050610e61565b60ff841115610f2d57610f2d610e38565b50506001821b610e61565b5060208310610133831016604e8410600b8410161715610f5b575081810a610e61565b610f686000198484610e9d565b8060001904821115610f7c57610f7c610e38565b029392505050565b6000610c7a60ff841683610ee0565b600082610fb057634e487b7160e01b600052601260045260246000fd5b500490565b8082028115828204841417610e6157610e61610e38565b6020808252600990820152682737ba1037bbb732b960b91b604082015260600190565b634e487b7160e01b600052603260045260246000fd5b60006020828403121561101757600080fd5b8135610c7a81610d7356fea264697066735822122047d5aaaf869d3bc41382fda64b17cebd71fc286e6e63dd53441fa1eecd2d2cc564736f6c634300081e0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100935760003560e01c80638da5cb5b116100665780638da5cb5b146101555780638ee573ac146101685780639dcb511a1461019d578063f2fde38b146101c6578063fd4690b6146101d957600080fd5b80630b7983a21461009857806341976e09146100db5780635b6cca80146100fc5780636614fc5414610140575b600080fd5b6100c66100a6366004610c5f565b6001600160a01b0390811660009081526001602052604090205416151590565b60405190151581526020015b60405180910390f35b6100ee6100e9366004610c5f565b6101ec565b6040519081526020016100d2565b61012861010a366004610c5f565b6001600160a01b039081166000908152600160205260409020541690565b6040516001600160a01b0390911681526020016100d2565b61015361014e366004610ccd565b610512565b005b600054610128906001600160a01b031681565b61018b610176366004610c5f565b60026020526000908152604090205460ff1681565b60405160ff90911681526020016100d2565b6101286101ab366004610c5f565b6001602052600090815260409020546001600160a01b031681565b6101536101d4366004610c5f565b61097e565b6101536101e7366004610d85565b610a42565b6001600160a01b038082166000908152600160205260408120549091168061025b5760405162461bcd60e51b815260206004820152601c60248201527f50726963652066656564206e6f742073657420666f7220746f6b656e0000000060448201526064015b60405180910390fd5b6000819050600080826001600160a01b031663feaf968c6040518163ffffffff1660e01b815260040160a060405180830381865afa1580156102a1573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906102c59190610de6565b509350509250506000821361031c5760405162461bcd60e51b815260206004820152601c60248201527f496e76616c69642070726963652066726f6d20436861696e6c696e6b000000006044820152606401610252565b600081116103655760405162461bcd60e51b8152602060048201526016602482015275141c9a58d94819185d18481b9bdd081d5c19185d195960521b6044820152606401610252565b610e106103728242610e4e565b106103b25760405162461bcd60e51b815260206004820152601060248201526f50726963652064617461207374616c6560801b6044820152606401610252565b6000836001600160a01b031663313ce5676040518163ffffffff1660e01b8152600401602060405180830381865afa1580156103f2573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906104169190610e67565b905082600660ff8316111561044c57610430600683610e84565b61043b90600a610f84565b6104459082610f93565b965061047c565b60068260ff16101561047857610463826006610e84565b61046e90600a610f84565b6104459082610fb5565b8096505b6001600160a01b03881660009081526002602052604090205460ff1680158015906104ab57508060ff16601214155b156105065760128160ff1610156104e3576104c7816012610e84565b6104d290600a610f84565b6104dc9089610fb5565b9750610506565b6104ee601282610e84565b6104f990600a610f84565b6105039089610f93565b97505b50505050505050919050565b6000546001600160a01b0316331461053c5760405162461bcd60e51b815260040161025290610fcc565b848314801561054a57508481145b61058e5760405162461bcd60e51b8152602060048201526015602482015274082e4e4c2f240d8cadccee8d040dad2e6dac2e8c6d605b1b6044820152606401610252565b60005b858110156109755760008787838181106105ad576105ad610fef565b90506020020160208101906105c29190610c5f565b6001600160a01b0316036106085760405162461bcd60e51b815260206004820152600d60248201526c24b73b30b634b2103a37b5b2b760991b6044820152606401610252565b600085858381811061061c5761061c610fef565b90506020020160208101906106319190610c5f565b6001600160a01b0316036106765760405162461bcd60e51b815260206004820152600c60248201526b125b9d985b1a59081999595960a21b6044820152606401610252565b600083838381811061068a5761068a610fef565b905060200201602081019061069f9190611005565b60ff161180156106d9575060128383838181106106be576106be610fef565b90506020020160208101906106d39190611005565b60ff1611155b6107185760405162461bcd60e51b815260206004820152601060248201526f496e76616c696420646563696d616c7360801b6044820152606401610252565b600085858381811061072c5761072c610fef565b90506020020160208101906107419190610c5f565b9050806001600160a01b031663feaf968c6040518163ffffffff1660e01b815260040160a060405180830381865afa158015610781573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906107a59190610de6565b50505050508585838181106107bc576107bc610fef565b90506020020160208101906107d19190610c5f565b600160008a8a868181106107e7576107e7610fef565b90506020020160208101906107fc9190610c5f565b6001600160a01b039081168252602082019290925260400160002080546001600160a01b0319169290911691909117905583838381811061083f5761083f610fef565b90506020020160208101906108549190611005565b600260008a8a8681811061086a5761086a610fef565b905060200201602081019061087f9190610c5f565b6001600160a01b031681526020810191909152604001600020805460ff191660ff929092169190911790558585838181106108bc576108bc610fef565b90506020020160208101906108d19190610c5f565b6001600160a01b03168888848181106108ec576108ec610fef565b90506020020160208101906109019190610c5f565b6001600160a01b03167fbbe9a70ef9e0977daf443b1efb907d53d3e756a7360c473022d4af39364b0f0e86868681811061093d5761093d610fef565b90506020020160208101906109529190611005565b6040805160ff90921682524260208301520160405180910390a350600101610591565b50505050505050565b6000546001600160a01b031633146109a85760405162461bcd60e51b815260040161025290610fcc565b6001600160a01b0381166109f25760405162461bcd60e51b815260206004820152601160248201527024b73b30b634b2103732bb9037bbb732b960791b6044820152606401610252565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b6000546001600160a01b03163314610a6c5760405162461bcd60e51b815260040161025290610fcc565b6001600160a01b038316610ab25760405162461bcd60e51b815260206004820152600d60248201526c24b73b30b634b2103a37b5b2b760991b6044820152606401610252565b6001600160a01b038216610af75760405162461bcd60e51b815260206004820152600c60248201526b125b9d985b1a59081999595960a21b6044820152606401610252565b60008160ff16118015610b0e575060128160ff1611155b610b4d5760405162461bcd60e51b815260206004820152601060248201526f496e76616c696420646563696d616c7360801b6044820152606401610252565b6000829050806001600160a01b031663feaf968c6040518163ffffffff1660e01b815260040160a060405180830381865afa158015610b90573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610bb49190610de6565b505050506001600160a01b03858116600081815260016020908152604080832080546001600160a01b031916958a1695861790556002825291829020805460ff191660ff89169081179091558251908152429181019190915292935090917fbbe9a70ef9e0977daf443b1efb907d53d3e756a7360c473022d4af39364b0f0e910160405180910390a350505050565b80356001600160a01b0381168114610c5a57600080fd5b919050565b600060208284031215610c7157600080fd5b610c7a82610c43565b9392505050565b60008083601f840112610c9357600080fd5b50813567ffffffffffffffff811115610cab57600080fd5b6020830191508360208260051b8501011115610cc657600080fd5b9250929050565b60008060008060008060608789031215610ce657600080fd5b863567ffffffffffffffff811115610cfd57600080fd5b610d0989828a01610c81565b909750955050602087013567ffffffffffffffff811115610d2957600080fd5b610d3589828a01610c81565b909550935050604087013567ffffffffffffffff811115610d5557600080fd5b610d6189828a01610c81565b979a9699509497509295939492505050565b60ff81168114610d8257600080fd5b50565b600080600060608486031215610d9a57600080fd5b610da384610c43565b9250610db160208501610c43565b91506040840135610dc181610d73565b809150509250925092565b805169ffffffffffffffffffff81168114610c5a57600080fd5b600080600080600060a08688031215610dfe57600080fd5b610e0786610dcc565b60208701516040880151606089015192975090955093509150610e2c60808701610dcc565b90509295509295909350565b634e487b7160e01b600052601160045260246000fd5b81810381811115610e6157610e61610e38565b92915050565b600060208284031215610e7957600080fd5b8151610c7a81610d73565b60ff8281168282160390811115610e6157610e61610e38565b6001815b6001841115610ed857808504811115610ebc57610ebc610e38565b6001841615610eca57908102905b60019390931c928002610ea1565b935093915050565b600082610eef57506001610e61565b81610efc57506000610e61565b8160018114610f125760028114610f1c57610f38565b6001915050610e61565b60ff841115610f2d57610f2d610e38565b50506001821b610e61565b5060208310610133831016604e8410600b8410161715610f5b575081810a610e61565b610f686000198484610e9d565b8060001904821115610f7c57610f7c610e38565b029392505050565b6000610c7a60ff841683610ee0565b600082610fb057634e487b7160e01b600052601260045260246000fd5b500490565b8082028115828204841417610e6157610e61610e38565b6020808252600990820152682737ba1037bbb732b960b91b604082015260600190565b634e487b7160e01b600052603260045260246000fd5b60006020828403121561101757600080fd5b8135610c7a81610d7356fea264697066735822122047d5aaaf869d3bc41382fda64b17cebd71fc286e6e63dd53441fa1eecd2d2cc564736f6c634300081e0033",
+  "devdoc": {
+    "details": "Converts token prices to USDC terms using Chainlink data feeds  Chainlink Price Feeds on Base: - ETH/USD: 0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70 - BTC/USD: 0x64c911996D3c6aC71f9b455B1E8E7266BcbD848F - More feeds: https://docs.chain.link/data-feeds/price-feeds/addresses?network=base",
+    "kind": "dev",
+    "methods": {
+      "getPrice(address)": {
+        "params": {
+          "token": "Address of token to price"
+        },
+        "returns": {
+          "price": "Price in USDC (6 decimals)"
+        }
+      },
+      "getPriceFeed(address)": {
+        "params": {
+          "token": "Address of token"
+        },
+        "returns": {
+          "_0": "Address of Chainlink price feed"
+        }
+      },
+      "hasPriceFeed(address)": {
+        "params": {
+          "token": "Address of token"
+        },
+        "returns": {
+          "_0": "True if price feed is set"
+        }
+      },
+      "setPriceFeed(address,address,uint8)": {
+        "params": {
+          "decimals": "Token decimals (e.g., 18 for WETH, 8 for WBTC)",
+          "feed": "Address of Chainlink price feed",
+          "token": "Address of token"
+        }
+      },
+      "setPriceFeeds(address[],address[],uint8[])": {
+        "params": {
+          "decimals": "Array of token decimals",
+          "feeds": "Array of Chainlink price feed addresses",
+          "tokens": "Array of token addresses"
+        }
+      },
+      "transferOwnership(address)": {
+        "params": {
+          "newOwner": "Address of new owner"
+        }
+      }
+    },
+    "title": "ChainlinkPriceOracle",
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "getPrice(address)": {
+        "notice": "Get price of token in USDC terms"
+      },
+      "getPriceFeed(address)": {
+        "notice": "Get price feed address for a token"
+      },
+      "hasPriceFeed(address)": {
+        "notice": "Check if price feed is set for a token"
+      },
+      "setPriceFeed(address,address,uint8)": {
+        "notice": "Set Chainlink price feed for a token"
+      },
+      "setPriceFeeds(address[],address[],uint8[])": {
+        "notice": "Set multiple price feeds at once"
+      },
+      "transferOwnership(address)": {
+        "notice": "Transfer ownership"
+      }
+    },
+    "notice": "Production-ready price oracle using Chainlink Price Feeds",
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 51,
+        "contract": "contracts/ChainlinkPriceOracle.sol:ChainlinkPriceOracle",
+        "label": "owner",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "astId": 55,
+        "contract": "contracts/ChainlinkPriceOracle.sol:ChainlinkPriceOracle",
+        "label": "priceFeeds",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_mapping(t_address,t_address)"
+      },
+      {
+        "astId": 59,
+        "contract": "contracts/ChainlinkPriceOracle.sol:ChainlinkPriceOracle",
+        "label": "tokenDecimals",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_mapping(t_address,t_uint8)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_mapping(t_address,t_address)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => address)",
+        "numberOfBytes": "32",
+        "value": "t_address"
+      },
+      "t_mapping(t_address,t_uint8)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => uint8)",
+        "numberOfBytes": "32",
+        "value": "t_uint8"
+      },
+      "t_uint8": {
+        "encoding": "inplace",
+        "label": "uint8",
+        "numberOfBytes": "1"
+      }
+    }
+  }
+}

@@ -10,19 +10,24 @@ import DecisionMatrix from "@/components/DecisionMatrix";
 import ProofModal from "@/components/ProofModal";
 import VaultBar from "@/components/VaultBar";
 import SnakeHUD from "@/components/SnakeHUD";
+import DepositModal from "@/components/DepositModal";
+import WithdrawModal from "@/components/WithdrawModal";
 
 const Index = () => {
   const [ripple, setRipple] = useState(false);
   const [proofTradeId, setProofTradeId] = useState<string | null>(null);
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
   const handleDeposit = () => {
+    setShowDepositModal(true);
     setRipple(true);
     systemLogBus.emit("DEPOSIT INITIATED: AWAITING CONFIRMATION...");
     setTimeout(() => setRipple(false), 1500);
   };
 
   const handleWithdraw = () => {
-    // Visual feedback for withdraw? Maybe a reverse ripple or just a log for now
+    setShowWithdrawModal(true);
     systemLogBus.emit("WITHDRAW INITIATED: VERIFYING LIQUIDITY...");
   };
 
@@ -69,6 +74,8 @@ const Index = () => {
       </main>
 
       <ProofModal tradeId={proofTradeId} onClose={() => setProofTradeId(null)} />
+      <DepositModal isOpen={showDepositModal} onClose={() => setShowDepositModal(false)} />
+      <WithdrawModal isOpen={showWithdrawModal} onClose={() => setShowWithdrawModal(false)} />
     </div>
   );
 };

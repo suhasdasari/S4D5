@@ -1,24 +1,47 @@
+import * as dotenv from "dotenv";
+dotenv.config();
 import { ethers } from "hardhat";
+import { S4D5Vault } from "../typechain-types";
+import { Wallet } from "ethers";
+import password from "@inquirer/password";
 
 /**
  * Initialize S4D5Vault with seed deposit
  * 
  * Usage:
- *   yarn hardhat run scripts/initialize-vault.ts --network baseSepolia
+ *   yarn hardhat run scripts/initialize-vault.ts --network base
  * 
  * Prerequisites:
  *   - Vault must be deployed
- *   - Deployer must have at least 1000 USDC
+ *   - Deployer must have at least 10 USDC
  */
 async function main() {
   console.log("\n🚀 Initializing S4D5Vault...\n");
 
-  // Get signer
-  const [signer] = await ethers.getSigners();
-  console.log("Signer address:", signer.address);
+  // Get signer from encrypted private key
+  const encryptedKey = process.env.DEPLOYER_PRIVATE_KEY_ENCRYPTED;
+  
+  if (!encryptedKey) {
+    console.log("🚫️ You don't have a deployer account. Run `yarn account:import` first");
+    return;
+  }
+
+  const pass = await password({ message: "Enter your password to decrypt the private key:" });
+  let wallet: Wallet;
+  try {
+    wallet = (await Wallet.fromEncryptedJson(encryptedKey, pass)) as Wallet;
+  } catch {
+    console.log("❌ Failed to decrypt private key. Wrong password?");
+    return;
+  }
+
+  // Connect wallet to provider
+  const signer = wallet.connect(ethers.provider);
+  const signerAddress = await signer.getAddress();
+  console.log("Signer address:", signerAddress);
 
   // Get deployed contracts
-  const vault = await ethers.getContract("S4D5Vault");
+  const vault = (await ethers.getContractAt("S4D5Vault", "0xed8E9E422D4681E177423BCe0Ebaf03BF413a83B", signer)) as S4D5Vault;
   const vaultAddress = await vault.getAddress();
   console.log("Vault address:", vaultAddress);
 
@@ -36,7 +59,7 @@ async function main() {
     throw new Error(`Unsupported network: ${network.chainId}`);
   }
 
-  const usdc = await ethers.getContractAt("IERC20", usdcAddress);
+  const usdc = await ethers.getContractAt("IERC20", usdcAddress, signer);
   console.log("USDC address:", usdcAddress);
 
   // Check if vault is already initialized
@@ -48,12 +71,12 @@ async function main() {
   }
 
   // Check USDC balance
-  const balance = await usdc.balanceOf(signer.address);
+  const balance = await usdc.balanceOf(signerAddress);
   console.log("\nYour USDC balance:", ethers.formatUnits(balance, 6), "USDC");
 
-  const initAmount = ethers.parseUnits("1000", 6); // 1000 USDC
+  const initAmount = ethers.parseUnits("10", 6); // 10 USDC
   if (balance < initAmount) {
-    throw new Error(`Insufficient USDC balance. Need 1000 USDC, have ${ethers.formatUnits(balance, 6)}`);
+    throw new Error(`Insufficient USDC balance. Need 10 USDC, have ${ethers.formatUnits(balance, 6)}`);
   }
 
   // Approve USDC
@@ -63,7 +86,7 @@ async function main() {
   console.log("✅ USDC approved");
 
   // Initialize vault
-  console.log("\n🔐 Initializing vault with 1000 USDC...");
+  console.log("\n🔐 Initializing vault with 10 USDC...");
   const initTx = await vault.initializeVault(initAmount);
   const receipt = await initTx.wait();
   console.log("✅ Vault initialized!");
@@ -71,7 +94,7 @@ async function main() {
 
   // Verify initialization
   const newTotalSupply = await vault.totalSupply();
-  const ownerShares = await vault.balanceOf(signer.address);
+  const ownerShares = await vault.balanceOf(signerAddress);
   const deadShares = await vault.balanceOf("0x000000000000000000000000000000000000dEaD");
 
   console.log("\n📊 Vault Status:");
