@@ -6,7 +6,7 @@
  */
 
 const CDPWalletManager = require('../lib/cdp-wallet');
-require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
+require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '..', '.env') });
 
 const BOT_NAME = 'AuditOracle';
 
