@@ -2,27 +2,44 @@
 /**
  * Send Proposals to ExecutionHand via Nerve-Cord
  * This script runs the analysis and sends proposals via Nerve-Cord
+ * Includes x402 micropayments to AuditOracle for risk analysis
  * Usage: node send-proposals.js
  */
 
 const { execSync } = require('child_process');
 const path = require('path');
+const { KiteWalletManager } = require('../lib/kite-wallet');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '..', '.env') });
-// Run analysis
-console.error('Running market analysis...');
-const analysisOutput = execSync('node scripts/analyze-and-propose.js', {
-  cwd: path.join(__dirname, '..'),
-  encoding: 'utf8'
-});
 
-const result = JSON.parse(analysisOutput);
+async function main() {
+  // Run analysis
+  console.error('Running market analysis...');
+  const analysisOutput = execSync('node scripts/analyze-and-propose.js', {
+    cwd: path.join(__dirname, '..'),
+    encoding: 'utf8'
+  });
 
-if (result.proposals.length === 0) {
-  console.log('No proposals generated');
-  process.exit(0);
+  const result = JSON.parse(analysisOutput);
+
+  if (result.proposals.length === 0) {
+    console.log('No proposals generated');
+    process.exit(0);
+  }
+
+  console.error(`Generated ${result.proposals.length} proposals`);
+
+// Initialize Kite wallet for x402 payments
+let kiteWallet = null;
+const AUDIT_ORACLE_ADDRESS = '0xF3bbD5682e671CdcDC42f52bDdecCB6a35D53aE1';
+
+try {
+  kiteWallet = new KiteWalletManager();
+  await kiteWallet.initialize();
+  console.error('✓ Kite wallet initialized for x402 payments');
+} catch (error) {
+  console.error('⚠️  Kite wallet not available:', error.message);
+  console.error('   Proposals will be sent without x402 payments');
 }
-
-console.error(`Generated ${result.proposals.length} proposals`);
 
 // Send each proposal via Nerve-Cord
 for (const proposal of result.proposals) {
@@ -74,6 +91,37 @@ Timestamp: ${new Date(proposal.timestamp).toISOString()}`;
     });
     console.error('✓ Sent successfully');
     
+    // Send x402 micropayment to AuditOracle for risk analysis service
+    if (kiteWallet) {
+      try {
+        const payment = await kiteWallet.sendPayment(
+          AUDIT_ORACLE_ADDRESS,
+          '0.001', // 0.001 KITE per proposal analysis
+          {
+            service: 'risk-analysis',
+            proposalId: proposal.action === 'OPEN' ? `PROP-${Date.now()}` : proposal.positionId,
+            agent: 'alpha-strategist',
+            recipient: 'audit-oracle',
+            description: `Payment for ${proposal.action} ${proposal.asset} analysis`
+          }
+        );
+        
+        if (payment.success) {
+          console.error(`✓ x402 payment sent: ${payment.txHash.substring(0, 10)}...`);
+          
+          // Log payment to Nerve-Cord
+          execSync(`npm run log "💰 Paid AuditOracle 0.001 KITE for analysis (tx: ${payment.txHash.substring(0, 10)}...)" "alpha-strategist,payment,kite"`, {
+            cwd: path.join(__dirname, '..', '..', '..', '..', 'nerve-cord'),
+            stdio: 'inherit'
+          });
+        } else {
+          console.error(`⚠️  x402 payment failed: ${payment.error}`);
+        }
+      } catch (paymentError) {
+        console.error(`⚠️  x402 payment error: ${paymentError.message}`);
+      }
+    }
+    
     // Log to Nerve-Cord dashboard
     execSync(`npm run log "📊 Sent proposal to AuditOracle: ${subject}" "alpha-strategist,proposal"`, {
       cwd: path.join(__dirname, '..', '..', '..', '..', 'nerve-cord'),
@@ -85,3 +133,10 @@ Timestamp: ${new Date(proposal.timestamp).toISOString()}`;
 }
 
 console.log(`Sent ${result.proposals.length} proposals to audit-oracle for review`);
+}
+
+// Run main function
+main().catch(error => {
+  console.error('Error:', error.message);
+  process.exit(1);
+});
