@@ -1,5 +1,9 @@
 .env
 
+# IDE and editor files
+.vscode/
+.kiro/
+
 # Nerve-cord runtime
 nerve-cord/data/
 nerve-cord/keys/
