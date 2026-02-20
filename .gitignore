@@ -1,3 +1,6 @@
-node_modules/
 .env
-.DS_Store
+
+# Nerve-cord runtime
+nerve-cord/data/
+nerve-cord/keys/
+nerve-cord/node_modules/

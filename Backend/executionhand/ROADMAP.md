@@ -28,4 +28,4 @@
 
 - Needs strategist front-end deployed to Vercel (pending Helix commit).
 - Needs Risk + Compliance schemas finalized to know which signatures/hashes to expect.
-- Requires AWS budget tracking to ensure Bedrock + QuickNode spend stays < $100 unless updated.
+- Requires AWS budget tracking to ensure Bedrock + QuickNode.
