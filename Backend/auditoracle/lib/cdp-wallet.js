@@ -1,4 +1,4 @@
-const { CdpAgentkit } = require("@coinbase/cdp-agentkit");
+const { Coinbase, Wallet } = require("@coinbase/coinbase-sdk");
 const fs = require("fs").promises;
 const path = require("path");
 
@@ -10,34 +10,36 @@ class CDPWalletManager {
   constructor(botName) {
     this.botName = botName;
     this.wallet = null;
-    this.agentkit = null;
+    this.coinbase = null;
   }
 
   /**
-   * Initialize CDP wallet using AgentKit
+   * Initialize CDP wallet using Coinbase SDK
    * @returns {Promise<string>} Wallet address
    */
   async initialize() {
     try {
       console.log(`[${this.botName}] Initializing CDP wallet...`);
       
-      // Create AgentKit instance
-      this.agentkit = await CdpAgentkit.create({
-        networkId: process.env.NETWORK_ID || "base-mainnet",
-        cdpApiKeyName: process.env.CDP_API_KEY_NAME,
-        cdpApiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY,
+      // Configure Coinbase SDK
+      Coinbase.configure({
+        apiKeyName: process.env.CDP_API_KEY_NAME,
+        privateKey: process.env.CDP_API_KEY_PRIVATE_KEY,
       });
       
-      // Get wallet instance
-      this.wallet = this.agentkit.wallet;
+      // Create wallet
+      this.wallet = await Wallet.create({
+        networkId: process.env.NETWORK_ID || "base-mainnet",
+      });
+      
       const address = await this.wallet.getDefaultAddress();
       
       console.log(`[${this.botName}] CDP wallet created: ${address}`);
       
       // Store wallet address in config
-      await this.saveWalletConfig(address);
+      await this.saveWalletConfig(address.getId());
       
-      return address;
+      return address.getId();
     } catch (error) {
       console.error(`[${this.botName}] CDP wallet initialization failed:`, error);
       throw error;
@@ -68,13 +70,15 @@ class CDPWalletManager {
     try {
       console.log(`[${this.botName}] Transferring ${amount} USDC to ${to}...`);
       
-      const tx = await this.wallet.transfer({
+      const transfer = await this.wallet.createTransfer({
         amount: amount,
         assetId: "usdc",
         destination: to,
       });
       
-      const txHash = tx.getTransactionHash();
+      await transfer.wait();
+      const txHash = transfer.getTransactionHash();
+      
       console.log(`[${this.botName}] Transfer successful: ${txHash}`);
       
       return txHash;
@@ -93,7 +97,8 @@ class CDPWalletManager {
       if (!this.wallet) {
         throw new Error("Wallet not initialized");
       }
-      return await this.wallet.getDefaultAddress();
+      const address = await this.wallet.getDefaultAddress();
+      return address.getId();
     } catch (error) {
       console.error(`[${this.botName}] Failed to get address:`, error);
       throw error;

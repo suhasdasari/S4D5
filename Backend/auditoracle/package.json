@@ -15,6 +15,6 @@
   "license": "MIT",
   "dependencies": {
     "dotenv": "^16.3.0",
-    "@coinbase/cdp-agentkit": "^0.0.1"
+    "@coinbase/coinbase-sdk": "^0.10.0"
   }
 }
