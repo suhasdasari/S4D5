@@ -7,7 +7,7 @@
 
 const { execSync } = require('child_process');
 const path = require('path');
-
+require('dotenv').config({ path: path.join(__dirname, '..', '..', '..', '.env') });
 // Run analysis
 console.error('Running market analysis...');
 const analysisOutput = execSync('node scripts/analyze-and-propose.js', {

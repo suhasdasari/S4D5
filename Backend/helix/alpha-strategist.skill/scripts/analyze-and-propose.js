@@ -7,13 +7,15 @@
  * Example: node analyze-and-propose.js BTC,ETH
  */
 
-const { fetchMarketData } = require('./fetch-market-data');
 const { analyzeOrderBook } = require('./analyze-orderbook');
 const { listPositions } = require('./track-positions');
-require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+const axios = require('axios');
+require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '..', '.env') });
+
+const BINANCE_US_API = 'https://api.binance.us/api/v3';
 
 const TARGET_ASSETS = (process.env.TARGET_ASSETS || 'BTC,ETH').split(',');
-const MIN_CONFIDENCE = parseFloat(process.env.MIN_CONFIDENCE || '30'); // Lowered for technical indicators
+const MIN_CONFIDENCE = parseFloat(process.env.MIN_CONFIDENCE || '60');
 const MAX_POSITION_SIZE = parseFloat(process.env.MAX_POSITION_SIZE || '10000');
 const RISK_MULTIPLIER = parseFloat(process.env.RISK_MULTIPLIER || '0.5');
 const TAKE_PROFIT_PCT = parseFloat(process.env.TAKE_PROFIT_PCT || '5');
@@ -114,17 +116,24 @@ async function analyzeAndPropose(assets = TARGET_ASSETS) {
       try {
         console.error(`Analyzing ${asset}...`);
         
-        // Fetch market data
-        const marketData = await fetchMarketData(asset);
+        // Get symbol for Binance.US
+        const symbol = `${asset.replace('-USD', '')}USDT`;
+        
+        // Fetch 24h ticker data from Binance.US
+        const tickerResponse = await axios.get(`${BINANCE_US_API}/ticker/24hr`, {
+          params: { symbol },
+          timeout: 5000
+        });
+        
+        const ticker = tickerResponse.data;
+        const currentPrice = parseFloat(ticker.lastPrice);
+        const change24h = parseFloat(ticker.priceChangePercent);
+        const volume24h = parseFloat(ticker.quoteVolume);
         
         // Analyze order book for real-time sentiment
-        const symbol = `${asset.replace('-USD', '')}USDT`;
         const orderBookAnalysis = await analyzeOrderBook(symbol);
         
         // Combine technical indicators with order book
-        const change24h = marketData.price.change24h || 0;
-        const volume24h = marketData.volume.volume24h || 0;
-        
         // Sentiment from order book (primary) + price momentum (secondary)
         const orderBookSentiment = parseFloat(orderBookAnalysis.sentiment);
         const priceMomentum = Math.max(-1, Math.min(1, change24h / 5));
@@ -143,7 +152,7 @@ async function analyzeAndPropose(assets = TARGET_ASSETS) {
           const closeReasons = shouldClosePosition(
             existingPosition,
             sentimentScore,
-            marketData.price.current
+            currentPrice
           );
           
           if (closeReasons.length > 0) {
@@ -152,7 +161,7 @@ async function analyzeAndPropose(assets = TARGET_ASSETS) {
               positionId: existingPosition.id,
               asset: asset,
               reasons: closeReasons,
-              currentPrice: marketData.price.current,
+              currentPrice: currentPrice,
               timestamp: Date.now()
             });
           }
@@ -168,19 +177,19 @@ async function analyzeAndPropose(assets = TARGET_ASSETS) {
               direction: direction,
               leverage: leverage,
               size: positionSize,
-              entryPrice: marketData.price.current,
+              entryPrice: currentPrice,
               stopLoss: direction === 'LONG' 
-                ? marketData.price.current * (1 - STOP_LOSS_PCT / 100)
-                : marketData.price.current * (1 + STOP_LOSS_PCT / 100),
+                ? currentPrice * (1 - STOP_LOSS_PCT / 100)
+                : currentPrice * (1 + STOP_LOSS_PCT / 100),
               takeProfit: direction === 'LONG'
-                ? marketData.price.current * (1 + TAKE_PROFIT_PCT / 100)
-                : marketData.price.current * (1 - TAKE_PROFIT_PCT / 100),
+                ? currentPrice * (1 + TAKE_PROFIT_PCT / 100)
+                : currentPrice * (1 - TAKE_PROFIT_PCT / 100),
               confidence: confidence,
               sentimentScore: sentimentScore,
               marketData: {
-                price: marketData.price.current,
-                volume24h: marketData.volume.volume24h,
-                change24h: marketData.price.change24h
+                price: currentPrice,
+                volume24h: volume24h,
+                change24h: change24h
               },
               orderBookAnalysis: {
                 buyPressure: orderBookAnalysis.pressure.buy,
