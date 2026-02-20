@@ -23,6 +23,9 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
     functionName: "balanceOf",
     args: [connectedAddress as string],
     chainId: 8453,
+    query: {
+      enabled: typeof window !== "undefined" && !!connectedAddress,
+    },
   });
 
   const { data: userAssets } = useScaffoldReadContract({
@@ -30,6 +33,9 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
     functionName: "convertToAssets",
     args: [userShares || 0n],
     chainId: 8453,
+    query: {
+      enabled: typeof window !== "undefined" && !!userShares,
+    },
   });
 
   const { writeContractAsync: withdrawFromVault } = useScaffoldWriteContract({

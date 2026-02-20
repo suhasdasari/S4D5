@@ -43,6 +43,9 @@ const SnakeHUD = () => {
     contractName: "S4D5Vault",
     functionName: "totalAssets",
     chainId: 8453, // Base mainnet
+    query: {
+      enabled: typeof window !== "undefined", // Only run on client
+    },
   });
 
   // Read user's USDC balance in wallet (not in vault) - using USDC contract directly
@@ -52,6 +55,9 @@ const SnakeHUD = () => {
     functionName: "balanceOf",
     args: [connectedAddress as `0x${string}`],
     chainId: 8453,
+    query: {
+      enabled: typeof window !== "undefined" && !!connectedAddress, // Only run on client with address
+    },
   });
 
   // Read user's share balance in vault
@@ -60,6 +66,9 @@ const SnakeHUD = () => {
     functionName: "balanceOf",
     args: [connectedAddress as string],
     chainId: 8453,
+    query: {
+      enabled: typeof window !== "undefined" && !!connectedAddress, // Only run on client with address
+    },
   });
 
   // Read total supply of shares
@@ -67,6 +76,9 @@ const SnakeHUD = () => {
     contractName: "S4D5Vault",
     functionName: "totalSupply",
     chainId: 8453,
+    query: {
+      enabled: typeof window !== "undefined", // Only run on client
+    },
   });
 
   // Convert USDC (6 decimals) to display value

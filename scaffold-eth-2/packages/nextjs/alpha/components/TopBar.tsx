@@ -10,6 +10,9 @@ const MetricsBar = () => {
     contractName: "S4D5Vault",
     functionName: "totalAssets",
     chainId: 8453, // Base mainnet
+    query: {
+      enabled: typeof window !== "undefined",
+    },
   });
 
   const tvl = totalAssets ? Number(formatUnits(totalAssets, 6)) : 10;
