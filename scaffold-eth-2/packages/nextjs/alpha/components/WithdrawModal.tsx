@@ -15,12 +15,14 @@ interface WithdrawModalProps {
 const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
   const { address: connectedAddress } = useAccount();
   const [amount, setAmount] = useState("");
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   // Read user's USDC value in vault
   const { data: userShares } = useScaffoldReadContract({
     contractName: "S4D5Vault",
     functionName: "balanceOf",
-    args: connectedAddress ? [connectedAddress] : undefined,
+    args: [connectedAddress as string],
     chainId: 8453,
   });
 
@@ -28,14 +30,13 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
   const { data: userAssets } = useScaffoldReadContract({
     contractName: "S4D5Vault",
     functionName: "convertToAssets",
-    args: userShares ? [userShares] : undefined,
+    args: [userShares || 0n],
     chainId: 8453,
   });
 
   // Withdraw from vault
-  const { writeContractAsync: withdrawFromVault, isMining: isWithdrawing } = useScaffoldWriteContract({
+  const { writeContractAsync: withdrawFromVault } = useScaffoldWriteContract({
     contractName: "S4D5Vault",
-    chainId: 8453,
   });
 
   const maxWithdraw = userAssets ? Number(formatUnits(userAssets, 6)) : 0;
@@ -44,6 +45,7 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
     if (!amount || !connectedAddress) return;
 
     try {
+      setIsWithdrawing(true);
       const amountInUsdc = parseUnits(amount, 6); // USDC has 6 decimals
 
       await withdrawFromVault({
@@ -52,10 +54,16 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
       });
 
       // Success
-      setAmount("");
-      onClose();
+      setSuccess(true);
+      setTimeout(() => {
+        setAmount("");
+        setIsWithdrawing(false);
+        setSuccess(false);
+        onClose();
+      }, 2000);
     } catch (error) {
       console.error("Withdraw failed:", error);
+      setIsWithdrawing(false);
     }
   };
 
@@ -79,7 +87,7 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
 
           <h2 className="text-xl font-display tracking-wider uppercase mb-4">Withdraw USDC</h2>
 
-          {!isWithdrawing ? (
+          {!isWithdrawing && !success ? (
             <>
               <div className="mb-2">
                 <p className="text-xs font-display tracking-wider uppercase text-foreground/60">
@@ -115,6 +123,10 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
                 Withdraw
               </button>
             </>
+          ) : success ? (
+            <div className="text-center py-8">
+              <p className="text-green-500 mb-2">✓ Withdrawal successful!</p>
+            </div>
           ) : (
             <div className="text-center py-8">
               <p className="text-foreground/60 mb-2">Withdrawing from vault...</p>

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 interface MarketRow {
   symbol: string;
@@ -6,29 +7,6 @@ interface MarketRow {
   change: string;
   positive: boolean;
 }
-
-const STOCKS: MarketRow[] = [
-  { symbol: "NVDA", price: "$1,247.30", change: "+3.42%", positive: true },
-  { symbol: "AAPL", price: "$234.56", change: "-0.18%", positive: false },
-  { symbol: "MSFT", price: "$478.91", change: "+1.07%", positive: true },
-];
-
-const CRYPTO: MarketRow[] = [
-  { symbol: "BTC", price: "$104,872", change: "+2.14%", positive: true },
-  { symbol: "ETH", price: "$3,847.22", change: "+4.67%", positive: true },
-  { symbol: "SOL", price: "$287.45", change: "-1.33%", positive: false },
-];
-
-const COMMODITIES: MarketRow[] = [
-  { symbol: "GOLD", price: "$2,934.10", change: "+0.52%", positive: true },
-  { symbol: "OIL", price: "$78.34", change: "-0.87%", positive: false },
-];
-
-const POLYMARKET: { question: string; odds: string }[] = [
-  { question: "Fed Rate Cut by Q2 2030?", odds: "72%" },
-  { question: "BTC > $150K by EOY?", odds: "58%" },
-  { question: "AI Regulation Bill Passes?", odds: "41%" },
-];
 
 
 const DataSection = ({ title, rows }: { title: string; rows: MarketRow[] }) => (
@@ -51,6 +29,49 @@ const DataSection = ({ title, rows }: { title: string; rows: MarketRow[] }) => (
 );
 
 const MarketWatch = ({ onOpenProof }: { onOpenProof: (tradeId: string) => void }) => {
+  const [cryptoPrices, setCryptoPrices] = useState<MarketRow[]>([
+    { symbol: "BTC", price: "$104,872", change: "+2.14%", positive: true },
+    { symbol: "ETH", price: "$3,847.22", change: "+4.67%", positive: true },
+  ]);
+
+  useEffect(() => {
+    const fetchPrices = async () => {
+      try {
+        const response = await fetch(
+          "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true"
+        );
+        const data = await response.json();
+
+        const btcPrice = data.bitcoin?.usd || 0;
+        const btcChange = data.bitcoin?.usd_24h_change || 0;
+        const ethPrice = data.ethereum?.usd || 0;
+        const ethChange = data.ethereum?.usd_24h_change || 0;
+
+        setCryptoPrices([
+          {
+            symbol: "BTC",
+            price: `$${btcPrice.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+            change: `${btcChange >= 0 ? "+" : ""}${btcChange.toFixed(2)}%`,
+            positive: btcChange >= 0,
+          },
+          {
+            symbol: "ETH",
+            price: `$${ethPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            change: `${ethChange >= 0 ? "+" : ""}${ethChange.toFixed(2)}%`,
+            positive: ethChange >= 0,
+          },
+        ]);
+      } catch (error) {
+        console.error("Failed to fetch crypto prices:", error);
+      }
+    };
+
+    fetchPrices();
+    const interval = setInterval(fetchPrices, 30000); // Update every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <motion.div
       className="glass-panel h-full flex flex-col scanline overflow-hidden"
@@ -64,22 +85,7 @@ const MarketWatch = ({ onOpenProof }: { onOpenProof: (tradeId: string) => void }
         </h3>
       </div>
       <div className="flex-1 overflow-y-auto p-4 terminal-scrollbar">
-        <DataSection title="Equities" rows={STOCKS} />
-        <DataSection title="Crypto" rows={CRYPTO} />
-        <DataSection title="Commodities" rows={COMMODITIES} />
-        <div>
-          <h4 className="font-display text-[10px] tracking-[0.25em] uppercase text-white/80 mb-2">
-            Polymarket Odds
-          </h4>
-          <div className="space-y-2">
-            {POLYMARKET.map((p) => (
-              <div key={p.question} className="text-xs px-2 py-1.5 rounded hover:bg-white/[0.03] transition-colors">
-                <div className="text-white/80 mb-1">{p.question}</div>
-                <div className="font-bold text-white">{p.odds}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <DataSection title="Crypto" rows={cryptoPrices} />
       </div>
     </motion.div>
   );

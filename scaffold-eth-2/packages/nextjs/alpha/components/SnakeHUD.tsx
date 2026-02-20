@@ -47,7 +47,7 @@ const SnakeHUD = () => {
   const { data: userShares } = useScaffoldReadContract({
     contractName: "S4D5Vault",
     functionName: "balanceOf",
-    args: connectedAddress ? [connectedAddress] : undefined,
+    args: [connectedAddress as string],
     chainId: 8453,
   });
 
