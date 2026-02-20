@@ -72,32 +72,32 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-auto">
+        <div className="fixed inset-0 z-[100] flex items-start justify-end p-4 pointer-events-none">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-gray-900 border-2 border-white/30 rounded-lg p-6 w-full max-w-md relative shadow-2xl"
+            initial={{ opacity: 0, x: 20, y: -20 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            exit={{ opacity: 0, x: 20, y: -20 }}
+            className="bg-gray-900/95 backdrop-blur-md border-2 border-red-500/40 rounded-lg p-4 w-80 relative shadow-2xl pointer-events-auto mt-16"
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors"
+              className="absolute top-2 right-2 text-white/60 hover:text-white transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
 
-            <h2 className="text-xl font-display tracking-wider uppercase mb-4 text-white">Withdraw USDC</h2>
+            <h2 className="text-sm font-display tracking-wider uppercase mb-3 text-white">Withdraw USDC</h2>
 
             {!isWithdrawing && !success ? (
               <>
                 <div className="mb-2">
-                  <p className="text-xs font-display tracking-wider uppercase text-white/60">
+                  <p className="text-[10px] font-display tracking-wider uppercase text-white/60">
                     Available: ${maxWithdraw.toFixed(2)} USDC
                   </p>
                 </div>
 
-                <div className="mb-4">
-                  <label className="text-xs font-display tracking-wider uppercase text-white/60 mb-2 block">
+                <div className="mb-3">
+                  <label className="text-[10px] font-display tracking-wider uppercase text-white/60 mb-1 block">
                     Amount (USDC)
                   </label>
                   <input
@@ -106,11 +106,11 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.00"
                     max={maxWithdraw}
-                    className="w-full bg-gray-800 border border-white/20 rounded px-4 py-2 text-white font-mono focus:outline-none focus:border-white/40"
+                    className="w-full bg-gray-800 border border-white/20 rounded px-3 py-1.5 text-sm text-white font-mono focus:outline-none focus:border-red-500/40"
                   />
                   <button
                     onClick={() => setAmount(maxWithdraw.toString())}
-                    className="text-xs text-white/60 hover:text-white mt-1 transition-colors"
+                    className="text-[10px] text-white/60 hover:text-white mt-1 transition-colors"
                   >
                     Max
                   </button>
@@ -119,19 +119,19 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
                 <button
                   onClick={handleWithdraw}
                   disabled={!amount || !connectedAddress || Number(amount) > maxWithdraw}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded font-display tracking-wider uppercase disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full bg-red-600 hover:bg-red-700 text-white py-1.5 text-xs rounded font-display tracking-wider uppercase disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Confirm Withdraw
                 </button>
               </>
             ) : success ? (
-              <div className="text-center py-8">
-                <p className="text-green-500 mb-2">✓ Withdrawal successful!</p>
+              <div className="text-center py-6">
+                <p className="text-xs text-green-500 mb-2">✓ Withdrawal successful!</p>
               </div>
             ) : (
-              <div className="text-center py-8">
-                <p className="text-white/60 mb-2">Withdrawing from vault...</p>
-                <div className="animate-spin w-8 h-8 border-2 border-white/20 border-t-white rounded-full mx-auto" />
+              <div className="text-center py-6">
+                <p className="text-[10px] text-white/60 mb-2">Withdrawing from vault...</p>
+                <div className="animate-spin w-6 h-6 border-2 border-white/20 border-t-white rounded-full mx-auto" />
               </div>
             )}
           </motion.div>

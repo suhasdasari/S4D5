@@ -2,8 +2,6 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 import { formatUnits, erc20Abi } from "viem";
-import DepositModal from "./DepositModal";
-import WithdrawModal from "./WithdrawModal";
 
 const BASE_VALUE = 1_240_500;
 const INITIAL_CAPITAL = 1_000_000;
@@ -93,8 +91,6 @@ const SnakeHUD = () => {
   const sessionStartRef = useRef(new Date());
   const [headPos, setHeadPos] = useState<{ x: number; y: number } | null>(null);
   const [isUp, setIsUp] = useState(true);
-  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
-  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
   const resetPoints = useCallback(() => {
     const seed: Point[] = [];
@@ -421,30 +417,7 @@ const SnakeHUD = () => {
         <p className="text-[8px] font-mono mt-0.5 tracking-[0.1em] uppercase text-muted-foreground">
           {connectedAddress ? "Base Mainnet • Live" : "Connect wallet to deposit"}
         </p>
-        
-        {/* Deposit and Withdraw buttons */}
-        {connectedAddress && (
-          <div className="flex gap-2 mt-2 pointer-events-auto">
-            <button
-              onClick={() => setIsDepositModalOpen(true)}
-              className="px-3 py-1 text-[10px] font-display tracking-wider uppercase bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 rounded transition-colors"
-            >
-              Deposit
-            </button>
-            <button
-              onClick={() => setIsWithdrawModalOpen(true)}
-              disabled={userFundsInVault === 0}
-              className="px-3 py-1 text-[10px] font-display tracking-wider uppercase bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Withdraw
-            </button>
-          </div>
-        )}
       </div>
-      
-      {/* Modals */}
-      <DepositModal isOpen={isDepositModalOpen} onClose={() => setIsDepositModalOpen(false)} />
-      <WithdrawModal isOpen={isWithdrawModalOpen} onClose={() => setIsWithdrawModalOpen(false)} />
     </div>
   );
 };
