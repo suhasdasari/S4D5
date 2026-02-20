@@ -94,12 +94,14 @@ Timestamp: ${new Date(proposal.timestamp).toISOString()}`;
     // Send x402 micropayment to AuditOracle for risk analysis service
     if (kiteWallet) {
       try {
+        const proposalId = proposal.action === 'OPEN' ? `PROP-${Date.now()}` : proposal.positionId;
+        
         const payment = await kiteWallet.sendPayment(
           AUDIT_ORACLE_ADDRESS,
           '0.001', // 0.001 KITE per proposal analysis
           {
             service: 'risk-analysis',
-            proposalId: proposal.action === 'OPEN' ? `PROP-${Date.now()}` : proposal.positionId,
+            proposalId: proposalId,
             agent: 'alpha-strategist',
             recipient: 'audit-oracle',
             description: `Payment for ${proposal.action} ${proposal.asset} analysis`
@@ -108,17 +110,50 @@ Timestamp: ${new Date(proposal.timestamp).toISOString()}`;
         
         if (payment.success) {
           console.error(`✓ x402 payment sent: ${payment.txHash.substring(0, 10)}...`);
+          console.error(`  Explorer: https://testnet.kitescan.ai/tx/${payment.txHash}`);
+          console.error(`  Mapping: ${proposalId} → ${payment.txHash.substring(0, 10)}... → risk-analysis`);
           
-          // Log payment to Nerve-Cord
-          execSync(`npm run log "💰 Paid AuditOracle 0.001 KITE for analysis (tx: ${payment.txHash.substring(0, 10)}...)" "alpha-strategist,payment,kite"`, {
+          // Log payment to Nerve-Cord with clear action-to-payment mapping
+          execSync(`npm run log "💰 PAID: ${proposalId} → 0.001 KITE → AuditOracle (tx: ${payment.txHash.substring(0, 10)}...) | Service: risk-analysis" "alpha-strategist,payment,kite"`, {
             cwd: path.join(__dirname, '..', '..', '..', '..', 'nerve-cord'),
             stdio: 'inherit'
           });
         } else {
-          console.error(`⚠️  x402 payment failed: ${payment.error}`);
+          console.error(`❌ x402 payment FAILED: ${payment.error}`);
+          console.error(`   Proposal: ${proposalId}`);
+          console.error(`   Reason: ${payment.error}`);
+          
+          // Check if it's insufficient funds
+          if (payment.error && payment.error.includes('Insufficient balance')) {
+            console.error(`   ⚠️  CRITICAL: Wallet out of KITE tokens!`);
+            console.error(`   Action: Fund wallet at https://faucet.gokite.ai`);
+            console.error(`   Address: ${kiteWallet.getInfo().address}`);
+            
+            // Log critical error to Nerve-Cord
+            execSync(`npm run log "🚨 PAYMENT FAILED: Insufficient KITE balance. Proposal ${proposalId} sent but NOT PAID. Manual intervention required." "alpha-strategist,error,payment"`, {
+              cwd: path.join(__dirname, '..', '..', '..', '..', 'nerve-cord'),
+              stdio: 'inherit'
+            });
+          } else {
+            // Log other payment failures
+            execSync(`npm run log "⚠️  Payment failed for ${proposalId}: ${payment.error}. Proposal sent but not paid." "alpha-strategist,error,payment"`, {
+              cwd: path.join(__dirname, '..', '..', '..', '..', 'nerve-cord'),
+              stdio: 'inherit'
+            });
+          }
+          
+          console.error(`   ℹ️  Proposal was sent to AuditOracle but payment failed.`);
+          console.error(`   ℹ️  AuditOracle may reject unpaid proposals.`);
         }
       } catch (paymentError) {
-        console.error(`⚠️  x402 payment error: ${paymentError.message}`);
+        console.error(`❌ x402 payment exception: ${paymentError.message}`);
+        console.error(`   Proposal sent but payment system error occurred.`);
+        
+        // Log exception to Nerve-Cord
+        execSync(`npm run log "🚨 Payment system error: ${paymentError.message}" "alpha-strategist,error,payment"`, {
+          cwd: path.join(__dirname, '..', '..', '..', '..', 'nerve-cord'),
+          stdio: 'inherit'
+        });
       }
     }
     
