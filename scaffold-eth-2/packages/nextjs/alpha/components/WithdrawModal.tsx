@@ -18,7 +18,6 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Read user's USDC value in vault
   const { data: userShares } = useScaffoldReadContract({
     contractName: "S4D5Vault",
     functionName: "balanceOf",
@@ -26,7 +25,6 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
     chainId: 8453,
   });
 
-  // Convert shares to assets
   const { data: userAssets } = useScaffoldReadContract({
     contractName: "S4D5Vault",
     functionName: "convertToAssets",
@@ -34,7 +32,6 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
     chainId: 8453,
   });
 
-  // Withdraw from vault
   const { writeContractAsync: withdrawFromVault } = useScaffoldWriteContract({
     contractName: "S4D5Vault",
   });
@@ -46,14 +43,13 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
 
     try {
       setIsWithdrawing(true);
-      const amountInUsdc = parseUnits(amount, 6); // USDC has 6 decimals
+      const amountInUsdc = parseUnits(amount, 6);
 
       await withdrawFromVault({
         functionName: "withdraw",
         args: [amountInUsdc, connectedAddress, connectedAddress],
       });
 
-      // Success
       setSuccess(true);
       setTimeout(() => {
         setAmount("");
@@ -79,10 +75,7 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
             exit={{ opacity: 0, x: 20, y: -20 }}
             className="bg-gray-900/95 backdrop-blur-md border-2 border-red-500/40 rounded-lg p-4 w-80 relative shadow-2xl pointer-events-auto mt-16"
           >
-            <button
-              onClick={onClose}
-              className="absolute top-2 right-2 text-white/60 hover:text-white transition-colors"
-            >
+            <button onClick={onClose} className="absolute top-2 right-2 text-white/60 hover:text-white transition-colors">
               <X className="w-4 h-4" />
             </button>
 
