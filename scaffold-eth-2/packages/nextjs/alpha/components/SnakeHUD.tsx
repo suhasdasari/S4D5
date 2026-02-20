@@ -317,6 +317,12 @@ const SnakeHUD = () => {
     return () => cancelAnimationFrame(animFrame);
   }, []);
 
+  // Calculate real P&L based on vault NAV (initial was $10)
+  const initialVaultValue = 10;
+  const realPnl = realNavValue - initialVaultValue;
+  const realPnlPercent = ((realNavValue - initialVaultValue) / initialVaultValue) * 100;
+  const isRealProfit = realPnl >= 0;
+
   const pnl = displayValue - INITIAL_CAPITAL;
   const isProfit = pnl >= 0;
 
@@ -371,12 +377,12 @@ const SnakeHUD = () => {
         </p>
         <p
           className="text-[9px] font-mono mt-0.5"
-          style={{ color: isProfit ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)" }}
+          style={{ color: isRealProfit ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)" }}
         >
-          {isProfit ? "▲" : "▼"} {isProfit ? "+" : ""}{((displayValue - INITIAL_CAPITAL) / INITIAL_CAPITAL * 100).toFixed(2)}%
+          {isRealProfit ? "▲" : "▼"} {isRealProfit ? "+" : ""}{realPnlPercent.toFixed(2)}%
           &nbsp;
-          <span style={{ color: isProfit ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)" }}>
-            ({isProfit ? "+" : ""}{pnl.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })})
+          <span style={{ color: isRealProfit ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)" }}>
+            ({isRealProfit ? "+" : ""}${realPnl.toFixed(2)})
           </span>
         </p>
         <p className="text-[8px] font-mono mt-0.5 tracking-[0.1em] uppercase text-muted-foreground">

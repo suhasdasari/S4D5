@@ -1,8 +1,22 @@
 import { motion } from "framer-motion";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { Wallet, CheckCircle } from "lucide-react";
+import { Wallet, TrendingUp } from "lucide-react";
+import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
+import { formatUnits } from "viem";
 
 const MetricsBar = () => {
+  // Read total assets (TVL) from vault
+  const { data: totalAssets } = useScaffoldReadContract({
+    contractName: "S4D5Vault",
+    functionName: "totalAssets",
+    chainId: 8453, // Base mainnet
+  });
+
+  const tvl = totalAssets ? Number(formatUnits(totalAssets, 6)) : 10;
+  const initialTvl = 10;
+  const tvlProfit = tvl - initialTvl;
+  const tvlProfitPercent = ((tvl - initialTvl) / initialTvl) * 100;
+
   return (
     <div className="flex items-center gap-3 flex-1">
       <motion.div
@@ -10,12 +24,17 @@ const MetricsBar = () => {
         whileHover={{ scale: 1.02 }}
         transition={{ type: "spring", stiffness: 400, damping: 15 }}
       >
-        <CheckCircle className="w-4 h-4 shrink-0 text-white/80" />
+        <TrendingUp className="w-4 h-4 shrink-0 text-white/80" />
         <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-[0.15em] text-white/70">0G Verified</p>
-          <p className="text-sm font-bold truncate text-white">VERIFIED</p>
+          <p className="text-[10px] uppercase tracking-[0.15em] text-white/70">Total Value Locked</p>
+          <p className="text-sm font-bold truncate text-white">${tvl.toFixed(2)}</p>
         </div>
-        <span className="text-[10px] text-white/70 ml-auto shrink-0">On-Chain</span>
+        <span 
+          className="text-[10px] ml-auto shrink-0"
+          style={{ color: tvlProfit >= 0 ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)" }}
+        >
+          {tvlProfit >= 0 ? "+" : ""}{tvlProfitPercent.toFixed(2)}%
+        </span>
       </motion.div>
     </div>
   );
@@ -31,11 +50,6 @@ const TopBar = () => {
             <span className="text-[9px] tracking-[0.3em] font-display uppercase text-white/80">
               Institutional Grade
             </span>
-          </div>
-          <div className="h-6 w-px bg-white/20 mx-2" />
-          <div className="flex items-center gap-1.5 px-2 py-1 bg-white/10 rounded-full border border-white/10">
-            <div className="w-1.5 h-1.5 rounded-full bg-positive animate-pulse" />
-            <span className="text-[10px] font-mono text-white tracking-wide">0G Verified</span>
           </div>
         </div>
       </div>
