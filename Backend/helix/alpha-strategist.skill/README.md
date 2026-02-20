@@ -215,7 +215,7 @@ crontab -e
 
 Add:
 ```
-*/5 * * * * cd ~/S4D5/Backend/helix/alpha-strategist.skill && node scripts/analyze-and-propose.js >> ~/logs/alpha-strategist.log 2>&1
+*/5 * * * * cd ~/S4D5/Backend/helix/alpha-strategist.skill && npm run send-proposals >> ~/logs/alpha-strategist.log 2>&1
 ```
 
 7. **Create log directory:**
@@ -225,33 +225,32 @@ mkdir -p ~/logs
 
 ## Integration with OpenClaw Bot
 
-The Alpha Strategist bot (running on OpenClaw framework) should:
+The Alpha Strategist bot already has Nerve-Cord integration via npm scripts. The skill provides a wrapper script that:
 
-1. **Execute the skill periodically** (via cron or internal scheduler)
-2. **Parse JSON output** from `analyze-and-propose.js`
-3. **Format proposals** into natural language messages
-4. **Send to ExecutionHand** via Nerve-Cord
+1. **Runs analysis** (`analyze-and-propose.js`)
+2. **Formats proposals** into natural language
+3. **Sends to ExecutionHand** via Nerve-Cord automatically
 
-Example bot logic:
-```javascript
-// Bot executes skill
-const result = execSync('npm run analyze').toString();
-const data = JSON.parse(result);
+### Send Proposals (Full Workflow)
 
-// Format proposals
-for (const proposal of data.proposals) {
-  if (proposal.action === 'OPEN') {
-    const message = `🎯 Trade Proposal: ${proposal.direction} ${proposal.asset} 
-    Leverage: ${proposal.leverage}x
-    Entry: $${proposal.entryPrice}
-    Stop-Loss: $${proposal.stopLoss}
-    Take-Profit: $${proposal.takeProfit}
-    Confidence: ${proposal.confidence}%`;
-    
-    // Send via Nerve-Cord to ExecutionHand
-    sendToNerveCord('execution-hand', message);
-  }
-}
+```bash
+npm run send-proposals
+```
+
+This will:
+- Analyze markets and sentiment
+- Generate trade proposals
+- Format them as messages
+- Send to `execution-hand` via Nerve-Cord
+
+### Manual Testing
+
+```bash
+# Test analysis only (no sending)
+npm run analyze
+
+# Send proposals to ExecutionHand
+npm run send-proposals
 ```
 
 ## Leverage Rules

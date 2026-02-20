@@ -7,7 +7,8 @@
     "fetch-market": "node scripts/fetch-market-data.js",
     "fetch-sentiment": "node scripts/fetch-sentiment.js",
     "track-positions": "node scripts/track-positions.js",
-    "analyze": "node scripts/analyze-and-propose.js"
+    "analyze": "node scripts/analyze-and-propose.js",
+    "send-proposals": "node scripts/send-proposals.js"
   },
   "keywords": ["hyperliquid", "polymarket", "trading", "sentiment-analysis"],
   "author": "S4D5 Team",
