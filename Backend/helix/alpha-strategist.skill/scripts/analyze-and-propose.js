@@ -118,7 +118,7 @@ async function analyzeAndPropose(assets = TARGET_ASSETS) {
         const marketData = await fetchMarketData(asset);
         
         // Fetch sentiment (use asset name as keyword)
-        const assetKeywords = [asset.replace('-USD', '').toLowerCase(), 'crypto'];
+        const assetKeywords = [asset.replace('-USD', '').toLowerCase()];
         const sentimentData = await fetchSentiment(assetKeywords);
         
         const sentimentScore = sentimentData.aggregateScore;

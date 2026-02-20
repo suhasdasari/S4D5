@@ -11,35 +11,49 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 
 const POLYMARKET_BASE_URL = process.env.POLYMARKET_BASE_URL || 'https://gamma-api.polymarket.com';
 
-async function fetchSentiment(keywords = ['crypto', 'bitcoin']) {
+async function fetchSentiment(keywords = ['bitcoin']) {
   try {
     // Fetch active markets
     const response = await axios.get(`${POLYMARKET_BASE_URL}/markets`, {
       params: {
         active: true,
         closed: false,
-        limit: 50
+        limit: 100  // Increased to get more options
       },
       timeout: 10000
     });
 
     const markets = response.data;
     
-    // Filter markets by keywords
+    // Filter for relevant SHORT-TERM price prediction markets
     const relevantMarkets = markets.filter(market => {
       const question = (market.question || '').toLowerCase();
       const description = (market.description || '').toLowerCase();
-      const tags = (market.tags || []).map(t => t.toLowerCase());
       
-      return keywords.some(keyword => 
+      // Must contain the asset keyword
+      const hasKeyword = keywords.some(keyword => 
         question.includes(keyword.toLowerCase()) ||
-        description.includes(keyword.toLowerCase()) ||
-        tags.includes(keyword.toLowerCase())
+        description.includes(keyword.toLowerCase())
       );
+      
+      if (!hasKeyword) return false;
+      
+      // Filter for price-related questions with timeframes
+      const priceKeywords = ['price', 'hit', 'reach', 'above', 'below', 'up', 'down'];
+      const timeKeywords = ['today', 'tomorrow', 'week', 'month', 'february', 'march', 'april', '2026'];
+      
+      const hasPrice = priceKeywords.some(kw => question.includes(kw));
+      const hasTime = timeKeywords.some(kw => question.includes(kw));
+      
+      // Exclude long-term or irrelevant markets
+      const excludeKeywords = ['gta', 'game', 'election', 'president', 'year 2030', '2030', '2040'];
+      const isExcluded = excludeKeywords.some(kw => question.includes(kw));
+      
+      return hasPrice && hasTime && !isExcluded;
     });
 
     // Extract sentiment signals
-    const signals = relevantMarkets.map(market => extractSentiment(market));
+    const signals = relevantMarkets.map(market => extractSentiment(market)).filter(s => s.sentiment !== null);
     
     // Calculate aggregate sentiment
     const aggregateScore = calculateAggregateSentiment(signals);
@@ -63,8 +77,40 @@ async function fetchSentiment(keywords = ['crypto', 'bitcoin']) {
 
 function extractSentiment(market) {
   const question = market.question.toLowerCase();
-  const outcomes = market.outcomes || ['Yes', 'No'];
-  const outcomePrices = market.outcomePrices || [0.5, 0.5];
+  
+  // Parse outcomePrices - handle string, array, or number format
+  let yesPrice = 0.5; // Default neutral
+  
+  if (market.outcomePrices) {
+    if (typeof market.outcomePrices === 'string') {
+      // Try to parse as JSON array
+      try {
+        const parsed = JSON.parse(market.outcomePrices);
+        yesPrice = Array.isArray(parsed) ? parseFloat(parsed[0]) : parseFloat(parsed);
+      } catch {
+        // If parsing fails, try direct float conversion
+        yesPrice = parseFloat(market.outcomePrices) || 0.5;
+      }
+    } else if (Array.isArray(market.outcomePrices)) {
+      yesPrice = parseFloat(market.outcomePrices[0]) || 0.5;
+    } else if (typeof market.outcomePrices === 'number') {
+      yesPrice = market.outcomePrices;
+    }
+  }
+  
+  // Validate yesPrice is a valid number
+  if (isNaN(yesPrice) || yesPrice < 0 || yesPrice > 1) {
+    return {
+      marketId: market.id,
+      question: market.question,
+      probability: null,
+      sentiment: null,
+      volume: market.volume || 0,
+      weight: 0,
+      isBullish: false,
+      isBearish: false
+    };
+  }
   
   // Determine if question is bullish or bearish
   const bullishKeywords = ['reach', 'above', 'increase', 'rise', 'higher', 'up', 'gain', 'rally'];
@@ -75,7 +121,6 @@ function extractSentiment(market) {
   
   // Calculate sentiment score (-1 to +1)
   let sentiment = 0;
-  const yesPrice = outcomePrices[0];
   
   if (isBullish) {
     // Higher yes price = more bullish
@@ -89,7 +134,7 @@ function extractSentiment(market) {
   }
   
   // Weight by market volume (higher volume = more reliable)
-  const volume = market.volume || 0;
+  const volume = parseFloat(market.volume) || 0;
   const weight = Math.min(volume / 100000, 1.0);
   
   return {
@@ -105,17 +150,20 @@ function extractSentiment(market) {
 }
 
 function calculateAggregateSentiment(signals) {
-  if (signals.length === 0) return 0;
+  // Filter out null sentiments
+  const validSignals = signals.filter(s => s.sentiment !== null && !isNaN(s.sentiment));
+  
+  if (validSignals.length === 0) return 0;
   
   // Weighted average of sentiment scores
-  const totalWeight = signals.reduce((sum, s) => sum + s.weight, 0);
+  const totalWeight = validSignals.reduce((sum, s) => sum + s.weight, 0);
   
   if (totalWeight === 0) {
     // Unweighted average
-    return signals.reduce((sum, s) => sum + s.sentiment, 0) / signals.length;
+    return validSignals.reduce((sum, s) => sum + s.sentiment, 0) / validSignals.length;
   }
   
-  const weightedSum = signals.reduce((sum, s) => sum + (s.sentiment * s.weight), 0);
+  const weightedSum = validSignals.reduce((sum, s) => sum + (s.sentiment * s.weight), 0);
   return weightedSum / totalWeight;
 }
 
@@ -124,7 +172,7 @@ if (require.main === module) {
   const keywords = process.argv.slice(2);
   
   if (keywords.length === 0) {
-    keywords.push('crypto', 'bitcoin');
+    keywords.push('bitcoin');
   }
   
   fetchSentiment(keywords)
