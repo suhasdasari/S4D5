@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatEther } from "viem";
-import { ExternalLinkIcon } from "@heroicons/react/24/outline";
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 
 type AgentBalance = {
   name: string;
@@ -158,7 +158,7 @@ export default function KiteDashboard() {
                       className="btn btn-sm btn-outline btn-primary w-full"
                     >
                       View on Explorer
-                      <ExternalLinkIcon className="h-4 w-4 ml-1" />
+                      <ArrowTopRightOnSquareIcon className="h-4 w-4 ml-1" />
                     </a>
                   </div>
                   <div className="text-xs text-gray-500 mt-2 break-all">{agent.address}</div>
@@ -214,7 +214,7 @@ export default function KiteDashboard() {
                               className="btn btn-xs btn-ghost"
                             >
                               {shortenAddress(payment.hash)}
-                              <ExternalLinkIcon className="h-3 w-3 ml-1" />
+                              <ArrowTopRightOnSquareIcon className="h-3 w-3 ml-1" />
                             </a>
                           </td>
                         </tr>
@@ -257,7 +257,7 @@ export default function KiteDashboard() {
                   className="btn btn-sm btn-outline w-full"
                 >
                   Documentation
-                  <ExternalLinkIcon className="h-4 w-4 ml-1" />
+                  <ArrowTopRightOnSquareIcon className="h-4 w-4 ml-1" />
                 </a>
                 <a
                   href="https://faucet.gokite.ai"
@@ -266,7 +266,7 @@ export default function KiteDashboard() {
                   className="btn btn-sm btn-outline w-full"
                 >
                   Testnet Faucet
-                  <ExternalLinkIcon className="h-4 w-4 ml-1" />
+                  <ArrowTopRightOnSquareIcon className="h-4 w-4 ml-1" />
                 </a>
                 <a
                   href={KITE_EXPLORER}
@@ -275,7 +275,7 @@ export default function KiteDashboard() {
                   className="btn btn-sm btn-outline w-full"
                 >
                   Block Explorer
-                  <ExternalLinkIcon className="h-4 w-4 ml-1" />
+                  <ArrowTopRightOnSquareIcon className="h-4 w-4 ml-1" />
                 </a>
               </div>
             </div>
