@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * QuickNode Hyperliquid Market Data Fetcher
- * Fetches real-time price, volume, and orderbook data via QuickNode Info endpoint
+ * QuickNode + Hyperliquid Market Data Fetcher
+ * Uses QuickNode for metadata and Hyperliquid public API for market data
+ * (QuickNode doesn't support allMids/metaAndAssetCtxs endpoints yet)
  * Usage: node fetch-market-data.js <asset>
  * Example: node fetch-market-data.js BTC
  */
@@ -9,22 +10,22 @@
 const axios = require('axios');
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
-// QuickNode Info endpoint (replace /hypercore with /info)
+// QuickNode Info endpoint for metadata
 const QUICKNODE_BASE_URL = process.env.QUICKNODE_BASE_URL;
 const QUICKNODE_INFO_URL = QUICKNODE_BASE_URL ? QUICKNODE_BASE_URL.replace('/hypercore', '/info') : null;
 
-async function fetchMarketData(asset) {
-  if (!QUICKNODE_INFO_URL) {
-    throw new Error('Missing QuickNode configuration. Check .env file.');
-  }
+// Hyperliquid public API for market data (fallback for unsupported endpoints)
+const HYPERLIQUID_API = 'https://api.hyperliquid.xyz/info';
 
+async function fetchMarketData(asset) {
   try {
     // Remove -USD suffix if present
     const coin = asset.replace('-USD', '');
     
-    // Fetch all mids (current prices) via QuickNode
+    // Fetch all mids (current prices) from Hyperliquid public API
+    // Note: QuickNode doesn't support this endpoint yet
     const midsResponse = await axios.post(
-      QUICKNODE_INFO_URL,
+      HYPERLIQUID_API,
       {
         type: 'allMids'
       },
@@ -37,34 +38,57 @@ async function fetchMarketData(asset) {
     );
 
     const allMids = midsResponse.data;
-    
-    // Find the requested asset
     const assetPrice = allMids[coin];
     
     if (!assetPrice) {
       throw new Error(`Asset ${coin} not found in market data. Available: ${Object.keys(allMids).join(', ')}`);
     }
 
-    // Fetch meta info for leverage limits via QuickNode
-    const metaResponse = await axios.post(
-      QUICKNODE_INFO_URL,
-      {
-        type: 'meta'
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        timeout: 10000
+    // Fetch meta info via QuickNode (this IS supported)
+    let assetMeta = null;
+    if (QUICKNODE_INFO_URL) {
+      try {
+        const metaResponse = await axios.post(
+          QUICKNODE_INFO_URL,
+          {
+            type: 'meta'
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            timeout: 10000
+          }
+        );
+        const meta = metaResponse.data;
+        assetMeta = meta.universe.find(u => u.name === coin);
+      } catch (error) {
+        console.error('QuickNode meta fetch failed, using Hyperliquid fallback');
       }
-    );
+    }
 
-    const meta = metaResponse.data;
-    const assetMeta = meta.universe.find(u => u.name === coin);
+    // Fallback to Hyperliquid if QuickNode failed
+    if (!assetMeta) {
+      const metaResponse = await axios.post(
+        HYPERLIQUID_API,
+        {
+          type: 'meta'
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          timeout: 10000
+        }
+      );
+      const meta = metaResponse.data;
+      assetMeta = meta.universe.find(u => u.name === coin);
+    }
 
-    // Fetch 24h stats via QuickNode
+    // Fetch 24h stats from Hyperliquid public API
+    // Note: QuickNode doesn't support metaAndAssetCtxs yet
     const statsResponse = await axios.post(
-      QUICKNODE_INFO_URL,
+      HYPERLIQUID_API,
       {
         type: 'metaAndAssetCtxs'
       },
@@ -112,9 +136,9 @@ async function fetchMarketData(asset) {
     return marketData;
   } catch (error) {
     if (error.response) {
-      throw new Error(`QuickNode API error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+      throw new Error(`API error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
     } else if (error.request) {
-      throw new Error(`QuickNode API timeout or network error`);
+      throw new Error(`API timeout or network error`);
     } else {
       throw new Error(`Error fetching market data: ${error.message}`);
     }
