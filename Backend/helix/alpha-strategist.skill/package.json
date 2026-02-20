@@ -10,11 +10,17 @@
     "analyze": "node scripts/analyze-and-propose.js",
     "send-proposals": "node scripts/send-proposals.js"
   },
-  "keywords": ["hyperliquid", "polymarket", "trading", "sentiment-analysis"],
+  "keywords": [
+    "hyperliquid",
+    "polymarket",
+    "trading",
+    "sentiment-analysis"
+  ],
   "author": "S4D5 Team",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.6.0",
+    "cheerio": "^1.2.0",
     "dotenv": "^16.3.0"
   }
 }

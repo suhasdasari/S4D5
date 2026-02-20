@@ -8,7 +8,7 @@
  */
 
 const { fetchMarketData } = require('./fetch-market-data');
-const { fetchSentiment } = require('./fetch-sentiment');
+const { analyzeOrderBook } = require('./analyze-orderbook');
 const { listPositions } = require('./track-positions');
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
@@ -117,25 +117,23 @@ async function analyzeAndPropose(assets = TARGET_ASSETS) {
         // Fetch market data
         const marketData = await fetchMarketData(asset);
         
-        // Calculate technical sentiment from price momentum
+        // Analyze order book for real-time sentiment
+        const symbol = `${asset.replace('-USD', '')}USDT`;
+        const orderBookAnalysis = await analyzeOrderBook(symbol);
+        
+        // Combine technical indicators with order book
         const change24h = marketData.price.change24h || 0;
         const volume24h = marketData.volume.volume24h || 0;
         
-        // Sentiment based on price change and volume
-        // Strong moves with high volume = higher confidence
-        let sentimentScore = 0;
-        let confidence = 0;
+        // Sentiment from order book (primary) + price momentum (secondary)
+        const orderBookSentiment = parseFloat(orderBookAnalysis.sentiment);
+        const priceMomentum = Math.max(-1, Math.min(1, change24h / 5));
         
-        if (Math.abs(change24h) >= 1) {
-          // Significant price movement (>1%)
-          sentimentScore = Math.max(-1, Math.min(1, change24h / 5)); // Normalize to -1 to +1
-          
-          // Confidence based on volume (higher volume = more reliable)
-          const volumeConfidence = Math.min(volume24h / 1000000000, 1); // Normalize by $1B
-          confidence = Math.abs(sentimentScore) * volumeConfidence * 100;
-        }
+        // Weighted combination: 70% order book, 30% price momentum
+        const sentimentScore = (orderBookSentiment * 0.7) + (priceMomentum * 0.3);
+        const confidence = parseFloat(orderBookAnalysis.confidence);
         
-        console.error(`${asset}: price_change=${change24h.toFixed(2)}%, sentiment=${sentimentScore.toFixed(2)}, confidence=${confidence.toFixed(1)}%, threshold=${MIN_CONFIDENCE}%`);
+        console.error(`${asset}: orderbook=${orderBookSentiment.toFixed(2)}, momentum=${priceMomentum.toFixed(2)}, combined=${sentimentScore.toFixed(2)}, confidence=${confidence.toFixed(1)}%, threshold=${MIN_CONFIDENCE}%`);
         
         // Check existing positions for this asset
         const existingPosition = openPositions.find(p => p.asset === asset);
@@ -184,9 +182,11 @@ async function analyzeAndPropose(assets = TARGET_ASSETS) {
                 volume24h: marketData.volume.volume24h,
                 change24h: marketData.price.change24h
               },
-              technicalIndicators: {
-                priceChange24h: marketData.price.change24h,
-                volume24h: marketData.volume.volume24h
+              orderBookAnalysis: {
+                buyPressure: orderBookAnalysis.pressure.buy,
+                sellPressure: orderBookAnalysis.pressure.sell,
+                spread: orderBookAnalysis.orderBook.spread,
+                trend: orderBookAnalysis.analysis.trend
               },
               timestamp: Date.now()
             });

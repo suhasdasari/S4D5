@@ -46,8 +46,11 @@ Market Data:
 
 Sentiment Score: ${proposal.sentimentScore.toFixed(2)} (${proposal.sentimentScore > 0 ? 'Bullish' : 'Bearish'})
 
-Top Signals:
-${proposal.sentimentSignals.map(s => `- ${s.question} (${(s.probability * 100).toFixed(0)}%)`).join('\n')}
+Order Book Analysis:
+- Buy Pressure: ${proposal.orderBookAnalysis.buyPressure}%
+- Sell Pressure: ${proposal.orderBookAnalysis.sellPressure}%
+- Spread: ${proposal.orderBookAnalysis.spread}%
+- Trend: ${proposal.orderBookAnalysis.trend}
 
 Timestamp: ${new Date(proposal.timestamp).toISOString()}`;
   } else if (proposal.action === 'CLOSE') {

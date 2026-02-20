@@ -13,7 +13,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const POSITIONS_FILE = process.env.POSITIONS_FILE || 
-  path.join(process.env.HOME, 'S4D5', 'data', 'positions', 'open-positions.json');
+  path.join(__dirname, '..', '..', '..', 'data', 'positions', 'open-positions.json');
 
 function ensurePositionsFile() {
   const dir = path.dirname(POSITIONS_FILE);
