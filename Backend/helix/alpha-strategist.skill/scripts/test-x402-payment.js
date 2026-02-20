@@ -22,17 +22,10 @@ async function main() {
 
   // Load AuditOracle wallet address (recipient)
   console.log('[2/4] Loading AuditOracle wallet address...');
-  const auditOracleConfigPath = path.join(__dirname, '../../../auditoracle/config/wallet.json');
   
-  let auditOracleAddress;
-  try {
-    const auditOracleConfig = JSON.parse(require('fs').readFileSync(auditOracleConfigPath, 'utf8'));
-    auditOracleAddress = auditOracleConfig.address;
-    console.log(`AuditOracle address: ${auditOracleAddress}`);
-  } catch (error) {
-    console.error('❌ AuditOracle wallet not found. Run init-wallet.js in auditoracle first.');
-    process.exit(1);
-  }
+  // AuditOracle address (same across all chains - multi-chain identity)
+  const auditOracleAddress = '0xF3bbD5682e671CdcDC42f52bDdecCB6a35D53aE1';
+  console.log(`AuditOracle address: ${auditOracleAddress}`);
 
   // Check balance
   console.log('[3/4] Checking balance...');
