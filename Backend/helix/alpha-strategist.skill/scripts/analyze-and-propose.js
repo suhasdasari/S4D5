@@ -13,7 +13,7 @@ const { listPositions } = require('./track-positions');
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const TARGET_ASSETS = (process.env.TARGET_ASSETS || 'BTC,ETH').split(',');
-const MIN_CONFIDENCE = parseFloat(process.env.MIN_CONFIDENCE || '60');
+const MIN_CONFIDENCE = parseFloat(process.env.MIN_CONFIDENCE || '30'); // Lowered for technical indicators
 const MAX_POSITION_SIZE = parseFloat(process.env.MAX_POSITION_SIZE || '10000');
 const RISK_MULTIPLIER = parseFloat(process.env.RISK_MULTIPLIER || '0.5');
 const TAKE_PROFIT_PCT = parseFloat(process.env.TAKE_PROFIT_PCT || '5');
@@ -117,14 +117,25 @@ async function analyzeAndPropose(assets = TARGET_ASSETS) {
         // Fetch market data
         const marketData = await fetchMarketData(asset);
         
-        // Fetch sentiment (use asset name as keyword)
-        const assetKeywords = [asset.replace('-USD', '').toLowerCase()];
-        const sentimentData = await fetchSentiment(assetKeywords);
+        // Calculate technical sentiment from price momentum
+        const change24h = marketData.price.change24h || 0;
+        const volume24h = marketData.volume.volume24h || 0;
         
-        const sentimentScore = sentimentData.aggregateScore;
-        const confidence = Math.abs(sentimentScore) * 100;
+        // Sentiment based on price change and volume
+        // Strong moves with high volume = higher confidence
+        let sentimentScore = 0;
+        let confidence = 0;
         
-        console.error(`${asset}: sentiment=${sentimentScore.toFixed(2)}, confidence=${confidence.toFixed(1)}%, threshold=${MIN_CONFIDENCE}%`);
+        if (Math.abs(change24h) >= 1) {
+          // Significant price movement (>1%)
+          sentimentScore = Math.max(-1, Math.min(1, change24h / 5)); // Normalize to -1 to +1
+          
+          // Confidence based on volume (higher volume = more reliable)
+          const volumeConfidence = Math.min(volume24h / 1000000000, 1); // Normalize by $1B
+          confidence = Math.abs(sentimentScore) * volumeConfidence * 100;
+        }
+        
+        console.error(`${asset}: price_change=${change24h.toFixed(2)}%, sentiment=${sentimentScore.toFixed(2)}, confidence=${confidence.toFixed(1)}%, threshold=${MIN_CONFIDENCE}%`);
         
         // Check existing positions for this asset
         const existingPosition = openPositions.find(p => p.asset === asset);
@@ -173,7 +184,10 @@ async function analyzeAndPropose(assets = TARGET_ASSETS) {
                 volume24h: marketData.volume.volume24h,
                 change24h: marketData.price.change24h
               },
-              sentimentSignals: sentimentData.signals.slice(0, 3), // Top 3 signals
+              technicalIndicators: {
+                priceChange24h: marketData.price.change24h,
+                volume24h: marketData.volume.volume24h
+              },
               timestamp: Date.now()
             });
           }

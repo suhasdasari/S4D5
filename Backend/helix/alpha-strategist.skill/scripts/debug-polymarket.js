@@ -54,6 +54,21 @@ async function debugPolymarket() {
       console.log('');
     });
     
+    // Check for gold markets
+    const goldMarkets = markets.filter(market => {
+      const question = (market.question || '').toLowerCase();
+      return question.includes('gold') || question.includes('xau');
+    });
+    
+    console.log(`\nGold-related markets: ${goldMarkets.length}\n`);
+    
+    goldMarkets.slice(0, 10).forEach((market, i) => {
+      console.log(`${i + 1}. ${market.question}`);
+      console.log(`   ID: ${market.id}`);
+      console.log(`   Volume: ${market.volume || 0}`);
+      console.log('');
+    });
+    
     // Show some crypto-related markets
     const cryptoMarkets = markets.filter(market => {
       const question = (market.question || '').toLowerCase();
