@@ -395,10 +395,10 @@ const SnakeHUD = () => {
         </div>
       )}
 
-      {/* User Balance in Wallet counter — top left */}
+      {/* User Deposited Funds counter — top left */}
       <div className="absolute top-3 left-14 z-30">
         <p className="text-[8px] font-display tracking-[0.25em] uppercase text-silver mb-0.5">
-          User Balance in Wallet
+          Your Deposited Funds
         </p>
         <p
           className="text-xl font-mono font-bold tracking-tight leading-none"
@@ -407,11 +407,11 @@ const SnakeHUD = () => {
             textShadow: isUp ? "0 0 18px rgba(0,255,0,0.4)" : "0 0 18px rgba(255,0,0,0.4)",
           }}
         >
-          ${userWalletBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC
+          ${userFundsInVault.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC
         </p>
-        {connectedAddress && userFundsInVault > 0 && (
+        {connectedAddress && userWalletBalance > 0 && (
           <p className="text-[8px] font-mono mt-1.5 tracking-[0.1em] uppercase text-white/90 border-t border-white/20 pt-1">
-            In Vault: ${userFundsInVault.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            Wallet Balance: ${userWalletBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         )}
         <p className="text-[8px] font-mono mt-0.5 tracking-[0.1em] uppercase text-muted-foreground">
