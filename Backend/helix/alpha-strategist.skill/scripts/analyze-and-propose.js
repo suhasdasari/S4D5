@@ -124,6 +124,8 @@ async function analyzeAndPropose(assets = TARGET_ASSETS) {
         const sentimentScore = sentimentData.aggregateScore;
         const confidence = Math.abs(sentimentScore) * 100;
         
+        console.error(`${asset}: sentiment=${sentimentScore.toFixed(2)}, confidence=${confidence.toFixed(1)}%, threshold=${MIN_CONFIDENCE}%`);
+        
         // Check existing positions for this asset
         const existingPosition = openPositions.find(p => p.asset === asset);
         
