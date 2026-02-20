@@ -1,0 +1,20 @@
+{
+  "name": "executionhand",
+  "version": "1.0.0",
+  "description": "Trade execution bot with spending limit enforcement for S4D5 AI Hedge Fund",
+  "main": "scripts/execute-trades.js",
+  "scripts": {
+    "init-wallet": "node scripts/init-wallet.js"
+  },
+  "keywords": [
+    "execution",
+    "trading",
+    "risk-enforcement"
+  ],
+  "author": "S4D5 Team",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.3.0",
+    "@coinbase/cdp-agentkit": "^0.0.1"
+  }
+}

@@ -1,4 +1,9 @@
 .env
+Backend/.env
+
+# CDP Wallet configs (contain sensitive wallet addresses)
+Backend/*/config/wallet.json
+Backend/*/*/config/wallet.json
 
 # IDE and editor files
 .vscode/

@@ -8,7 +8,8 @@
     "fetch-sentiment": "node scripts/fetch-sentiment.js",
     "track-positions": "node scripts/track-positions.js",
     "analyze": "node scripts/analyze-and-propose.js",
-    "send-proposals": "node scripts/send-proposals.js"
+    "send-proposals": "node scripts/send-proposals.js",
+    "init-wallet": "node scripts/init-wallet.js"
   },
   "keywords": [
     "hyperliquid",
@@ -21,6 +22,7 @@
   "dependencies": {
     "axios": "^1.6.0",
     "cheerio": "^1.2.0",
-    "dotenv": "^16.3.0"
+    "dotenv": "^16.3.0",
+    "@coinbase/cdp-agentkit": "^0.0.1"
   }
 }
