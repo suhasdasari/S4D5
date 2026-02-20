@@ -1,6 +1,22 @@
-# S4D5Vault Contract Function Guide
+# S4D5Vault Contract Function Guide (v2.0.0)
 
-This guide explains all functions available in the S4D5Vault contract.
+This guide explains all functions available in the security-hardened S4D5Vault contract.
+
+---
+
+## ⚠️ CRITICAL: INITIALIZATION REQUIRED
+
+Before accepting any deposits, the vault MUST be initialized to prevent inflation attacks:
+
+```solidity
+// 1. Approve USDC
+usdc.approve(vaultAddress, 1000000000); // 1000 USDC
+
+// 2. Initialize vault
+vault.initializeVault(1000000000); // Mints 1000 shares to dead address
+```
+
+**This is a one-time operation that protects all future depositors!**
 
 ---
 
@@ -63,6 +79,75 @@ owner: 0xYourAddress
 
 ---
 
+## 🔧 INITIALIZATION & CONFIGURATION (Owner Only)
+
+### `initializeVault(uint256 initialDeposit)`
+**What it does:** Initialize vault with seed deposit to prevent inflation attack  
+**Who can call:** Owner only (one-time operation)  
+**Parameters:**
+- `initialDeposit`: Amount of USDC to seed (minimum 1000 USDC recommended)
+
+**Example:** Initialize with 1000 USDC
+```
+initialDeposit: 1000000000  (1000 USDC with 6 decimals)
+```
+
+**CRITICAL:** This MUST be called before accepting public deposits!
+
+**What it does internally:**
+- Mints 1000 shares to dead address (0x...dEaD)
+- Mints remaining shares to owner
+- Prevents first depositor inflation attack
+
+---
+
+### `setPriceOracle(address oracle)`
+**What it does:** Set price oracle for multi-asset valuation  
+**Who can call:** Owner only  
+**Parameters:**
+- `oracle`: Address of price oracle contract
+
+**Example:** Set Chainlink oracle
+```
+oracle: 0xChainlinkOracleAddress
+```
+
+**Required for:** Multi-asset accounting (tracking non-USDC tokens)
+
+**Oracle Interface:**
+```solidity
+interface IPriceOracle {
+    function getPrice(address token) external view returns (uint256 price);
+}
+```
+
+---
+
+### `whitelistToken(address token)`
+**What it does:** Add a token to the whitelist (vault can hold this token)  
+**Who can call:** Owner only  
+**Parameters:**
+- `token`: Address of the token to whitelist
+
+**Example:** Whitelist WETH
+```
+token: 0xWETHAddress
+```
+
+**Use case:** Before bots can trade for a token, it must be whitelisted.
+
+---
+
+### `removeToken(address token)`
+**What it does:** Remove a token from whitelist  
+**Who can call:** Owner only  
+**Parameters:**
+- `token`: Address of the token to remove
+
+**Requirement:** Token balance must be zero before removal.
+
+---
+
 ## 🤖 BOT MANAGEMENT FUNCTIONS (Owner Only)
 
 ### `authorizeBotWallet(address botWallet)`
@@ -78,6 +163,8 @@ botWallet: 0xAlphaStrategistCDPWalletAddress
 
 **Important:** Once authorized, the bot can execute trades and send USDC on behalf of the vault!
 
+**Security:** Bots are limited to 10 USDC per day for micropayments and can only use whitelisted DEX routers.
+
 ---
 
 ### `deauthorizeBotWallet(address botWallet)`
@@ -90,28 +177,81 @@ botWallet: 0xAlphaStrategistCDPWalletAddress
 
 ---
 
+### `whitelistDexRouter(address dexRouter)`
+**What it does:** Add a DEX router to the whitelist for trading  
+**Who can call:** Owner only  
+**Parameters:**
+- `dexRouter`: Address of the DEX router (e.g., Uniswap V3 Router, Aerodrome Router)
+
+**Example:** Whitelist Uniswap V3 Router
+```
+dexRouter: 0xUniswapV3RouterAddress
+```
+
+**Security:** Only whitelisted DEX routers can be used by bots. This prevents malicious contracts from being approved.
+
+---
+
+### `removeDexRouter(address dexRouter)`
+**What it does:** Remove a DEX router from the whitelist  
+**Who can call:** Owner only  
+**Parameters:**
+- `dexRouter`: Address of the DEX router to remove
+
+**Use case:** Remove compromised or deprecated DEX routers.
+
+---
+
 ## 🔄 BOT TRADING FUNCTIONS (Authorized Bots Only)
 
-### `executeTrade(address token, uint256 amountIn, uint256 minAmountOut, address dexRouter, address[] path)`
-**What it does:** Execute a trade using vault's USDC  
+### `executeTrade(address tokenIn, address tokenOut, uint256 amountIn, uint256 minAmountOut, address dexRouter, bytes calldata swapCalldata)`
+**What it does:** Execute a trade with atomic swap (approve + swap + reset)  
 **Who can call:** Authorized bots only  
 **Parameters:**
-- `token`: Address of token to trade for
-- `amountIn`: Amount of USDC to spend
-- `minAmountOut`: Minimum tokens to receive (slippage protection)
-- `dexRouter`: Address of DEX router (e.g., Uniswap)
-- `path`: Token swap path (currently unused in placeholder)
+- `tokenIn`: Address of input token (e.g., USDC)
+- `tokenOut`: Address of output token (e.g., WETH)
+- `amountIn`: Amount of input token to spend
+- `minAmountOut`: Minimum output tokens to receive (slippage protection)
+- `dexRouter`: Address of DEX router (must be whitelisted)
+- `swapCalldata`: Encoded swap function call for the DEX router
 
-**Example:** Bot trades 1000 USDC for ETH
-```
-token: 0xETHAddress
-amountIn: 1000000000  (1000 USDC)
-minAmountOut: 500000000000000000  (0.5 ETH minimum)
-dexRouter: 0xUniswapRouterAddress
-path: []  (placeholder)
+**Example:** Bot trades 1000 USDC for WETH via Uniswap V3
+```javascript
+// Encode Uniswap V3 swap call
+const swapCalldata = uniswapRouter.interface.encodeFunctionData(
+  'exactInputSingle',
+  [{
+    tokenIn: USDC_ADDRESS,
+    tokenOut: WETH_ADDRESS,
+    fee: 3000,
+    recipient: vaultAddress,
+    deadline: Math.floor(Date.now() / 1000) + 300,
+    amountIn: ethers.parseUnits("1000", 6),
+    amountOutMinimum: ethers.parseEther("0.3"),
+    sqrtPriceLimitX96: 0
+  }]
+);
+
+// Execute trade
+await vault.executeTrade(
+  USDC_ADDRESS,
+  WETH_ADDRESS,
+  ethers.parseUnits("1000", 6),
+  ethers.parseEther("0.3"),
+  UNISWAP_V3_ROUTER,
+  swapCalldata
+);
 ```
 
-**Security:** Only authorized bots can call this. USDC stays in vault during trade.
+**Security:** 
+- Only authorized bots can call this
+- Only whitelisted DEX routers are allowed
+- Only whitelisted tokens can be traded
+- Atomic execution: approve + swap + reset in one transaction
+- Slippage protection enforced on-chain
+- Approval reset to 0 after swap
+
+**Returns:** Actual amount of output tokens received
 
 ---
 
@@ -130,16 +270,29 @@ amount: 1000  (0.001 USDC with 6 decimals)
 
 **Use case:** x402 micropayments between bots (Alpha Strategist pays AuditOracle).
 
+**Security:** Each bot is limited to 10 USDC per day. The limit resets every 24 hours.
+
 ---
 
 ## 🚨 EMERGENCY FUNCTIONS (Owner Only)
 
-### `emergencyWithdraw()`
-**What it does:** Withdraw ALL USDC from vault to owner  
+### `emergencyWithdraw(address token)`
+**What it does:** Withdraw specific token from vault to owner  
 **Who can call:** Owner only  
-**Parameters:** None
+**Parameters:**
+- `token`: Address of token to withdraw (use `address(0)` for ETH)
 
-**Use case:** Emergency situations where you need to recover all funds immediately.
+**Example:** Withdraw all USDC
+```
+token: 0xUSDCAddress
+```
+
+**Example:** Withdraw ETH
+```
+token: 0x0000000000000000000000000000000000000000
+```
+
+**Use case:** Emergency situations where you need to recover funds immediately.
 
 **Warning:** This withdraws everything! Use only in emergencies.
 
@@ -172,13 +325,21 @@ Returns: 1000000000000000000  (1 share with 18 decimals)
 ---
 
 ### `totalAssets()`
-**What it does:** Get total USDC held in the vault  
-**Returns:** Total USDC amount (6 decimals)
+**What it does:** Get total assets under management in USDC terms  
+**Returns:** Total value in USDC (6 decimals)
+
+**How it works:**
+- Counts USDC balance
+- If price oracle is set, adds value of all other tokens
+- Uses oracle to convert token balances to USDC value
+- Conservative: skips tokens if oracle fails
 
 **Example:**
 ```
-Returns: 50000000000  (50,000 USDC)
+Returns: 50000000000  (50,000 USDC equivalent)
 ```
+
+**Note:** This is the heart of the vault's accounting system!
 
 ---
 
@@ -270,6 +431,34 @@ Returns: 50000000000  (50,000 USDC)
 
 ---
 
+### `getHeldTokens()`
+**What it does:** Get list of all tokens held by vault  
+**Returns:** Array of token addresses
+
+**Example:**
+```
+Returns: [0xUSDCAddress, 0xWETHAddress, 0xWBTCAddress]
+```
+
+**Use case:** See what tokens the vault currently holds.
+
+---
+
+### `getTokenBalance(address token)`
+**What it does:** Get balance of specific token in vault  
+**Parameters:**
+- `token`: Address of token to check
+
+**Returns:** Token balance
+
+**Example:**
+```
+token: 0xWETHAddress
+Returns: 5000000000000000000  (5 WETH with 18 decimals)
+```
+
+---
+
 ### `isBotAuthorized(address botWallet)`
 **What it does:** Check if a bot is authorized  
 **Parameters:**
@@ -285,6 +474,57 @@ Returns: true
 
 ---
 
+### `isDexRouterWhitelisted(address dexRouter)`
+**What it does:** Check if a DEX router is whitelisted  
+**Parameters:**
+- `dexRouter`: DEX router address to check
+
+**Returns:** `true` if whitelisted, `false` if not
+
+**Example:**
+```
+dexRouter: 0xUniswapV3RouterAddress
+Returns: true
+```
+
+**Use case:** Verify a DEX router is approved before attempting trades.
+
+---
+
+### `isTokenWhitelisted(address token)`
+**What it does:** Check if a token is whitelisted  
+**Parameters:**
+- `token`: Token address to check
+
+**Returns:** `true` if whitelisted, `false` if not
+
+**Example:**
+```
+token: 0xWETHAddress
+Returns: true
+```
+
+---
+
+### `getRemainingMicropaymentAllowance(address bot)`
+**What it does:** Get how much USDC a bot can still transfer today  
+**Parameters:**
+- `bot`: Bot address to check
+
+**Returns:** Remaining USDC amount (6 decimals)
+
+**Example:**
+```
+bot: 0xAlphaStrategistAddress
+Returns: 8500000  (8.5 USDC remaining today)
+```
+
+**Use case:** Check if a bot has enough daily allowance before sending micropayments.
+
+**Note:** The allowance resets to 10 USDC every 24 hours.
+
+---
+
 ### `authorizedBots(address)`
 **What it does:** Direct mapping lookup for bot authorization  
 **Parameters:**
@@ -293,6 +533,85 @@ Returns: true
 **Returns:** `true` if authorized, `false` if not
 
 **Note:** Same as `isBotAuthorized()` but direct mapping access.
+
+---
+
+### `whitelistedDexRouters(address)`
+**What it does:** Direct mapping lookup for DEX router whitelist status  
+**Parameters:**
+- Address to check
+
+**Returns:** `true` if whitelisted, `false` if not
+
+**Note:** Same as `isDexRouterWhitelisted()` but direct mapping access.
+
+---
+
+### `whitelistedTokens(address)`
+**What it does:** Direct mapping lookup for token whitelist status  
+**Parameters:**
+- Address to check
+
+**Returns:** `true` if whitelisted, `false` if not
+
+**Note:** Same as `isTokenWhitelisted()` but direct mapping access.
+
+---
+
+### `dailyMicropaymentUsed(address)`
+**What it does:** Get how much USDC a bot has used today  
+**Parameters:**
+- Bot address to check
+
+**Returns:** USDC amount used today (6 decimals)
+
+**Example:**
+```
+bot: 0xAlphaStrategistAddress
+Returns: 1500000  (1.5 USDC used today)
+```
+
+---
+
+### `lastMicropaymentReset(address)`
+**What it does:** Get timestamp of last daily limit reset for a bot  
+**Parameters:**
+- Bot address to check
+
+**Returns:** Unix timestamp
+
+**Use case:** Check when the bot's daily allowance will reset.
+
+---
+
+### `DAILY_MICROPAYMENT_LIMIT()`
+**What it does:** Get the daily micropayment limit per bot  
+**Returns:** 10000000 (10 USDC with 6 decimals)
+
+**Note:** This is a constant value that applies to all bots.
+
+---
+
+### `priceOracle()`
+**What it does:** Get the current price oracle address  
+**Returns:** Address of price oracle contract (or address(0) if not set)
+
+---
+
+### `heldTokens(uint256 index)`
+**What it does:** Get token address at specific index in held tokens array  
+**Parameters:**
+- `index`: Array index
+
+**Returns:** Token address
+
+**Note:** Use `getHeldTokens()` to get the full array instead.
+
+---
+
+### `totalTradesExecuted()`
+**What it does:** Get total number of trades executed by bots  
+**Returns:** Number of trades
 
 ---
 
@@ -377,13 +696,19 @@ Returns: true
 
 ---
 
-### `totalTradesExecuted()`
-**What it does:** Get total number of trades executed by bots  
-**Returns:** Number of trades
-
----
-
 ## 🎯 QUICK START GUIDE
+
+### For Owner (Initial Setup):
+1. **Deploy Contract**: `yarn deploy --network baseSepolia`
+2. **Initialize Vault**: 
+   ```javascript
+   await usdc.approve(vaultAddress, ethers.parseUnits("1000", 6));
+   await vault.initializeVault(ethers.parseUnits("1000", 6));
+   ```
+3. **Set Price Oracle**: `await vault.setPriceOracle(oracleAddress)`
+4. **Whitelist DEX Routers**: `await vault.whitelistDexRouter(uniswapRouter)`
+5. **Whitelist Tokens**: `await vault.whitelistToken(wethAddress)`
+6. **Authorize Bots**: `await vault.authorizeBotWallet(botAddress)`
 
 ### For Users (Depositing/Withdrawing):
 1. **Approve USDC**: Call `approve()` on USDC contract
@@ -391,14 +716,10 @@ Returns: true
 3. **Check Balance**: Call `balanceOf(yourAddress)`
 4. **Withdraw**: Call `withdraw(amount, yourAddress, yourAddress)`
 
-### For Owner (Managing Bots):
-1. **Authorize Bot**: Call `authorizeBotWallet(botAddress)`
-2. **Check Status**: Call `isBotAuthorized(botAddress)`
-3. **Deauthorize**: Call `deauthorizeBotWallet(botAddress)` if needed
-
 ### For Bots (Trading):
-1. **Execute Trade**: Call `executeTrade(...)` with trade parameters
-2. **Send Payment**: Call `transferUSDC(recipient, amount)` for x402 payments
+1. **Encode Swap**: Create swap calldata for DEX
+2. **Execute Trade**: Call `executeTrade(...)` with encoded calldata
+3. **Send Payment**: Call `transferUSDC(recipient, amount)` for x402 payments
 
 ---
 
@@ -406,10 +727,56 @@ Returns: true
 
 1. **USDC has 6 decimals**, not 18! Always multiply by 1,000,000 (1e6) for USDC amounts.
 2. **Vault shares have 18 decimals** (standard ERC-20).
-3. **Always approve USDC** before depositing.
-4. **Only owner** can authorize/deauthorize bots.
-5. **Only authorized bots** can execute trades and transfer USDC.
-6. **USDC stays in vault** - bots don't hold funds directly.
+3. **Always initialize vault** before accepting public deposits (prevents inflation attack).
+4. **Set price oracle** for multi-asset accounting to work properly.
+5. **Whitelist tokens** before bots can trade for them.
+6. **Whitelist DEX routers** before bots can use them.
+7. **Only owner** can authorize/deauthorize bots and whitelist assets.
+8. **Only authorized bots** can execute trades and transfer USDC.
+9. **USDC stays in vault** - bots don't hold funds directly.
+10. **Daily micropayment limit**: Each bot can transfer max 10 USDC per day (resets every 24 hours).
+
+---
+
+## 🔒 SECURITY FEATURES
+
+### Multi-Asset Accounting
+- Tracks all tokens held by vault
+- Uses price oracle to value non-USDC tokens
+- Conservative approach: skips tokens if oracle fails
+- Prevents share price manipulation
+
+### Inflation Attack Protection
+- Requires initialization with seed deposit
+- Mints 1000 shares to dead address
+- Makes first depositor attack economically infeasible
+
+### Atomic Swap Execution
+- Approve + swap + reset in one transaction
+- No dangling approvals
+- Balance verification before/after
+- On-chain slippage protection
+
+### DEX Router Whitelist
+- Prevents bots from approving arbitrary contracts
+- Owner must explicitly whitelist each DEX router
+- Protects against malicious contract approvals
+
+### Token Whitelist
+- Vault can only hold whitelisted tokens
+- Prevents bots from buying scam tokens
+- Owner controls which assets are allowed
+
+### Daily Micropayment Limits
+- Each bot limited to 10 USDC per day
+- Prevents excessive fund drainage
+- Resets automatically every 24 hours
+- Check remaining allowance with `getRemainingMicropaymentAllowance()`
+
+### Bot Authorization
+- Only owner can authorize/deauthorize bots
+- Bots can only execute trades and micropayments
+- Cannot withdraw all funds (only owner via emergency)
 
 ---
 
@@ -420,6 +787,24 @@ Returns: true
 
 ---
 
+## 📚 RELATED DOCUMENTS
+
+- **S4D5Vault-SECURITY.md** - Detailed security analysis and fixes
+- **SECURITY-FIXES-SUMMARY.md** - Quick reference for v2.0.0 changes
+- **S4D5Vault.sol** - Contract source code
+
+---
+
 ## 📞 SUPPORT
 
-For questions or issues, refer to the main README or contact the development team.
+For questions or issues:
+- Review the security guide: `S4D5Vault-SECURITY.md`
+- Check the fixes summary: `SECURITY-FIXES-SUMMARY.md`
+- Test on Base Sepolia before mainnet
+- Consider professional audit before mainnet deployment
+
+---
+
+**Contract Version:** 2.0.0 (Security Hardened)  
+**Last Updated:** February 2026  
+**Status:** Ready for Testnet
