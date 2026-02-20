@@ -36,15 +36,35 @@ export const athEventBus = {
 const SnakeHUD = () => {
   const { address: connectedAddress } = useAccount();
 
-  // Read total assets (NAV) from vault - this is the real portfolio value
+  // Read total assets (TVL) from vault
   const { data: totalAssets } = useScaffoldReadContract({
     contractName: "S4D5Vault",
     functionName: "totalAssets",
     chainId: 8453, // Base mainnet
   });
 
+  // Read user's share balance
+  const { data: userShares } = useScaffoldReadContract({
+    contractName: "S4D5Vault",
+    functionName: "balanceOf",
+    args: connectedAddress ? [connectedAddress] : undefined,
+    chainId: 8453,
+  });
+
+  // Read total supply of shares
+  const { data: totalSupply } = useScaffoldReadContract({
+    contractName: "S4D5Vault",
+    functionName: "totalSupply",
+    chainId: 8453,
+  });
+
   // Convert USDC (6 decimals) to display value
-  const realNavValue = totalAssets ? Number(formatUnits(totalAssets, 6)) : 10;
+  const totalVaultFunds = totalAssets ? Number(formatUnits(totalAssets, 6)) : 10;
+  
+  // Calculate user's funds (shares * totalAssets / totalSupply)
+  const userFunds = userShares && totalAssets && totalSupply && totalSupply > 0n
+    ? Number(formatUnits((userShares * totalAssets) / totalSupply, 6))
+    : 0;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -317,10 +337,10 @@ const SnakeHUD = () => {
     return () => cancelAnimationFrame(animFrame);
   }, []);
 
-  // Calculate real P&L based on vault NAV (initial was $10)
+  // Calculate real P&L based on vault TVL (initial was $10)
   const initialVaultValue = 10;
-  const realPnl = realNavValue - initialVaultValue;
-  const realPnlPercent = ((realNavValue - initialVaultValue) / initialVaultValue) * 100;
+  const realPnl = totalVaultFunds - initialVaultValue;
+  const realPnlPercent = ((totalVaultFunds - initialVaultValue) / initialVaultValue) * 100;
   const isRealProfit = realPnl >= 0;
 
   const pnl = displayValue - INITIAL_CAPITAL;
@@ -361,10 +381,10 @@ const SnakeHUD = () => {
         </div>
       )}
 
-      {/* Portfolio NAV counter — top left */}
+      {/* Total Vault Funds counter — top left */}
       <div className="absolute top-3 left-14 z-30">
         <p className="text-[8px] font-display tracking-[0.25em] uppercase text-silver mb-0.5">
-          Portfolio NAV {connectedAddress && "(Live)"}
+          Total Vault Funds
         </p>
         <p
           className="text-xl font-mono font-bold tracking-tight leading-none"
@@ -373,7 +393,7 @@ const SnakeHUD = () => {
             textShadow: isUp ? "0 0 18px rgba(0,255,0,0.4)" : "0 0 18px rgba(255,0,0,0.4)",
           }}
         >
-          ${realNavValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          ${totalVaultFunds.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
         <p
           className="text-[9px] font-mono mt-0.5"
@@ -385,8 +405,13 @@ const SnakeHUD = () => {
             ({isRealProfit ? "+" : ""}${realPnl.toFixed(2)})
           </span>
         </p>
+        {connectedAddress && userFunds > 0 && (
+          <p className="text-[8px] font-mono mt-1.5 tracking-[0.1em] uppercase text-white/90 border-t border-white/20 pt-1">
+            Your Funds: ${userFunds.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+        )}
         <p className="text-[8px] font-mono mt-0.5 tracking-[0.1em] uppercase text-muted-foreground">
-          {connectedAddress ? "Connected to Base Mainnet" : "Connect wallet to see your position"}
+          {connectedAddress ? "Base Mainnet • Live" : "Connect wallet to deposit"}
         </p>
       </div>
     </div>
