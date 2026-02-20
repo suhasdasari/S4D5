@@ -1,20 +1,20 @@
 {
   "name": "auditoracle",
   "version": "1.0.0",
-  "description": "Risk assessment and trade proposal auditing bot for S4D5 AI Hedge Fund",
-  "main": "scripts/audit-proposals.js",
+  "description": "Compliance and audit bot for S4D5 AI Hedge Fund",
+  "main": "scripts/audit-trades.js",
   "scripts": {
     "init-wallet": "node scripts/init-wallet.js"
   },
   "keywords": [
     "audit",
-    "risk-assessment",
-    "trading"
+    "compliance",
+    "risk-management"
   ],
   "author": "S4D5 Team",
   "license": "MIT",
   "dependencies": {
     "dotenv": "^16.3.0",
-    "@coinbase/coinbase-sdk": "^0.10.0"
+    "ethers": "^6.9.0"
   }
 }

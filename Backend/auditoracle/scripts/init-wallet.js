@@ -1,48 +1,48 @@
 #!/usr/bin/env node
 /**
- * CDP Wallet Initialization Script for AuditOracle
- * Initializes the bot's CDP wallet on startup
+ * Wallet Initialization Script for AuditOracle
+ * Initializes the bot's Ethereum wallet on Base network
  * Usage: node init-wallet.js
  */
 
-const CDPWalletManager = require('../lib/cdp-wallet');
+const WalletManager = require('../lib/wallet');
 require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '..', '.env') });
 
 const BOT_NAME = 'AuditOracle';
 
 async function initializeWallet() {
   try {
-    console.log(`[${BOT_NAME}] Starting CDP wallet initialization...`);
-    
-    // Check required environment variables
-    if (!process.env.CDP_API_KEY_NAME || !process.env.CDP_API_KEY_PRIVATE_KEY) {
-      throw new Error('Missing required environment variables: CDP_API_KEY_NAME, CDP_API_KEY_PRIVATE_KEY');
-    }
+    console.log(`[${BOT_NAME}] Starting wallet initialization...`);
     
     // Create wallet manager instance
-    const walletManager = new CDPWalletManager(BOT_NAME);
+    const walletManager = new WalletManager(BOT_NAME);
     
     // Initialize wallet
     const address = await walletManager.initialize();
     
-    console.log(`[${BOT_NAME}] ✓ CDP wallet initialized successfully`);
-    console.log(`[${BOT_NAME}] Wallet address: ${address}`);
-    console.log(`[${BOT_NAME}] Network: ${process.env.NETWORK_ID || 'base-mainnet'}`);
+    console.log(`[${BOT_NAME}] ✓ Wallet initialized successfully`);
+    console.log(`[${BOT_NAME}] Address: ${address}`);
+    console.log(`[${BOT_NAME}] Network: Base Mainnet`);
     
-    // Get initial balance
+    // Get balances
     try {
-      const balance = await walletManager.getBalance();
-      console.log(`[${BOT_NAME}] Current USDC balance: ${balance}`);
+      const ethBalance = await walletManager.getBalance();
+      const usdcBalance = await walletManager.getUSDCBalance();
+      console.log(`[${BOT_NAME}] ETH Balance: ${ethBalance}`);
+      console.log(`[${BOT_NAME}] USDC Balance: ${usdcBalance}`);
     } catch (error) {
-      console.log(`[${BOT_NAME}] Note: Could not fetch balance (wallet may need funding)`);
+      console.log(`[${BOT_NAME}] Note: Could not fetch balances (wallet may need funding)`);
     }
     
     console.log(`[${BOT_NAME}] Wallet configuration saved to config/wallet.json`);
+    console.log(`\n⚠️  NEXT STEPS:`);
+    console.log(`1. Save this address: ${address}`);
+    console.log(`2. Fund the wallet from your vault contract`);
+    console.log(`3. Verify balance with: npm run check-balance\n`);
     
     process.exit(0);
   } catch (error) {
     console.error(`[${BOT_NAME}] ✗ Wallet initialization failed:`, error.message);
-    console.error(`[${BOT_NAME}] Stack trace:`, error.stack);
     process.exit(1);
   }
 }
