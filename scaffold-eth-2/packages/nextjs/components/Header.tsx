@@ -23,6 +23,10 @@ export const menuLinks: HeaderMenuLink[] = [
     href: '/'
   },
   {
+    label: 'Kite Dashboard',
+    href: '/kite-dashboard'
+  },
+  {
     label: 'Debug Contracts',
     href: '/debug',
     icon: <BugAntIcon className="h-4 w-4" />
