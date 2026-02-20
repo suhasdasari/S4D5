@@ -100,9 +100,58 @@ We built and configured the following agents that plug into the Nerve-Cord:
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Local Development Setup
 
-### Frontend (Dashboard)
+### Prerequisites
+
+- Node.js (v18 or higher)
+- Yarn (v1.22 or higher)
+- Git
+
+### 1. Clone and Setup
+
+```bash
+git clone https://github.com/suhasdasari/S4D5.git
+cd S4D5
+```
+
+### 2. Configure Environment Variables
+
+Create a `.env` file in the root directory:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your actual values:
+```env
+NERVE_PORT=9999
+NERVE_TOKEN=your-secret-token
+NERVE_SERVER=https://s4d5-production.up.railway.app
+BOTNAME=alpha-strategist
+ANALYSIS_INTERVAL=300000
+MIN_CONFIDENCE=60
+TARGET_ASSETS=BTC,ETH
+MAX_POSITION_SIZE=10000
+RISK_MULTIPLIER=0.5
+TAKE_PROFIT_PCT=5
+STOP_LOSS_PCT=3
+MAX_POSITION_AGE_HOURS=24
+```
+
+### 3. Start Nerve-Cord (Message Broker)
+
+```bash
+cd nerve-cord
+npm install
+npm start
+```
+
+Dashboard: `http://localhost:9999/stats`
+
+### 4. Start Frontend (Dashboard)
+
+In a new terminal:
 
 ```bash
 cd scaffold-eth-2
@@ -112,15 +161,35 @@ yarn start
 
 Visit: `http://localhost:3000`
 
-### Nerve-Cord (Message Broker)
+### 5. Run Alpha Strategist (Trading Bot)
+
+In a new terminal:
+
+```bash
+cd Backend/helix/alpha-strategist.skill
+npm install
+
+# Test market analysis
+node scripts/analyze-and-propose.js
+
+# Send proposals to nerve-cord
+npm run send-proposals
+```
+
+### 6. Test Inter-Agent Communication
 
 ```bash
 cd nerve-cord
-npm install
-PORT=9999 TOKEN=your-secret node server.js
-```
 
-Dashboard: `http://localhost:9999/stats`
+# Send a test message
+npm run send "audit-oracle" "Test" "Hello from Alpha Strategist"
+
+# Check inbox
+npm run check
+
+# View activity log
+npm run log "Test message logged"
+```
 
 ---
 
