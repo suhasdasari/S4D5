@@ -191,6 +191,27 @@ npm run check
 npm run log "Test message logged"
 ```
 
+### 7. Register Bots with Nerve-Cord
+
+Bots need to register themselves with Nerve-Cord to appear in the dashboard. You can activate them by sending a ping:
+
+```bash
+cd nerve-cord
+
+# Register alpha-strategist
+BOTNAME=alpha-strategist npm run ping
+
+# Register audit-oracle
+BOTNAME=audit-oracle npm run ping
+
+# Register execution-hand
+BOTNAME=execution-hand npm run ping
+```
+
+After pinging, the bots will appear in the Nerve-Cord dashboard at `http://localhost:9999/stats` under "Active Bots".
+
+**Note**: On EC2 instances, if you have systemd services running (`nerve-poll@<botname>.service`), they automatically send heartbeats and register the bots.
+
 ---
 
 ## 🌐 Deployments
