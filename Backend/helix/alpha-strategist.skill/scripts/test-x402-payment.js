@@ -16,7 +16,7 @@ async function main() {
   // Initialize Alpha Strategist wallet (payer)
   console.log('[1/4] Loading Alpha Strategist wallet...');
   const strategistWallet = new KiteWalletManager(
-    path.join(__dirname, '../config/kite-wallet.json')
+    path.join(__dirname, '../config/wallet.json')
   );
   await strategistWallet.initialize();
 
