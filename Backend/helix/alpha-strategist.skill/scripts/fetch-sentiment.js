@@ -38,19 +38,24 @@ async function fetchSentiment(keywords = ['bitcoin']) {
       
       if (!hasKeyword) return false;
       
-      // Filter for price-related questions with timeframes
-      const priceKeywords = ['price', 'hit', 'reach', 'above', 'below', 'up', 'down'];
-      const timeKeywords = ['today', 'tomorrow', 'week', 'month', 'february', 'march', 'april', '2026'];
+      // Exclude obviously irrelevant markets
+      const excludeKeywords = ['gta', 'game', 'election', 'president', 'trump', 'biden'];
+      const isExcluded = excludeKeywords.some(kw => question.includes(kw));
+      
+      if (isExcluded) return false;
+      
+      // Accept any market with price-related keywords OR timeframes
+      const priceKeywords = ['price', 'hit', 'reach', 'above', 'below', 'up', 'down', '$', 'usd'];
+      const timeKeywords = ['today', 'tomorrow', 'week', 'month', 'february', 'march', 'april', 'may', 'june', '2026', '2025'];
       
       const hasPrice = priceKeywords.some(kw => question.includes(kw));
       const hasTime = timeKeywords.some(kw => question.includes(kw));
       
-      // Exclude long-term or irrelevant markets
-      const excludeKeywords = ['gta', 'game', 'election', 'president', 'year 2030', '2030', '2040'];
-      const isExcluded = excludeKeywords.some(kw => question.includes(kw));
-      
-      return hasPrice && hasTime && !isExcluded;
+      // Accept if it has price keywords OR time keywords (more lenient)
+      return hasPrice || hasTime;
     });
+
+    console.error(`Found ${relevantMarkets.length} relevant markets out of ${markets.length} total`);
 
     // Extract sentiment signals
     const signals = relevantMarkets.map(market => extractSentiment(market)).filter(s => s.sentiment !== null);
