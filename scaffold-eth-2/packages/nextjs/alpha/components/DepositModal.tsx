@@ -83,21 +83,22 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-black border border-foreground/20 rounded-lg p-6 w-full max-w-md relative"
-        >
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-foreground/60 hover:text-foreground"
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-gray-900 border-2 border-white/30 rounded-lg p-6 w-full max-w-md relative shadow-2xl"
           >
-            <X className="w-5 h-5" />
-          </button>
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
 
-          <h2 className="text-xl font-display tracking-wider uppercase mb-4">Deposit USDC</h2>
+            <h2 className="text-xl font-display tracking-wider uppercase mb-4 text-white">Deposit USDC</h2>
 
           {step === "input" && (
             <>
