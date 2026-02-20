@@ -13,7 +13,7 @@ const VaultBar = ({ onDeposit, onWithdraw }: VaultBarProps) => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={onDeposit}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-display tracking-[0.15em] uppercase bg-transparent border border-foreground text-foreground rounded-sm transition-colors hover:bg-foreground/10 whitespace-nowrap cursor-pointer"
+        className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-display tracking-[0.15em] uppercase bg-green-600 hover:bg-green-700 border border-green-500 text-white rounded-sm transition-colors whitespace-nowrap cursor-pointer"
       >
         <ArrowDownLeft className="w-3 h-3" />
         Deposit
@@ -22,7 +22,7 @@ const VaultBar = ({ onDeposit, onWithdraw }: VaultBarProps) => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={onWithdraw}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-display tracking-[0.15em] uppercase bg-transparent border border-foreground text-foreground rounded-sm transition-colors hover:bg-foreground/10 whitespace-nowrap cursor-pointer"
+        className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-display tracking-[0.15em] uppercase bg-red-600 hover:bg-red-700 border border-red-500 text-white rounded-sm transition-colors whitespace-nowrap cursor-pointer"
       >
         <ArrowUpRight className="w-3 h-3" />
         Withdraw

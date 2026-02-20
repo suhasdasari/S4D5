@@ -408,8 +408,8 @@ const SnakeHUD = () => {
       )}
 
       {/* User Deposited Funds counter — top left */}
-      <div className="absolute top-3 left-14 z-30">
-        <p className="text-[8px] font-display tracking-[0.25em] uppercase text-silver mb-0.5">
+      <div className="absolute top-3 left-14 z-30 bg-black/80 backdrop-blur-sm border border-white/20 rounded-lg p-3">
+        <p className="text-[8px] font-display tracking-[0.25em] uppercase text-white/70 mb-0.5">
           Your Deposited Funds
         </p>
         <p
@@ -422,11 +422,11 @@ const SnakeHUD = () => {
           ${userFundsInVault.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC
         </p>
         {connectedAddress && userWalletBalance > 0 && (
-          <p className="text-[8px] font-mono mt-1.5 tracking-[0.1em] uppercase text-white/90 border-t border-white/20 pt-1">
+          <p className="text-[9px] font-mono mt-1.5 tracking-[0.1em] uppercase text-white border-t border-white/20 pt-1">
             Wallet Balance: ${userWalletBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         )}
-        <p className="text-[8px] font-mono mt-0.5 tracking-[0.1em] uppercase text-muted-foreground">
+        <p className="text-[8px] font-mono mt-0.5 tracking-[0.1em] uppercase text-white/60">
           {connectedAddress ? "Base Mainnet • Live" : "Connect wallet to deposit"}
         </p>
       </div>
