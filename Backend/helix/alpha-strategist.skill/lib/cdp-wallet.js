@@ -14,6 +14,22 @@ class CDPWalletManager {
   }
 
   /**
+   * Convert base64 private key to PEM format
+   * @param {string} base64Key Base64 encoded private key
+   * @returns {string} PEM formatted private key
+   */
+  base64ToPem(base64Key) {
+    // EC private keys are 32 bytes, but the base64 might include additional data
+    // We'll wrap it in PEM format for Ed25519
+    const pemHeader = "-----BEGIN EC PRIVATE KEY-----";
+    const pemFooter = "-----END EC PRIVATE KEY-----";
+    
+    // Split base64 into 64-character lines
+    const lines = base64Key.match(/.{1,64}/g) || [];
+    return `${pemHeader}\n${lines.join('\n')}\n${pemFooter}`;
+  }
+
+  /**
    * Initialize CDP wallet using Coinbase SDK
    * @returns {Promise<string>} Wallet address
    */
@@ -21,10 +37,27 @@ class CDPWalletManager {
     try {
       console.log(`[${this.botName}] Initializing CDP wallet...`);
       
+      let apiKeyName = process.env.CDP_API_KEY_NAME;
+      let privateKey = process.env.CDP_API_KEY_PRIVATE_KEY;
+      
+      // Check if privateKey is base64 (doesn't start with -----)
+      if (!privateKey.startsWith('-----')) {
+        console.log(`[${this.botName}] Converting base64 private key to PEM format...`);
+        privateKey = this.base64ToPem(privateKey);
+      }
+      
+      // If apiKeyName is just a UUID, convert to proper format
+      if (!apiKeyName.includes('/')) {
+        // Assume it's in format: organizations/{org}/apiKeys/{keyId}
+        // We'll use the UUID as the keyId
+        apiKeyName = `organizations/${process.env.CDP_ORG_ID || 'default'}/apiKeys/${apiKeyName}`;
+        console.log(`[${this.botName}] Using API key name: ${apiKeyName}`);
+      }
+      
       // Configure Coinbase SDK
       Coinbase.configure({
-        apiKeyName: process.env.CDP_API_KEY_NAME,
-        privateKey: process.env.CDP_API_KEY_PRIVATE_KEY,
+        apiKeyName: apiKeyName,
+        privateKey: privateKey,
       });
       
       // Create wallet
