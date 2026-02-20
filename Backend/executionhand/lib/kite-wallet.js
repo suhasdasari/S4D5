@@ -2,6 +2,7 @@
  * Kite AI Wallet Manager for Agent Payments
  * 
  * Handles x402 micropayments between AI agents on Kite testnet
+ * REUSES existing Base wallet (same private key, different chain)
  */
 
 const { ethers } = require('ethers');
@@ -13,47 +14,39 @@ const KITE_TESTNET_RPC = process.env.KITE_RPC || 'https://rpc-testnet.gokite.ai/
 const KITE_CHAIN_ID = 2368;
 
 class KiteWalletManager {
-  constructor(configPath = path.join(__dirname, '../config/kite-wallet.json')) {
-    this.configPath = configPath;
+  constructor(baseWalletPath = path.join(__dirname, '../config/wallet.json')) {
+    this.baseWalletPath = baseWalletPath;
     this.provider = new ethers.JsonRpcProvider(KITE_TESTNET_RPC, KITE_CHAIN_ID);
     this.wallet = null;
     this.config = null;
   }
 
   /**
-   * Initialize or load existing Kite wallet
+   * Initialize Kite wallet using existing Base wallet private key
    */
   async initialize() {
     try {
-      // Try to load existing wallet
-      if (fs.existsSync(this.configPath)) {
-        this.config = JSON.parse(fs.readFileSync(this.configPath, 'utf8'));
-        this.wallet = new ethers.Wallet(this.config.privateKey, this.provider);
-        console.log(`[Kite] Loaded wallet: ${this.wallet.address}`);
-      } else {
-        // Create new wallet
-        this.wallet = ethers.Wallet.createRandom().connect(this.provider);
-        this.config = {
-          address: this.wallet.address,
-          privateKey: this.wallet.privateKey,
-          chainId: KITE_CHAIN_ID,
-          rpc: KITE_TESTNET_RPC,
-          created: new Date().toISOString()
-        };
-        
-        // Save to file
-        const dir = path.dirname(this.configPath);
-        if (!fs.existsSync(dir)) {
-          fs.mkdirSync(dir, { recursive: true });
-        }
-        fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2));
-        console.log(`[Kite] Created new wallet: ${this.wallet.address}`);
-        console.log(`[Kite] ⚠️  Fund this wallet at: https://faucet.gokite.ai`);
+      // Load existing Base wallet
+      if (!fs.existsSync(this.baseWalletPath)) {
+        throw new Error(`Base wallet not found at ${this.baseWalletPath}. Run init-wallet.js first.`);
       }
+
+      this.config = JSON.parse(fs.readFileSync(this.baseWalletPath, 'utf8'));
+      
+      // Create Kite wallet using same private key
+      this.wallet = new ethers.Wallet(this.config.privateKey, this.provider);
+      
+      console.log(`[Kite] Loaded wallet: ${this.wallet.address}`);
+      console.log(`[Kite] ✅ Same address as Base wallet - multi-chain identity!`);
 
       // Check balance
       const balance = await this.getBalance();
       console.log(`[Kite] Balance: ${balance} KITE`);
+
+      if (parseFloat(balance) === 0) {
+        console.log(`[Kite] ⚠️  Fund this wallet at: https://faucet.gokite.ai`);
+        console.log(`[Kite] Address: ${this.wallet.address}`);
+      }
 
       return this.wallet;
     } catch (error) {

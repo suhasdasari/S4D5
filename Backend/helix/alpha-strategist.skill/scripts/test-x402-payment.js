@@ -22,15 +22,15 @@ async function main() {
 
   // Load AuditOracle wallet address (recipient)
   console.log('[2/4] Loading AuditOracle wallet address...');
-  const auditOracleConfigPath = path.join(__dirname, '../../../auditoracle/config/kite-wallet.json');
+  const auditOracleConfigPath = path.join(__dirname, '../../../auditoracle/config/wallet.json');
   
   let auditOracleAddress;
   try {
-    const auditOracleConfig = require(auditOracleConfigPath);
+    const auditOracleConfig = JSON.parse(require('fs').readFileSync(auditOracleConfigPath, 'utf8'));
     auditOracleAddress = auditOracleConfig.address;
     console.log(`AuditOracle address: ${auditOracleAddress}`);
   } catch (error) {
-    console.error('❌ AuditOracle wallet not found. Run init-kite-wallet.js in auditoracle first.');
+    console.error('❌ AuditOracle wallet not found. Run init-wallet.js in auditoracle first.');
     process.exit(1);
   }
 
