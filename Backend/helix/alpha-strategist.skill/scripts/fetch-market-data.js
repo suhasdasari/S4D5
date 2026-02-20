@@ -100,7 +100,14 @@ async function fetchMarketData(asset) {
       }
     );
 
-    const assetCtx = statsResponse.data[0]?.find(ctx => ctx.coin === coin);
+    // Parse response - it returns [assetCtxs, meta]
+    let assetCtx = null;
+    if (Array.isArray(statsResponse.data) && statsResponse.data.length > 0) {
+      const assetCtxs = statsResponse.data[0];
+      if (Array.isArray(assetCtxs)) {
+        assetCtx = assetCtxs.find(ctx => ctx.coin === coin);
+      }
+    }
 
     // Format the data
     const currentPrice = parseFloat(assetPrice);
