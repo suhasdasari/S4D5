@@ -88,54 +88,54 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
 
             <h2 className="text-xl font-display tracking-wider uppercase mb-4 text-white">Withdraw USDC</h2>
 
-          {!isWithdrawing && !success ? (
-            <>
-              <div className="mb-2">
-                <p className="text-xs font-display tracking-wider uppercase text-white/60">
-                  Available: ${maxWithdraw.toFixed(2)} USDC
-                </p>
-              </div>
+            {!isWithdrawing && !success ? (
+              <>
+                <div className="mb-2">
+                  <p className="text-xs font-display tracking-wider uppercase text-white/60">
+                    Available: ${maxWithdraw.toFixed(2)} USDC
+                  </p>
+                </div>
 
-              <div className="mb-4">
-                <label className="text-xs font-display tracking-wider uppercase text-white/60 mb-2 block">
-                  Amount (USDC)
-                </label>
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.00"
-                  max={maxWithdraw}
-                  className="w-full bg-gray-800 border border-white/20 rounded px-4 py-2 text-white font-mono focus:outline-none focus:border-white/40"
-                />
+                <div className="mb-4">
+                  <label className="text-xs font-display tracking-wider uppercase text-white/60 mb-2 block">
+                    Amount (USDC)
+                  </label>
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.00"
+                    max={maxWithdraw}
+                    className="w-full bg-gray-800 border border-white/20 rounded px-4 py-2 text-white font-mono focus:outline-none focus:border-white/40"
+                  />
+                  <button
+                    onClick={() => setAmount(maxWithdraw.toString())}
+                    className="text-xs text-white/60 hover:text-white mt-1 transition-colors"
+                  >
+                    Max
+                  </button>
+                </div>
+
                 <button
-                  onClick={() => setAmount(maxWithdraw.toString())}
-                  className="text-xs text-white/60 hover:text-white mt-1 transition-colors"
+                  onClick={handleWithdraw}
+                  disabled={!amount || !connectedAddress || Number(amount) > maxWithdraw}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded font-display tracking-wider uppercase disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  Max
+                  Confirm Withdraw
                 </button>
+              </>
+            ) : success ? (
+              <div className="text-center py-8">
+                <p className="text-green-500 mb-2">✓ Withdrawal successful!</p>
               </div>
-
-              <button
-                onClick={handleWithdraw}
-                disabled={!amount || !connectedAddress || Number(amount) > maxWithdraw}
-                className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded font-display tracking-wider uppercase disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Confirm Withdraw
-              </button>
-            </>
-          ) : success ? (
-            <div className="text-center py-8">
-              <p className="text-green-500 mb-2">✓ Withdrawal successful!</p>
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-white/60 mb-2">Withdrawing from vault...</p>
-              <div className="animate-spin w-8 h-8 border-2 border-white/20 border-t-white rounded-full mx-auto" />
-            </div>
-          )}
-        </motion.div>
-      </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-white/60 mb-2">Withdrawing from vault...</p>
+                <div className="animate-spin w-8 h-8 border-2 border-white/20 border-t-white rounded-full mx-auto" />
+              </div>
+            )}
+          </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );
