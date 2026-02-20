@@ -1,0 +1,17 @@
+{
+  "name": "nerve-cord",
+  "version": "1.0.0",
+  "description": "Nerve cord — inter-bot message broker for OpenClaw instances",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "ping": "node ping-team.js",
+    "check": "node check.js",
+    "send": "node send.js",
+    "log": "node log.js",
+    "prio": "node priority.js"
+  },
+  "dependencies": {
+    "nanoid": "^5.0.0"
+  }
+}
