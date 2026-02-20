@@ -4,6 +4,8 @@
 
 🌐 **Live Dashboard**: [s4-d5.vercel.app](https://s4-d5.vercel.app/)
 
+🚀 **Kite AI x402 Demo**: [KITE-DEMO.md](KITE-DEMO.md) - Agent-to-agent micropayments
+
 > [!CAUTION]
 > **ALL** inter-bot communication must use the Nerve-Cord terminal scripts (`npm run send / check / ping`) located in the `nerve-cord/` directory.
 
