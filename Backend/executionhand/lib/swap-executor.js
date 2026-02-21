@@ -15,9 +15,7 @@ class SwapExecutor {
     try {
       // 1. Generate calldata
       const swapData = await this.apiClient.getSwapCalldata({
-        quoteId: quote.quoteId,
-        slippage: this.config.slippageTolerance,
-        recipient: this.vaultContract.target
+        rawQuote: quote.rawQuote
       });
 
       // 2. Validate security constraints

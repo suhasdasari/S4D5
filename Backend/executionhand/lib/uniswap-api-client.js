@@ -53,7 +53,8 @@ class UniswapAPIClient {
         route: routing || [],
         gasEstimate: quote.classicGasUseEstimateUSD || '200000',
         priceImpact: '0', // Not provided in new API
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        rawQuote: quote // Store the full quote for swap endpoint
       };
     } catch (error) {
       const latency = Date.now() - startTime;
@@ -69,10 +70,9 @@ class UniswapAPIClient {
     try {
       const response = await this.retryRequest(() =>
         this.client.post(endpoint, {
-          quoteId: params.quoteId,
-          slippageTolerance: params.slippage || '0.5',
-          recipient: params.recipient,
-          deadline: Math.floor(Date.now() / 1000) + 1200 // 20 minutes
+          quote: params.rawQuote, // Pass the full quote object
+          simulateTransaction: false,
+          includeGasInfo: true
         })
       );
 
@@ -84,7 +84,7 @@ class UniswapAPIClient {
         to: response.data.to,
         value: response.data.value || '0',
         gasLimit: response.data.gasLimit || '300000',
-        quoteId: params.quoteId
+        quoteId: params.rawQuote.quoteId
       };
     } catch (error) {
       const latency = Date.now() - startTime;
