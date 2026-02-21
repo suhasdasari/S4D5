@@ -6,3 +6,6 @@ cmds = ["cd nerve-cord && npm ci"]
 
 [start]
 cmd = "cd nerve-cord && node index.js"
+
+[variables]
+NIXPACKS_NO_MUSL = "1"
