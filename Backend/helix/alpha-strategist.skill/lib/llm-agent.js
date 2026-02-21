@@ -244,22 +244,31 @@ Use your characteristic direct, data-driven communication style.`;
   }
 
   /**
-   * Call LLM API (mock implementation - replace with actual OpenClaw client)
+   * Call LLM API using OpenAI-compatible client
    */
   async _callLLM(prompt, options = {}) {
-    // TODO: Replace with actual OpenClaw LLM client call
-    // For now, this is a placeholder that would be replaced with:
-    // return await this.openclawClient.chat.completions.create({
-    //   model: 'gpt-4',
-    //   messages: [{ role: 'user', content: prompt }],
-    //   ...options
-    // });
+    if (!this.openclawClient) {
+      throw new Error('LLM client not initialized. Pass OpenAI client to constructor.');
+    }
     
     console.log('[LLM] Calling LLM API...');
     console.log('[LLM] Prompt length:', prompt.length, 'chars');
     
-    // Mock response for development
-    throw new Error('LLM client not implemented. Replace _callLLM with actual OpenClaw client.');
+    try {
+      const response = await this.openclawClient.chat.completions.create({
+        model: options.model || 'gpt-4-turbo-preview',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: options.temperature || 0.7,
+        max_tokens: options.max_tokens || 1500,
+        response_format: options.response_format || { type: 'json_object' }
+      });
+      
+      console.log('[LLM] ✓ Response received');
+      return response.choices[0].message.content;
+    } catch (error) {
+      console.error('[LLM] ✗ API call failed:', error.message);
+      throw error;
+    }
   }
 
   /**
