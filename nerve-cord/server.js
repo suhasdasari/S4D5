@@ -6,7 +6,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { nanoid } = require('nanoid');
-const { uploadTo0g } = require('./0g_Upload');
+const { uploadTo0g } = require('./0g_upload');
 
 const PORT = parseInt(process.env.PORT || '9999', 10);
 const TOKEN = process.env.TOKEN || 'nerve-cord-default-token';

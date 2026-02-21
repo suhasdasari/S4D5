@@ -26,7 +26,7 @@ function loadEnv() {
 loadEnv();
 
 // Require uploadTo0g from 0g_Upload.js
-const { uploadTo0g } = require('./0g_Upload');
+const { uploadTo0g } = require('./0g_upload');
 
 // Soul files to upload
 const SOUL_DIR = path.join(__dirname, 'automation', 'soul_templates');
