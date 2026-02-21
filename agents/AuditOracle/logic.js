@@ -1,4 +1,5 @@
 const { logIntent } = require("../../hedera/scripts/logIntent");
+const { postToNerveCord } = require("../../hedera/scripts/postToNerveCord");
 require("dotenv").config();
 
 /**
@@ -30,6 +31,19 @@ async function runAudit(proposalPayload, hcsSequence) {
         console.log(`✅ [AUDIT ORACLE] Verdict anchored for Proposal ${proposalPayload.proposalId}`);
     } catch (error) {
         console.error(`❌ [AUDIT ORACLE] Failed to anchor verdict:`, error.message);
+    }
+
+    // Pin verdict to 0G via Nerve-Cord
+    try {
+        const nc = await postToNerveCord({
+            from: "audit-oracle",
+            text: `Verdict: ${auditVerdict.status} for ${auditVerdict.responding_to} — ${auditVerdict.reason}`,
+            tags: ["audit"],
+            details: auditVerdict,
+        });
+        if (nc && nc.cid) console.log(`✅ [AUDIT ORACLE] Verdict pinned to 0G: ${nc.cid}`);
+    } catch (err) {
+        console.warn(`⚠️ [AUDIT ORACLE] Nerve-Cord/0G pin skipped:`, err.message);
     }
 }
 

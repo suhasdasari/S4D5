@@ -159,12 +159,6 @@ const server = http.createServer(async (req, res) => {
   const p = url.pathname;
 
   // Public endpoints (no auth)
-  
-  // GET /health - Public healthcheck for Railway
-  if (req.method === 'GET' && p === '/health') {
-    return json(res, 200, { ok: true, messages: messages.size, bots: bots.size, uptime: process.uptime() });
-  }
-  
   if (req.method === 'GET' && p === '/stats') {
     expire();
     const now = Date.now();
@@ -604,6 +598,11 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, { deleted: true });
   }
 
+  // GET /health
+  if (req.method === 'GET' && p === '/health') {
+    return json(res, 200, { ok: true, messages: messages.size, bots: bots.size, uptime: process.uptime() });
+  }
+
   // --- Activity Log ---
 
   // POST /log — add an entry
@@ -619,7 +618,7 @@ const server = http.createServer(async (req, res) => {
         details: body.details || null,
         created: new Date().toISOString(),
       };
-      const shouldPinTo0g = (body.tags && (body.tags.includes('audit') || body.tags.includes('proposal') || body.tags.includes('consensus'))) || body.pinTo0g === true;
+      const shouldPinTo0g = (body.tags && (body.tags.includes('audit') || body.tags.includes('proposal') || body.tags.includes('consensus') || body.tags.includes('execution'))) || body.pinTo0g === true;
       if (shouldPinTo0g) {
         try {
           // Prefer full decision blob for 0G (Hedera transcriptCid will point to this)
@@ -782,19 +781,8 @@ const server = http.createServer(async (req, res) => {
 });
 
 // --- Start ---
-process.stdout.write('Loading data from disk...\n');
 load();
-process.stdout.write('Setting up periodic save interval...\n');
 setInterval(() => { expire(); save(); }, SAVE_INTERVAL);
-process.stdout.write(`Starting HTTP server on 0.0.0.0:${PORT}...\n`);
-
-server.on('error', (err) => {
-  process.stderr.write(`Server error: ${err.message}\n`);
-  process.exit(1);
-});
-
 server.listen(PORT, '0.0.0.0', () => {
-  process.stdout.write(`✅ Nerve cord broker listening on 0.0.0.0:${PORT}\n`);
-  process.stdout.write(`Health check endpoint: http://0.0.0.0:${PORT}/health\n`);
-  process.stdout.write(`Stats dashboard: http://0.0.0.0:${PORT}/stats\n`);
+  console.log(`Nerve cord broker listening on 0.0.0.0:${PORT}`);
 });

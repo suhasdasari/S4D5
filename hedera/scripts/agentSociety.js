@@ -3,6 +3,7 @@ const { Client, PrivateKey } = require("@hashgraph/sdk");
 const { runAudit } = require("../../agents/AuditOracle/logic");
 const { runExecution } = require("../../agents/ExecutionHand/logic");
 const { settlePerformanceReward } = require("./truthSettlement");
+const { postToNerveCord } = require("./postToNerveCord");
 require("dotenv").config();
 
 async function startSociety() {
@@ -21,6 +22,9 @@ async function startSociety() {
 
     console.log(`🤖 S4D5 Society Online: Listening on Topic ${process.env.HEDERA_TOPIC_ID}...`);
 
+    const proposalsByProposalId = {};
+    const auditsByProposalId = {};
+
     new TopicMessageQuery()
         .setTopicId(process.env.HEDERA_TOPIC_ID)
         .subscribe(client, null, async (message) => {
@@ -32,12 +36,14 @@ async function startSociety() {
 
                 // 1. Audit Oracle Reacts to Alpha Strategist
                 if (data.agent === "Alpha Strategist" && data.intent === "create_checkout") {
+                    if (data.payload.proposalId) proposalsByProposalId[data.payload.proposalId] = data.payload;
                     console.log("⚖️ Audit Oracle: Analyzing new trade proposal...");
                     await runAudit(data.payload, seq);
                 }
 
                 // 2. Execution Hand Reacts to Audit Oracle
                 if (data.agent === "Audit Oracle" && data.intent === "payment_handler") {
+                    if (data.payload.responding_to) auditsByProposalId[data.payload.responding_to] = data.payload;
                     if (data.payload.status === "APPROVED") {
                         console.log("⚡ Execution Hand: Executing on Base...");
 
@@ -80,6 +86,28 @@ async function startSociety() {
                         data.erc8004 ? data.erc8004.reputation_score : 0,
                         seq
                     );
+
+                    // Pin consensus/full blob to 0G via Nerve-Cord
+                    try {
+                        const proposalId = data.payload.responding_to_audit;
+                        const strategist = proposalsByProposalId[proposalId] || null;
+                        const audit = auditsByProposalId[proposalId] || null;
+                        const nc = await postToNerveCord({
+                            from: "society",
+                            text: `Consensus: ${proposalId} — approved and executed`,
+                            tags: ["consensus"],
+                            details: {
+                                proposalId,
+                                strategist,
+                                audit,
+                                execution: data.payload,
+                                created: new Date().toISOString(),
+                            },
+                        });
+                        if (nc && nc.cid) console.log(`✅ [SOCIETY] Consensus blob pinned to 0G: ${nc.cid}`);
+                    } catch (err) {
+                        console.warn(`⚠️ [SOCIETY] Nerve-Cord/0G consensus pin skipped:`, err.message);
+                    }
                 }
 
             } catch (err) {

@@ -1,4 +1,5 @@
 const { logIntent } = require("../../hedera/scripts/logIntent");
+const { postToNerveCord } = require("../../hedera/scripts/postToNerveCord");
 require("dotenv").config();
 
 /**
@@ -31,6 +32,19 @@ async function runExecution(auditPayload, hcsSequence) {
         console.log(`🏁 [EXECUTION HAND] Receipt anchored. Society Loop Complete.`);
     } catch (error) {
         console.error(`❌ [EXECUTION HAND] Failed to anchor receipt:`, error.message);
+    }
+
+    // Pin receipt to 0G via Nerve-Cord
+    try {
+        const nc = await postToNerveCord({
+            from: "execution-hand",
+            text: `Executed ${executionReceipt.responding_to_audit} on ${executionReceipt.network} — tx ${simulatedTxHash.substring(0, 10)}...`,
+            tags: ["execution"],
+            details: executionReceipt,
+        });
+        if (nc && nc.cid) console.log(`✅ [EXECUTION HAND] Receipt pinned to 0G: ${nc.cid}`);
+    } catch (err) {
+        console.warn(`⚠️ [EXECUTION HAND] Nerve-Cord/0G pin skipped:`, err.message);
     }
 }
 
