@@ -1,0 +1,375 @@
+import { useEffect, useRef, useState, useCallback } from "react";
+
+const BASE_VALUE = 1_240_500;
+const INITIAL_CAPITAL = 1_000_000;
+const MAX_POINTS = 80;
+const UPDATE_MS = 800;
+
+interface Point {
+  x: number;
+  y: number;
+  value: number;
+  time: Date;
+}
+
+interface Candle {
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  x: number;
+}
+
+// ATH event bus — globe subscribes to flash white
+export const athEventBus = {
+  listeners: [] as (() => void)[],
+  emit() { this.listeners.forEach((fn) => fn()); },
+  subscribe(fn: () => void) {
+    this.listeners.push(fn);
+    return () => { this.listeners = this.listeners.filter((l) => l !== fn); };
+  },
+};
+
+const SnakeHUD = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pointsRef = useRef<Point[]>([]);
+  const candlesRef = useRef<Candle[]>([]);
+  const [displayValue, setDisplayValue] = useState(BASE_VALUE);
+  const minRef = useRef(BASE_VALUE - 20_000);
+  const maxRef = useRef(BASE_VALUE + 20_000);
+  const sessionAthRef = useRef(BASE_VALUE);
+  const sessionStartRef = useRef(new Date());
+  const [headPos, setHeadPos] = useState<{ x: number; y: number } | null>(null);
+  const [isUp, setIsUp] = useState(true);
+
+  const resetPoints = useCallback(() => {
+    const seed: Point[] = [];
+    const candles: Candle[] = [];
+    let v = BASE_VALUE;
+    const now = Date.now();
+    sessionStartRef.current = new Date(now - MAX_POINTS * UPDATE_MS);
+    for (let i = 0; i < 40; i++) {
+      const prev = v;
+      v = Math.max(BASE_VALUE - 18_000, v + (Math.random() - 0.48) * 1_200);
+      seed.push({ x: i / 40, y: 0, value: v, time: new Date(now - (40 - i) * UPDATE_MS) });
+      if (i % 4 === 0) {
+        const range = Math.abs(v - prev) * 2 + 800;
+        candles.push({
+          open: prev, close: v,
+          high: Math.max(prev, v) + Math.random() * range * 0.3,
+          low: Math.min(prev, v) - Math.random() * range * 0.3,
+          x: i / 40,
+        });
+      }
+    }
+    pointsRef.current = seed;
+    candlesRef.current = candles;
+  }, []);
+
+  useEffect(() => { resetPoints(); }, [resetPoints]);
+
+  // Live updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const pts = pointsRef.current;
+      const last = pts[pts.length - 1]?.value ?? BASE_VALUE;
+      const prev = pts[pts.length - 2]?.value ?? BASE_VALUE;
+      const delta = (Math.random() - 0.47) * 1_400;
+      const next = Math.max(BASE_VALUE - 18_000, last + delta);
+
+      setDisplayValue(next);
+      setIsUp(next >= prev);
+
+      if (next > sessionAthRef.current) {
+        sessionAthRef.current = next;
+        athEventBus.emit();
+      }
+
+      const newPts: Point[] = [
+        ...pts.slice(-(MAX_POINTS - 1)),
+        { x: 1, y: 0, value: next, time: new Date() },
+      ].map((p, i, arr) => ({ ...p, x: i / (arr.length - 1) }));
+
+      const vals = newPts.map((p) => p.value);
+      minRef.current = Math.min(...vals) - 2_000;
+      maxRef.current = Math.max(...vals) + 2_000;
+      pointsRef.current = newPts;
+
+      // Always update candle every tick — perfectly in sync with snake line
+      const cands = candlesRef.current;
+      const lastCand = cands[cands.length - 1];
+      const wickRange = Math.abs(next - (lastCand?.close ?? BASE_VALUE)) * 1.5 + 400;
+      const newCand: Candle = {
+        open: lastCand?.close ?? BASE_VALUE,
+        close: next,
+        high: Math.max(lastCand?.close ?? BASE_VALUE, next) + Math.random() * wickRange * 0.15,
+        low: Math.min(lastCand?.close ?? BASE_VALUE, next) - Math.random() * wickRange * 0.15,
+        x: newPts[newPts.length - 1].x,
+      };
+      candlesRef.current = [...cands.slice(-39), newCand].map((c, i, arr) => ({ ...c, x: i / (arr.length - 1) }));
+    }, UPDATE_MS);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Canvas render loop
+  useEffect(() => {
+    let animFrame: number;
+    const AXIS_LEFT = 52;
+    const AXIS_BOTTOM = 28;
+
+    const draw = () => {
+      const canvas = canvasRef.current;
+      const container = containerRef.current;
+      if (!canvas || !container) { animFrame = requestAnimationFrame(draw); return; }
+
+      const W = container.clientWidth;
+      const H = container.clientHeight;
+      if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { animFrame = requestAnimationFrame(draw); return; }
+
+      ctx.clearRect(0, 0, W, H);
+
+      const plotW = W - AXIS_LEFT - 8;
+      const plotH = H - AXIS_BOTTOM - 8;
+      const pts = pointsRef.current;
+      if (pts.length < 2) { animFrame = requestAnimationFrame(draw); return; }
+
+      const range = maxRef.current - minRef.current || 1;
+      const toX = (nx: number) => AXIS_LEFT + nx * plotW;
+      const toY = (v: number) => 8 + plotH - ((v - minRef.current) / range) * plotH * 0.85 - plotH * 0.075;
+
+      // ── Candlestick layer — Binance-style green/red ──
+      const candles = candlesRef.current;
+      const candleW = Math.max(4, plotW / candles.length * 0.55);
+      candles.forEach((c) => {
+        const cx = toX(c.x);
+        const openY = toY(c.open);
+        const closeY = toY(c.close);
+        const highY = toY(c.high);
+        const lowY = toY(c.low);
+        const bullish = c.close >= c.open;
+
+        // Wick — colored per direction
+        ctx.beginPath();
+        ctx.strokeStyle = bullish ? "rgba(0,200,80,0.5)" : "rgba(220,40,40,0.5)";
+        ctx.lineWidth = 1;
+        ctx.moveTo(cx, highY); ctx.lineTo(cx, lowY);
+        ctx.stroke();
+
+        // Body
+        const bodyTop = Math.min(openY, closeY);
+        const bodyH = Math.max(1.5, Math.abs(closeY - openY));
+        ctx.fillStyle = bullish ? "rgba(0,210,80,0.25)" : "rgba(220,40,40,0.22)";
+        ctx.fillRect(cx - candleW / 2, bodyTop, candleW, bodyH);
+        // Border outline
+        ctx.strokeStyle = bullish ? "rgba(0,230,90,0.7)" : "rgba(230,50,50,0.7)";
+        ctx.lineWidth = 0.8;
+        ctx.strokeRect(cx - candleW / 2, bodyTop, candleW, bodyH);
+      });
+
+      // ── Solid black strip behind Y-axis labels ──
+      ctx.fillStyle = "rgb(5,5,5)";
+      ctx.fillRect(0, 0, AXIS_LEFT, H);
+      // ── Solid black strip behind X-axis labels ──
+      ctx.fillStyle = "rgb(5,5,5)";
+      ctx.fillRect(0, 8 + plotH, W, AXIS_BOTTOM + 6);
+
+      // ── Y-Axis line ──
+      ctx.strokeStyle = "rgba(120,120,120,1)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(AXIS_LEFT, 8); ctx.lineTo(AXIS_LEFT, 8 + plotH);
+      ctx.stroke();
+
+      const yTicks = 4;
+      ctx.font = "bold 9px 'JetBrains Mono', monospace";
+      ctx.textAlign = "right";
+      for (let t = 0; t <= yTicks; t++) {
+        const val = minRef.current + (t / yTicks) * range;
+        const y = 8 + plotH - (t / yTicks) * plotH * 0.85 - plotH * 0.075;
+        // Tick mark
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(120,120,120,1)";
+        ctx.lineWidth = 1;
+        ctx.moveTo(AXIS_LEFT - 3, y); ctx.lineTo(AXIS_LEFT, y);
+        ctx.stroke();
+        // Label — clearly visible
+        ctx.fillStyle = "rgba(220,220,220,1)";
+        ctx.fillText(`$${(val / 1000).toFixed(0)}K`, AXIS_LEFT - 5, y + 3);
+        // Grid line
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(60,60,60,1)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 7]);
+        ctx.moveTo(AXIS_LEFT + 1, y); ctx.lineTo(AXIS_LEFT + plotW, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // ── X-Axis line ──
+      ctx.strokeStyle = "rgba(160,160,160,1)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(AXIS_LEFT, 8 + plotH); ctx.lineTo(AXIS_LEFT + plotW, 8 + plotH);
+      ctx.stroke();
+
+      const xTicks = 4;
+      ctx.textAlign = "center";
+      ctx.font = "bold 9px 'JetBrains Mono', monospace";
+      const sessionStart = sessionStartRef.current.getTime();
+      const sessionEnd = Date.now();
+      const sessionRange = sessionEnd - sessionStart || 1;
+      for (let t = 0; t <= xTicks; t++) {
+        const x = AXIS_LEFT + (t / xTicks) * plotW;
+        const ts = new Date(sessionStart + (t / xTicks) * sessionRange);
+        const label = ts.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+        // Tick mark
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(160,160,160,1)";
+        ctx.lineWidth = 1;
+        ctx.moveTo(x, 8 + plotH); ctx.lineTo(x, 8 + plotH + 3);
+        ctx.stroke();
+        // Label — clearly visible
+        ctx.fillStyle = "rgba(220,220,220,1)";
+        ctx.fillText(label, x, 8 + plotH + 17);
+        // Grid line
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(60,60,60,1)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 7]);
+        ctx.moveTo(x, 8); ctx.lineTo(x, 8 + plotH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // ── Fading tail ──
+      const lastVal = pts[pts.length - 1]?.value ?? BASE_VALUE;
+      const prevVal = pts[pts.length - 2]?.value ?? BASE_VALUE;
+      const headRgb = lastVal >= prevVal ? "0,230,80" : "220,40,40";
+
+      for (let i = 1; i < pts.length; i++) {
+        const alpha = i / pts.length;
+        ctx.beginPath();
+        ctx.moveTo(toX(pts[i - 1].x), toY(pts[i - 1].value));
+        ctx.lineTo(toX(pts[i].x), toY(pts[i].value));
+        ctx.strokeStyle = `rgba(${headRgb},${alpha * 0.9})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      // ── Area fill ──
+      ctx.beginPath();
+      ctx.moveTo(toX(pts[0].x), toY(pts[0].value));
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(toX(pts[i].x), toY(pts[i].value));
+      ctx.lineTo(toX(pts[pts.length - 1].x), 8 + plotH);
+      ctx.lineTo(toX(pts[0].x), 8 + plotH);
+      ctx.closePath();
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, lastVal >= prevVal ? "rgba(0,230,80,0.18)" : "rgba(220,40,40,0.18)");
+      grad.addColorStop(0.6, lastVal >= prevVal ? "rgba(0,230,80,0.04)" : "rgba(220,40,40,0.04)");
+      grad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // ── Glowing snake head ──
+      const head = pts[pts.length - 1];
+      const hx = toX(head.x);
+      const hy = toY(head.value);
+      const glowRgb = lastVal >= prevVal ? "0,230,80" : "220,40,40";
+      const glowHex = lastVal >= prevVal ? "#00E650" : "#DC2828";
+
+      [22, 13, 7].forEach((r, idx) => {
+        ctx.beginPath();
+        ctx.arc(hx, hy, r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${glowRgb},${[0.06, 0.12, 0.22][idx]})`;
+        ctx.fill();
+      });
+      ctx.beginPath();
+      ctx.arc(hx, hy, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = glowHex;
+      ctx.shadowColor = glowHex;
+      ctx.shadowBlur = 20;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      setHeadPos({ x: hx, y: hy });
+      animFrame = requestAnimationFrame(draw);
+    };
+
+    animFrame = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(animFrame);
+  }, []);
+
+  const pnl = displayValue - INITIAL_CAPITAL;
+  const isProfit = pnl >= 0;
+
+  return (
+    <div ref={containerRef} className="absolute inset-0 pointer-events-none z-50">
+      {/* Faint grid background */}
+      <svg className="absolute inset-0 w-full h-full opacity-[0.05]" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="hud-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#hud-grid)" />
+      </svg>
+
+      {/* Snake + candlestick canvas */}
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+
+      {/* Floating ticker label pinned to snake head */}
+      {headPos && (
+        <div
+          className="absolute pointer-events-none z-50"
+          style={{ left: headPos.x + 10, top: headPos.y - 24 }}
+        >
+          <span
+            className="text-[9px] font-mono font-bold whitespace-nowrap px-1.5 py-0.5 rounded-sm"
+            style={{
+              background: "rgba(0,0,0,0.85)",
+              border: `1px solid ${isProfit ? "rgba(0,255,0,0.5)" : "rgba(255,0,0,0.5)"}`,
+              color: isProfit ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)",
+              textShadow: isProfit ? "0 0 8px hsl(120 100% 50% / 0.8)" : "0 0 8px hsl(0 100% 50% / 0.8)",
+            }}
+          >
+            ${displayValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+        </div>
+      )}
+
+      {/* Portfolio NAV counter — top left */}
+      <div className="absolute top-3 left-14 z-30">
+        <p className="text-[8px] font-display tracking-[0.25em] uppercase text-silver mb-0.5">
+          Portfolio NAV
+        </p>
+        <p
+          className="text-xl font-mono font-bold tracking-tight leading-none"
+          style={{
+            color: isUp ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)",
+            textShadow: isUp ? "0 0 18px rgba(0,255,0,0.4)" : "0 0 18px rgba(255,0,0,0.4)",
+          }}
+        >
+          ${displayValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </p>
+        <p
+          className="text-[9px] font-mono mt-0.5"
+          style={{ color: isProfit ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)" }}
+        >
+          {isProfit ? "▲" : "▼"} {isProfit ? "+" : ""}{((displayValue - INITIAL_CAPITAL) / INITIAL_CAPITAL * 100).toFixed(2)}%
+          &nbsp;
+          <span style={{ color: isProfit ? "hsl(120 100% 50%)" : "hsl(0 100% 50%)" }}>
+            ({isProfit ? "+" : ""}{pnl.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })})
+          </span>
+        </p>
+        <p className="text-[8px] font-mono mt-0.5 tracking-[0.1em] uppercase text-muted-foreground">
+          Initial Capital: $1,000,000.00
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default SnakeHUD;

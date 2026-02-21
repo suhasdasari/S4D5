@@ -1,0 +1,24 @@
+import TransactionComp from "../_components/TransactionComp";
+import type { NextPage } from "next";
+import { Hash } from "viem";
+import { isZeroAddress } from "~~/utils/scaffold-eth/common";
+
+type PageProps = {
+  params: Promise<{ txHash?: Hash }>;
+};
+
+export const dynamic = "force-dynamic";
+
+// export function generateStaticParams() {
+//   return [{ txHash: "0x0000000000000000000000000000000000000000" }];
+// }
+const TransactionPage: NextPage<PageProps> = async (props: PageProps) => {
+  const params = await props.params;
+  const txHash = params?.txHash as Hash;
+
+  if (isZeroAddress(txHash)) return null;
+
+  return <TransactionComp txHash={txHash} />;
+};
+
+export default TransactionPage;
