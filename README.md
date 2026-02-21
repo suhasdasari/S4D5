@@ -53,6 +53,12 @@ Our hedge fund operates as a **Multi-Agent Council**. Instead of a single bot ma
 
 ```
 S4D5/
+├── docs/                  # 📚 Complete system documentation
+│   ├── README.md          # Documentation index
+│   ├── 01-architecture.md # System design
+│   ├── 02-quick-start.md  # 10-minute setup guide
+│   └── ...                # Component-specific docs
+│
 ├── scaffold-eth-2/        # Frontend — Next.js dashboard (Scaffold-ETH 2)
 │   └── packages/
 │       ├── nextjs/        # AI Hedge Fund dashboard UI
@@ -75,6 +81,8 @@ S4D5/
 ├── smart-contracts/       # Additional contract documentation
 └── README.md              # ← You are here
 ```
+
+> **📚 Complete Documentation**: See [`docs/`](./docs/) for detailed guides on architecture, deployment, and troubleshooting.
 
 ---
 
@@ -151,8 +159,8 @@ NERVE_PORT=9999
 NERVE_TOKEN=your-secret-token
 NERVE_SERVER=https://s4d5-production.up.railway.app
 BOTNAME=alpha-strategist
-ANALYSIS_INTERVAL=300000
-MIN_CONFIDENCE=60
+ANALYSIS_INTERVAL=30000
+MIN_CONFIDENCE=30  # Set to 30 for initial testing to ensure proposals are generated
 TARGET_ASSETS=BTC,ETH
 MAX_POSITION_SIZE=10000
 RISK_MULTIPLIER=0.5

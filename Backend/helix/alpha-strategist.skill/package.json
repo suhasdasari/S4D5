@@ -1,26 +1,4 @@
 {
-<<<<<<< HEAD
-  "name": "alpha-strategist",
-  "version": "1.0.0",
-  "description": "AI-powered trading strategy bot for S4D5 AI Hedge Fund",
-  "main": "scripts/analyze-and-propose.js",
-  "scripts": {
-    "init-wallet": "node scripts/init-wallet.js",
-    "webhook": "node webhook-receiver.js"
-  },
-  "keywords": [
-    "trading",
-    "strategy",
-    "ai",
-    "analysis"
-  ],
-  "author": "S4D5 Team",
-  "license": "MIT",
-  "dependencies": {
-    "dotenv": "^16.3.0",
-    "ethers": "^6.9.0",
-    "express": "^4.18.2"
-=======
   "name": "alpha-strategist-skill",
   "version": "1.0.0",
   "description": "Market analysis skill for Alpha Strategist bot - analyzes Hyperliquid markets and Polymarket sentiment",
@@ -30,14 +8,18 @@
     "fetch-sentiment": "node scripts/fetch-sentiment.js",
     "track-positions": "node scripts/track-positions.js",
     "analyze": "node scripts/analyze-and-propose.js",
-    "send-proposals": "node scripts/send-proposals.js"
+    "send-proposals": "node scripts/send-proposals.js",
+    "init-wallet": "node scripts/init-wallet.js"
   },
   "keywords": ["hyperliquid", "polymarket", "trading", "sentiment-analysis"],
   "author": "S4D5 Team",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.6.0",
-    "dotenv": "^16.3.0"
->>>>>>> Og_integration
+    "dotenv": "^16.3.0",
+    "ethers": "^6.9.0",
+    "express": "^4.18.2",
+    "node-fetch": "^2.7.0",
+    "openai": "^4.20.0"
   }
 }

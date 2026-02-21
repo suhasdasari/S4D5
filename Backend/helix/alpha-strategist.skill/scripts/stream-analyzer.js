@@ -17,7 +17,7 @@ require('dotenv').config({ path: path.join(__dirname, '..', '..', '..', '.env') 
 // Configuration
 const WEBHOOK_API_URL = process.env.WEBHOOK_API_URL || 'https://s4d5-production-f42d.up.railway.app/dashboard';
 const ANALYSIS_INTERVAL = parseInt(process.env.ANALYSIS_INTERVAL) || 30000; // 30 seconds
-const MIN_CONFIDENCE = parseInt(process.env.MIN_CONFIDENCE) || 60;
+const MIN_CONFIDENCE = parseInt(process.env.MIN_CONFIDENCE) || 30; // Lowered to 30 for initial testing
 const AUDIT_ORACLE_ADDRESS = process.env.AUDIT_ORACLE_ADDRESS || '0xF3bbD5682e671CdcDC42f52bDdecCB6a35D53aE1';
 const NERVE_CORD_PATH = process.env.NERVE_CORD_PATH || path.join(__dirname, '..', '..', '..', '..', 'nerve-cord');
 
