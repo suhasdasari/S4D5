@@ -63,11 +63,6 @@ app.post(WEBHOOK_PATH, (req, res) => {
     stats.totalWebhooksReceived++;
     stats.lastWebhookTime = Date.now();
     
-    console.log('\n=== Webhook Received ===');
-    console.log('Timestamp:', new Date().toISOString());
-    console.log('Payload size:', JSON.stringify(payload).length, 'bytes');
-    console.log('Payload structure:', JSON.stringify(payload, null, 2).substring(0, 500));
-    
     // Validate payload structure
     if (!payload.data || !Array.isArray(payload.data)) {
       console.error('Invalid payload: missing data array');
@@ -80,28 +75,43 @@ app.post(WEBHOOK_PATH, (req, res) => {
     payload.data.forEach(dataItem => {
       const { block_time, block_number, events } = dataItem;
       
-      console.log('Data item:', { block_time, block_number, eventsCount: events?.length || 0 });
-      
-      if (!events || !Array.isArray(events)) {
-        console.log('No events array found in data item');
+      if (!events || !Array.isArray(events) || events.length === 0) {
         return;
       }
       
       // Process each trade event
       events.forEach(event => {
-        console.log('Event received:', JSON.stringify(event).substring(0, 200));
-        // Extract trade information
-        const { coin, px, sz, side } = event;
+        // Hyperliquid events come as [address, tradeData]
+        let tradeData;
+        if (Array.isArray(event) && event.length >= 2) {
+          tradeData = event[1]; // Second element is the trade object
+        } else if (typeof event === 'object') {
+          tradeData = event;
+        } else {
+          return;
+        }
+        
+        // Extract trade information from Hyperliquid format
+        const { coin, dir, px, sz } = tradeData;
         
         // Filter for BTC and ETH only
         if (coin !== 'BTC' && coin !== 'ETH') {
           return;
         }
         
-        // Validate required fields
-        if (!px || !sz || !side) {
-          console.warn('Skipping trade with missing fields:', event);
+        // Some events might not have px/sz (position updates, not trades)
+        // We only want actual trades with price and size
+        if (!px || !sz) {
           return;
+        }
+        
+        // Hyperliquid uses 'dir' field: "Open Long", "Close Long", "Open Short", "Close Short"
+        // Convert to buy/sell
+        let side;
+        if (dir) {
+          side = dir.includes('Long') ? 'buy' : 'sell';
+        } else {
+          side = 'unknown';
         }
         
         // Create trade record
@@ -111,7 +121,8 @@ app.post(WEBHOOK_PATH, (req, res) => {
           asset: coin,
           price: parseFloat(px),
           quantity: parseFloat(sz),
-          side: side.toLowerCase(), // 'buy' or 'sell'
+          side: side,
+          direction: dir, // Keep original direction for reference
           receivedAt: Date.now()
         };
         
@@ -127,15 +138,12 @@ app.post(WEBHOOK_PATH, (req, res) => {
         tradesProcessed++;
         stats.totalTradesProcessed++;
         
-        console.log(`[${coin}] ${side} ${sz} @ $${px} (block ${block_number})`);
+        // Only log actual trades (reduced logging)
+        if (tradesProcessed % 10 === 0) {
+          console.log(`[${coin}] ${dir} ${sz} @ $${px} | Total: ${stats.totalTradesProcessed}`);
+        }
       });
     });
-    
-    console.log(`Processed ${tradesProcessed} trades`);
-    console.log('Buffer sizes - BTC:', tradeBuffers.BTC.length, 'ETH:', tradeBuffers.ETH.length);
-    
-    // Calculate and display metrics
-    displayMetrics();
     
     // Acknowledge receipt
     res.status(200).json({ 
@@ -266,24 +274,6 @@ function calculateMetrics(asset) {
     buySellRatio: buySellRatio.toFixed(2),
     tradeCount: buffer.length
   };
-}
-
-// Display metrics in console
-function displayMetrics() {
-  console.log('\n--- Real-Time Metrics ---');
-  
-  ['BTC', 'ETH'].forEach(asset => {
-    const metrics = calculateMetrics(asset);
-    console.log(`\n${asset}:`);
-    console.log(`  Trades: ${metrics.tradeCount}`);
-    console.log(`  Avg Price: $${metrics.averagePrice}`);
-    console.log(`  Volume: $${metrics.totalVolume}`);
-    console.log(`  Trend: ${metrics.trend} (${metrics.priceChange})`);
-    console.log(`  Frequency: ${metrics.tradeFrequency} trades/min`);
-    console.log(`  Buy/Sell Ratio: ${metrics.buySellRatio}`);
-  });
-  
-  console.log('========================\n');
 }
 
 // Start server
