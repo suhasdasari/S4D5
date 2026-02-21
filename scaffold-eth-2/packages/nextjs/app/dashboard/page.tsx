@@ -13,8 +13,17 @@ const AGENTS = [
 const KITE_RPC = "https://rpc-testnet.gokite.ai/";
 const KITE_EXPLORER = "https://testnet.kitescan.ai";
 
+interface Transaction {
+  hash: string;
+  from: string;
+  to: string;
+  blockNumber: string;
+  value: string;
+}
+
 export default function Dashboard() {
   const [kiteBalances, setKiteBalances] = useState<{ [key: string]: string }>({});
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,9 +52,72 @@ export default function Dashboard() {
       setLoading(false);
     };
 
+    const fetchTransactions = async () => {
+      try {
+        // Fetch latest block
+        const blockResponse = await fetch(KITE_RPC, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            method: "eth_blockNumber",
+            params: [],
+            id: 1,
+          }),
+        });
+        const blockData = await blockResponse.json();
+        const latestBlock = parseInt(blockData.result, 16);
+
+        // Fetch last 3 blocks to find transactions
+        const txs: Transaction[] = [];
+        for (let i = 0; i < 50 && txs.length < 3; i++) {
+          const blockNum = latestBlock - i;
+          const response = await fetch(KITE_RPC, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              jsonrpc: "2.0",
+              method: "eth_getBlockByNumber",
+              params: [`0x${blockNum.toString(16)}`, true],
+              id: 1,
+            }),
+          });
+          const data = await response.json();
+          
+          if (data.result && data.result.transactions) {
+            // Filter for transactions between our agents
+            const agentAddresses = AGENTS.map(a => a.address.toLowerCase());
+            const agentTxs = data.result.transactions.filter((tx: any) => 
+              agentAddresses.includes(tx.from?.toLowerCase()) && 
+              agentAddresses.includes(tx.to?.toLowerCase())
+            );
+            
+            txs.push(...agentTxs.map((tx: any) => ({
+              hash: tx.hash,
+              from: tx.from,
+              to: tx.to,
+              blockNumber: data.result.number,
+              value: tx.value,
+            })));
+          }
+        }
+        
+        setTransactions(txs.slice(0, 3));
+      } catch (error) {
+        console.error("Failed to fetch transactions:", error);
+      }
+    };
+
     fetchKiteBalances();
-    const interval = setInterval(fetchKiteBalances, 30000);
-    return () => clearInterval(interval);
+    fetchTransactions();
+    
+    const balanceInterval = setInterval(fetchKiteBalances, 30000);
+    const txInterval = setInterval(fetchTransactions, 15000); // Check for new txs every 15s
+    
+    return () => {
+      clearInterval(balanceInterval);
+      clearInterval(txInterval);
+    };
   }, []);
 
   return (
@@ -62,7 +134,10 @@ export default function Dashboard() {
           <div className="card bg-black border border-white shadow-xl">
             <div className="card-body p-4">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="card-title text-lg text-white">🪁 Kite AI</h2>
+                <h2 className="card-title text-lg text-white flex items-center gap-2">
+                  <span className="text-2xl">🪁</span>
+                  <span>Kite AI</span>
+                </h2>
                 <span className="badge badge-sm bg-white text-black">x402 Payments</span>
               </div>
 
@@ -89,25 +164,49 @@ export default function Dashboard() {
               {/* Payment Flow */}
               <div className="bg-white/10 rounded p-2 mb-2">
                 <div className="text-xs font-bold mb-1 text-white">Payment Flow:</div>
-                <div className="text-xs space-y-0.5 text-white">
-                  <div>💰 Alpha → Audit (0.001 KITE)</div>
-                  <div className="text-gray-400">Risk analysis service</div>
+                <div className="text-xs space-y-1 text-white">
+                  <div className="flex items-center gap-1">
+                    <span>💰</span>
+                    <span>Alpha → Audit (0.001 KITE)</span>
+                  </div>
+                  <div className="text-gray-400 pl-5">Risk analysis service</div>
+                  <div className="flex items-center gap-1">
+                    <span>💰</span>
+                    <span>Audit → Execution (0.001 KITE)</span>
+                  </div>
+                  <div className="text-gray-400 pl-5">Trade execution service</div>
                 </div>
               </div>
 
-              {/* Recent Transaction */}
+              {/* Recent Transactions */}
               <div className="bg-white/10 rounded p-2">
-                <div className="text-xs font-bold mb-1 text-white">Recent TX:</div>
-                <a
-                  href={`${KITE_EXPLORER}/tx/0x673533bcc22f07572426809066823edd5b362df6342ce8608a6e58750adaa0ed`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs hover:text-green-400 flex items-center gap-1 text-white"
-                >
-                  Alpha → AuditOracle
-                  <ArrowTopRightOnSquareIcon className="h-3 w-3" />
-                </a>
-                <div className="text-xs text-gray-400">Block: 19,988,818</div>
+                <div className="text-xs font-bold mb-1 text-white">Recent Transactions:</div>
+                {transactions.length === 0 ? (
+                  <div className="text-xs text-gray-400">Loading transactions...</div>
+                ) : (
+                  <div className="space-y-1">
+                    {transactions.map((tx, idx) => {
+                      const fromAgent = AGENTS.find(a => a.address.toLowerCase() === tx.from.toLowerCase());
+                      const toAgent = AGENTS.find(a => a.address.toLowerCase() === tx.to.toLowerCase());
+                      const fromName = fromAgent?.name.split(' ')[0] || 'Unknown';
+                      const toName = toAgent?.name.split(' ')[0] || 'Unknown';
+                      const blockNum = parseInt(tx.blockNumber, 16);
+                      
+                      return (
+                        <a
+                          key={tx.hash}
+                          href={`${KITE_EXPLORER}/tx/${tx.hash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs hover:text-green-400 flex items-center justify-between text-white"
+                        >
+                          <span>{fromName} → {toName}</span>
+                          <ArrowTopRightOnSquareIcon className="h-3 w-3" />
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>
