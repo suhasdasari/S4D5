@@ -13,7 +13,7 @@ class UniswapAPIClient {
       baseURL: config.baseUrl,
       timeout: 10000,
       headers: {
-        'Authorization': `Bearer ${config.apiKey}`,
+        'x-api-key': config.apiKey,
         'Content-Type': 'application/json'
       }
     });
@@ -25,27 +25,34 @@ class UniswapAPIClient {
     
     try {
       const response = await this.retryRequest(() =>
-        this.client.get(endpoint, {
-          params: {
-            chainId: this.config.chainId,
-            tokenIn: params.tokenIn,
-            tokenOut: params.tokenOut,
-            amount: params.amount,
-            slippageTolerance: params.slippage || '0.5',
-            type: 'exactIn'
-          }
+        this.client.post(endpoint, {
+          tokenIn: params.tokenIn,
+          tokenOut: params.tokenOut,
+          tokenInChainId: this.config.chainId,
+          tokenOutChainId: this.config.chainId,
+          amount: params.amount,
+          type: 'EXACT_INPUT',
+          swapper: params.swapper,
+          slippageTolerance: params.slippage || '0.5'
         })
       );
 
       const latency = Date.now() - startTime;
       this.metricsCollector.recordAPIRequest(endpoint, latency, true, response.status);
 
+      // Parse the new API response format
+      const quote = response.data.quote;
+      const routing = response.data.routing;
+      
+      // Extract output amount from aggregatedOutputs
+      const outputAmount = quote.aggregatedOutputs?.[0]?.amount || '0';
+      
       return {
-        quoteId: response.data.quoteId,
-        expectedOutput: response.data.amountOut,
-        route: response.data.route || [],
-        gasEstimate: response.data.gasEstimate || '200000',
-        priceImpact: response.data.priceImpact || '0',
+        quoteId: quote.quoteId,
+        expectedOutput: outputAmount,
+        route: routing || [],
+        gasEstimate: quote.classicGasUseEstimateUSD || '200000',
+        priceImpact: '0', // Not provided in new API
         timestamp: Date.now()
       };
     } catch (error) {

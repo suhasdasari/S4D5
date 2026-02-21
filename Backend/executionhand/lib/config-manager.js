@@ -10,7 +10,7 @@ class ConfigManager {
     this.config = {
       uniswap: {
         apiKey: process.env.UNISWAP_API_KEY,
-        baseUrl: process.env.UNISWAP_API_BASE_URL || 'https://api.uniswap.org/v2',
+        baseUrl: process.env.UNISWAP_API_BASE_URL || 'https://trade-api.gateway.uniswap.org/v1',
         chainId: 8453 // Base mainnet
       },
       network: {

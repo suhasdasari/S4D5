@@ -9,7 +9,7 @@ class QuoteService {
     this.quoteCache = new Map();
   }
 
-  async getQuote(proposal) {
+  async getQuote(proposal, swapperAddress) {
     try {
       // Check cache first
       const cacheKey = this.getCacheKey(proposal);
@@ -25,7 +25,8 @@ class QuoteService {
         tokenIn: proposal.tokenIn,
         tokenOut: proposal.tokenOut,
         amount: proposal.amountIn,
-        slippage: this.config.slippageTolerance
+        slippage: this.config.slippageTolerance,
+        swapper: swapperAddress
       });
 
       // Validate quote

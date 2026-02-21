@@ -38,8 +38,11 @@ class ExecutionHandMessageHandler {
 
       console.log('Processing approved proposal', { proposalId: proposal.proposalId });
 
-      // 4. Fetch quote
-      const quoteResult = await this.quoteService.getQuote(proposal);
+      // 4. Fetch quote (pass vault address as swapper since vault executes the trade)
+      const quoteResult = await this.quoteService.getQuote(
+        proposal, 
+        this.config.network.vaultAddress
+      );
       if (!quoteResult.valid) {
         console.warn('Quote validation failed', {
           proposalId: proposal.proposalId,
