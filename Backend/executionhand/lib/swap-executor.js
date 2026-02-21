@@ -111,29 +111,46 @@ class SwapExecutor {
   }
 
   async validateSwap(swapData, proposal) {
-    // Skip bot authorization check - already verified in test setup
-    // The vault will enforce this when executeTrade is called
-    
-    // 1. Verify router is whitelisted
-    const isRouterWhitelisted = await this.vaultContract.isDexRouterWhitelisted(swapData.to);
-    if (!isRouterWhitelisted) {
-      throw new Error(`Router ${swapData.to} not whitelisted`);
-    }
+    try {
+      // Skip bot authorization check - already verified in test setup
+      // The vault will enforce this when executeTrade is called
+      
+      // 1. Verify router is whitelisted
+      console.log('Checking if router is whitelisted:', swapData.to);
+      const isRouterWhitelisted = await this.vaultContract.isDexRouterWhitelisted(swapData.to);
+      console.log('Router whitelisted result:', isRouterWhitelisted);
+      
+      if (!isRouterWhitelisted) {
+        throw new Error(`Router ${swapData.to} not whitelisted`);
+      }
 
-    // 2. Verify tokens are whitelisted
-    const isTokenInWhitelisted = await this.vaultContract.isTokenWhitelisted(proposal.tokenIn);
-    const isTokenOutWhitelisted = await this.vaultContract.isTokenWhitelisted(proposal.tokenOut);
-    if (!isTokenInWhitelisted || !isTokenOutWhitelisted) {
-      throw new Error('Token not whitelisted');
-    }
+      // 2. Verify tokens are whitelisted
+      console.log('Checking if tokens are whitelisted...');
+      const isTokenInWhitelisted = await this.vaultContract.isTokenWhitelisted(proposal.tokenIn);
+      const isTokenOutWhitelisted = await this.vaultContract.isTokenWhitelisted(proposal.tokenOut);
+      console.log('Token In whitelisted:', isTokenInWhitelisted);
+      console.log('Token Out whitelisted:', isTokenOutWhitelisted);
+      
+      if (!isTokenInWhitelisted || !isTokenOutWhitelisted) {
+        throw new Error('Token not whitelisted');
+      }
 
-    // 3. Verify amount doesn't exceed max trade size
-    const maxTradeSize = BigInt(this.config.maxTradeSize) * BigInt(10 ** 6); // USDC has 6 decimals
-    if (BigInt(proposal.amountIn) > maxTradeSize) {
-      throw new Error('Trade size exceeds maximum');
-    }
+      // 3. Verify amount doesn't exceed max trade size
+      const maxTradeSize = BigInt(this.config.maxTradeSize) * BigInt(10 ** 6); // USDC has 6 decimals
+      if (BigInt(proposal.amountIn) > maxTradeSize) {
+        throw new Error('Trade size exceeds maximum');
+      }
 
-    return { valid: true };
+      console.log('Validation passed');
+      return { valid: true };
+    } catch (error) {
+      console.error('Validation error:', {
+        message: error.message,
+        code: error.code,
+        data: error.data
+      });
+      throw error;
+    }
   }
 
   calculateSlippage(expected, actual) {
