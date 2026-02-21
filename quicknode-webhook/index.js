@@ -66,6 +66,7 @@ app.post(WEBHOOK_PATH, (req, res) => {
     console.log('\n=== Webhook Received ===');
     console.log('Timestamp:', new Date().toISOString());
     console.log('Payload size:', JSON.stringify(payload).length, 'bytes');
+    console.log('Payload structure:', JSON.stringify(payload, null, 2).substring(0, 500));
     
     // Validate payload structure
     if (!payload.data || !Array.isArray(payload.data)) {
@@ -79,12 +80,16 @@ app.post(WEBHOOK_PATH, (req, res) => {
     payload.data.forEach(dataItem => {
       const { block_time, block_number, events } = dataItem;
       
+      console.log('Data item:', { block_time, block_number, eventsCount: events?.length || 0 });
+      
       if (!events || !Array.isArray(events)) {
+        console.log('No events array found in data item');
         return;
       }
       
       // Process each trade event
       events.forEach(event => {
+        console.log('Event received:', JSON.stringify(event).substring(0, 200));
         // Extract trade information
         const { coin, px, sz, side } = event;
         
