@@ -79,14 +79,14 @@ class UniswapAPIClient {
       const latency = Date.now() - startTime;
       this.metricsCollector.recordAPIRequest(endpoint, latency, true, response.status);
 
-      // Log the full response to debug
-      console.log('Swap API response:', JSON.stringify(response.data, null, 2));
-
+      // Parse the response - the swap data is nested under 'swap'
+      const swap = response.data.swap;
+      
       return {
-        calldata: response.data.calldata || response.data.data,
-        to: response.data.to,
-        value: response.data.value || '0',
-        gasLimit: response.data.gasLimit || response.data.gas || '300000',
+        calldata: swap.data,
+        to: swap.to,
+        value: swap.value || '0',
+        gasLimit: swap.gasLimit || '300000',
         quoteId: params.rawQuote.quoteId
       };
     } catch (error) {
