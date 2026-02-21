@@ -14,12 +14,20 @@ class SwapExecutor {
 
     try {
       // 1. Generate calldata
+      console.log('Generating swap calldata...');
       const swapData = await this.apiClient.getSwapCalldata({
         rawQuote: quote.rawQuote
       });
+      console.log('Swap calldata generated:', {
+        to: swapData.to,
+        calldataLength: swapData.calldata.length,
+        gasLimit: swapData.gasLimit
+      });
 
       // 2. Validate security constraints
+      console.log('Validating swap constraints...');
       await this.validateSwap(swapData, proposal);
+      console.log('Validation passed');
 
       // 3. Log calldata for audit
       console.log('Executing swap', {
@@ -29,6 +37,15 @@ class SwapExecutor {
       });
 
       // 4. Execute via vault
+      console.log('Calling vault.executeTrade with:', {
+        tokenIn: proposal.tokenIn,
+        tokenOut: proposal.tokenOut,
+        amountIn: proposal.amountIn,
+        minAmountOut: quote.expectedOutput,
+        dexRouter: swapData.to,
+        calldataLength: swapData.calldata.length
+      });
+      
       const tx = await this.vaultContract.executeTrade(
         proposal.tokenIn,
         proposal.tokenOut,
@@ -74,7 +91,11 @@ class SwapExecutor {
         slippage
       };
     } catch (error) {
-      console.error('Swap execution failed', { error: error.message, proposal });
+      console.error('Swap execution failed', { 
+        error: error.message,
+        stack: error.stack,
+        proposal 
+      });
       
       this.metricsCollector.recordSwapExecution({
         latency: Date.now() - startTime,
