@@ -1,9 +1,10 @@
 .env
+node_modules/
+**/node_modules/
 
 # Nerve-cord runtime
 nerve-cord/data/
 nerve-cord/keys/
-nerve-cord/node_modules/
 .DS_Store
 
 Backend/.env
@@ -15,3 +16,5 @@ Backend/*/*/config/wallet.json
 # IDE and editor files
 .vscode/
 .kiro/
+*.log
+.DS_Store

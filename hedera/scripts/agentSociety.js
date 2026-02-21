@@ -1,32 +1,57 @@
 const { TopicMessageQuery } = require("@hashgraph/sdk");
-const { logIntent } = require("../hedera/scripts/logIntent");
 const { Client, PrivateKey } = require("@hashgraph/sdk");
+const { runAudit } = require("../../agents/AuditOracle/logic");
+const { runExecution } = require("../../agents/ExecutionHand/logic");
 require("dotenv").config();
 
 async function startSociety() {
+    // Check for required operator credentials
+    if (!process.env.ACCOUNT_ID || !process.env.PRIVATE_KEY) {
+        throw new Error("Missing ACCOUNT_ID or PRIVATE_KEY in .env for HCS Operator.");
+    }
+    if (!process.env.HEDERA_TOPIC_ID) {
+        throw new Error("Missing HEDERA_TOPIC_ID in .env.");
+    }
+
     const client = Client.forTestnet().setOperator(
         process.env.ACCOUNT_ID,
         PrivateKey.fromString(process.env.PRIVATE_KEY)
     );
 
-    console.log("🤖 S4D5 Society Online: Listening for HCS signals...");
+    console.log(`🤖 S4D5 Society Online: Listening on Topic ${process.env.HEDERA_TOPIC_ID}...`);
 
     new TopicMessageQuery()
         .setTopicId(process.env.HEDERA_TOPIC_ID)
         .subscribe(client, null, async (message) => {
-            const data = JSON.parse(Buffer.from(message.contents).toString());
-            console.log(`📩 [HCS Signal] ${data.agent}: ${data.intent}`);
+            try {
+                const data = JSON.parse(Buffer.from(message.contents).toString());
+                const seq = message.sequenceNumber.toString();
 
-            // 1. Audit Oracle Reacts to Alpha Strategist
-            if (data.agent === "Alpha Strategist" && data.intent === "create_checkout") {
-                console.log("⚖️ Audit Oracle: Analyzing new trade proposal...");
-                // Trigger Audit logic here
-            }
+                console.log(`📩 [HCS Signal #${seq}] ${data.agent}: ${data.intent}`);
 
-            // 2. Execution Hand Reacts to Audit Oracle
-            if (data.agent === "Audit Oracle" && data.intent === "payment_handler" && data.payload.status === "APPROVED") {
-                console.log("⚡ Execution Hand: Executing on Base...");
-                // Trigger Execution logic here
+                // 1. Audit Oracle Reacts to Alpha Strategist
+                if (data.agent === "Alpha Strategist" && data.intent === "create_checkout") {
+                    console.log("⚖️ Audit Oracle: Analyzing new trade proposal...");
+                    await runAudit(data.payload, seq);
+                }
+
+                // 2. Execution Hand Reacts to Audit Oracle
+                if (data.agent === "Audit Oracle" && data.intent === "payment_handler") {
+                    if (data.payload.status === "APPROVED") {
+                        console.log("⚡ Execution Hand: Executing on Base...");
+                        await runExecution(data.payload, seq);
+                    } else {
+                        console.log("🛑 Audit Oracle VETOED this proposal. Loop terminated.");
+                    }
+                }
+
+                // 3. Loop Termination Logging
+                if (data.agent === "Execution Hand" && data.intent === "execution_receipt") {
+                    console.log(`🏁 Full loop completed gracefully for Proposal: ${data.payload.responding_to_audit}`);
+                }
+
+            } catch (err) {
+                console.error("❌ Error processing HCS message:", err.message);
             }
         });
 }

@@ -3,8 +3,8 @@ const { Client, PrivateKey } = require("@hashgraph/sdk");
 require("dotenv").config();
 
 // Import your agent logic
-const { runAudit } = require("../agents/AuditOracle/logic");
-const { runExecution } = require("../agents/ExecutionHand/logic");
+const { runAudit } = require("../../agents/AuditOracle/logic");
+const { runExecution } = require("../../agents/ExecutionHand/logic");
 
 async function startClawWorkflow() {
     const client = Client.forTestnet().setOperator(

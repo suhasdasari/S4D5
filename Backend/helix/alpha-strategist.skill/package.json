@@ -11,7 +11,12 @@
     "send-proposals": "node scripts/send-proposals.js",
     "init-wallet": "node scripts/init-wallet.js"
   },
-  "keywords": ["hyperliquid", "polymarket", "trading", "sentiment-analysis"],
+  "keywords": [
+    "hyperliquid",
+    "polymarket",
+    "trading",
+    "sentiment-analysis"
+  ],
   "author": "S4D5 Team",
   "license": "MIT",
   "dependencies": {
@@ -20,6 +25,7 @@
     "ethers": "^6.9.0",
     "express": "^4.18.2",
     "node-fetch": "^2.7.0",
-    "openai": "^4.20.0"
+    "openai": "^4.20.0",
+    "@hashgraph/sdk": "^2.80.0"
   }
 }
