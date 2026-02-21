@@ -5,13 +5,13 @@ require("dotenv").config();
  * Audit Oracle Logic
  * Triggered when a new proposal is found on Hedera HCS.
  */
-async function runAudit(proposalPayload, hcsSequence) {
-    console.log(`🔍 [AUDIT ORACLE] Auditing Proposal anchored at HCS Seq #${hcsSequence}`);
+async function runAudit(proposalPayload, hcsSequence, isExternal = false) {
+    const origin = isExternal ? "EXTERNAL REQUEST" : `HCS Seq #${hcsSequence}`;
+    console.log(`🔍 [AUDIT ORACLE] Auditing Proposal from ${origin}`);
     console.log(`📄 Proposal ID: ${proposalPayload.proposalId}`);
 
     // SIMULATED RISK AUDIT
-    // In a production scenario, this would query market depth, slippage, and volatility.
-    const isSafe = Math.random() > 0.1; // 90% chance of approval for demo
+    const isSafe = Math.random() > 0.1;
     const auditScore = isSafe ? 95 : 40;
 
     const auditVerdict = {
@@ -19,6 +19,7 @@ async function runAudit(proposalPayload, hcsSequence) {
         hcs_origin_seq: hcsSequence,
         status: isSafe ? "APPROVED" : "VETOED",
         reason: isSafe ? "Liquidity depth sufficient. Slippage within 0.5% tolerance." : "Market volatility exceeded safety threshold.",
+        is_external: isExternal,
         timestamp: new Date().toISOString()
     };
 
@@ -31,6 +32,8 @@ async function runAudit(proposalPayload, hcsSequence) {
     } catch (error) {
         console.error(`❌ [AUDIT ORACLE] Failed to anchor verdict:`, error.message);
     }
+
+    return { verdict: auditVerdict, score: auditScore };
 }
 
 module.exports = { runAudit };

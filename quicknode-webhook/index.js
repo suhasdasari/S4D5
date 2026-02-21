@@ -12,8 +12,19 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const WEBHOOK_PATH = '/webhook/quicknode-streams';
 
+// UCP Integration
+const path = require('path');
+const ucpController = require('./controllers/ucpController');
+
 // Middleware
 app.use(express.json({ limit: '10mb' }));
+
+// Serve UCP Manifest
+app.use('/.well-known', express.static(path.join(__dirname, 'public/.well-known')));
+
+// UCP Endpoints
+app.post('/api/v1/ucp/checkout-sessions', ucpController.createSession);
+app.post('/api/v1/ucp/checkout-sessions/:id/complete', ucpController.completeSession);
 
 // CORS for dashboard access
 app.use((req, res, next) => {
@@ -59,26 +70,26 @@ app.get('/', (req, res) => {
 app.post(WEBHOOK_PATH, (req, res) => {
   try {
     const payload = req.body;
-    
+
     stats.totalWebhooksReceived++;
     stats.lastWebhookTime = Date.now();
-    
+
     // Validate payload structure
     if (!payload.data || !Array.isArray(payload.data)) {
       console.error('Invalid payload: missing data array');
       return res.status(400).json({ error: 'Invalid payload structure' });
     }
-    
+
     // Process each data item
     let tradesProcessed = 0;
-    
+
     payload.data.forEach(dataItem => {
       const { block_time, block_number, events } = dataItem;
-      
+
       if (!events || !Array.isArray(events) || events.length === 0) {
         return;
       }
-      
+
       // Process each trade event
       events.forEach(event => {
         // Hyperliquid events come as [address, tradeData]
@@ -90,21 +101,21 @@ app.post(WEBHOOK_PATH, (req, res) => {
         } else {
           return;
         }
-        
+
         // Extract trade information from Hyperliquid format
         const { coin, dir, px, sz } = tradeData;
-        
+
         // Filter for BTC and ETH only
         if (coin !== 'BTC' && coin !== 'ETH') {
           return;
         }
-        
+
         // Some events might not have px/sz (position updates, not trades)
         // We only want actual trades with price and size
         if (!px || !sz) {
           return;
         }
-        
+
         // Hyperliquid uses 'dir' field: "Open Long", "Close Long", "Open Short", "Close Short"
         // Convert to buy/sell
         let side;
@@ -113,7 +124,7 @@ app.post(WEBHOOK_PATH, (req, res) => {
         } else {
           side = 'unknown';
         }
-        
+
         // Create trade record
         const trade = {
           timestamp: new Date(block_time).getTime(),
@@ -125,36 +136,36 @@ app.post(WEBHOOK_PATH, (req, res) => {
           direction: dir, // Keep original direction for reference
           receivedAt: Date.now()
         };
-        
+
         // Add to buffer
         const buffer = tradeBuffers[coin];
         buffer.push(trade);
-        
+
         // Maintain buffer size
         if (buffer.length > MAX_BUFFER_SIZE) {
           buffer.shift(); // Remove oldest
         }
-        
+
         tradesProcessed++;
         stats.totalTradesProcessed++;
-        
+
         // Only log actual trades (reduced logging)
         if (tradesProcessed % 10 === 0) {
           console.log(`[${coin}] ${dir} ${sz} @ $${px} | Total: ${stats.totalTradesProcessed}`);
         }
       });
     });
-    
+
     // Acknowledge receipt
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       tradesProcessed,
       bufferSizes: {
         BTC: tradeBuffers.BTC.length,
         ETH: tradeBuffers.ETH.length
       }
     });
-    
+
   } catch (error) {
     console.error('Error processing webhook:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -163,7 +174,7 @@ app.post(WEBHOOK_PATH, (req, res) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ 
+  res.json({
     status: 'ok',
     uptime: process.uptime(),
     bufferSizes: {
@@ -193,7 +204,7 @@ app.get('/stats', (req, res) => {
 app.get('/dashboard', (req, res) => {
   const btcMetrics = calculateMetrics('BTC');
   const ethMetrics = calculateMetrics('ETH');
-  
+
   res.json({
     timestamp: new Date().toISOString(),
     stats: {
@@ -216,7 +227,7 @@ app.get('/dashboard', (req, res) => {
 // Calculate real-time metrics
 function calculateMetrics(asset) {
   const buffer = tradeBuffers[asset];
-  
+
   if (buffer.length === 0) {
     return {
       totalVolume: 0,
@@ -227,13 +238,13 @@ function calculateMetrics(asset) {
       tradeCount: 0
     };
   }
-  
+
   // Total volume
   const totalVolume = buffer.reduce((sum, trade) => sum + (trade.price * trade.quantity), 0);
-  
+
   // Average price
   const averagePrice = buffer.reduce((sum, trade) => sum + trade.price, 0) / buffer.length;
-  
+
   // Price trend (compare first half vs second half)
   const midpoint = Math.floor(buffer.length / 2);
   if (midpoint === 0) {
@@ -247,24 +258,24 @@ function calculateMetrics(asset) {
       tradeCount: buffer.length
     };
   }
-  
+
   const firstHalfAvg = buffer.slice(0, midpoint).reduce((sum, t) => sum + t.price, 0) / midpoint;
   const secondHalfAvg = buffer.slice(midpoint).reduce((sum, t) => sum + t.price, 0) / (buffer.length - midpoint);
   const priceChange = ((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100;
-  
+
   let trend = 'neutral';
   if (priceChange > 1) trend = 'upward';
   else if (priceChange < -1) trend = 'downward';
-  
+
   // Trade frequency (trades per minute)
   const timeSpan = (buffer[buffer.length - 1].timestamp - buffer[0].timestamp) / 1000 / 60; // minutes
   const tradeFrequency = timeSpan > 0 ? buffer.length / timeSpan : 0;
-  
+
   // Buy/Sell ratio
   const buyCount = buffer.filter(t => t.side === 'buy').length;
   const sellCount = buffer.filter(t => t.side === 'sell').length;
   const buySellRatio = sellCount > 0 ? buyCount / sellCount : buyCount;
-  
+
   return {
     totalVolume: totalVolume.toFixed(2),
     averagePrice: averagePrice.toFixed(2),

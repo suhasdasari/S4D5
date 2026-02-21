@@ -1,0 +1,11 @@
+{
+  "name": "S4D5 Treasury Protector",
+  "capability": "dev.ucp.service.audit",
+  "endpoint": "https://s4d5-production.up.railway.app/api/v1/ucp",
+  "payment": {
+    "protocol": "AP2-Hedera-HTS",
+    "token_id": "0.0.7998321",
+    "standard_fee": "5.00"
+  },
+  "manifest_version": "1.0"
+}
