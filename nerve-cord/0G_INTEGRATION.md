@@ -8,7 +8,7 @@ This document describes the 0G Labs storage integration for pinning council deci
 
 **What it does:** Automatically uploads selected Nerve-Cord activity log entries to 0G Storage, providing a decentralized, verifiable audit trail for AI council decisions.
 
-**When it triggers:** Log entries with tags `audit`, `proposal`, or `consensus` (or `pinTo0g: true`) are pinned to 0G.
+**When it triggers:** Log entries with tags `audit`, `proposal`, `consensus`, or `execution` (or `pinTo0g: true`) are pinned to 0G.
 
 **What gets stored:** 
 - **Single log entries** (default): The log entry JSON as-is.
@@ -58,13 +58,17 @@ Add these to `nerve-cord/.env`:
 
 | File | Purpose |
 |------|---------|
-| `nerve-cord/0g_Upload.js` | 0G upload helper: `uploadTo0g(data)` function using `@0glabs/0g-ts-sdk` with `MemData` |
-| `nerve-cord/server.js` | Modified POST `/log` handler to call `uploadTo0g()` for tagged entries |
-| `nerve-cord/package.json` | Added dependencies: `@0glabs/0g-ts-sdk`, `ethers` |
+| `nerve-cord/0g_upload.js` | 0G upload helper: `uploadTo0g(data)` using `@0glabs/0g-ts-sdk` with `MemData` |
+| `nerve-cord/server.js` | POST `/log` calls `uploadTo0g()` for entries with tags `audit`, `proposal`, `consensus`, or `execution` |
+| `nerve-cord/package.json` | Dependencies: `@0glabs/0g-ts-sdk`, `ethers` |
+| `hedera/scripts/postToNerveCord.js` | Helper to POST log entries to Nerve-Cord (used by agents and society) |
+| `agents/AuditOracle/logic.js` | After HCS anchor, posts verdict to Nerve-Cord with tag `audit` → pinned to 0G |
+| `agents/ExecutionHand/logic.js` | After HCS anchor, posts receipt to Nerve-Cord with tag `execution` → pinned to 0G |
+| `hedera/scripts/agentSociety.js` | After execution_receipt, posts consensus blob with tag `consensus` → pinned to 0G |
 
 ### How It Works
 
-1. **Log Entry Posted** → Agent or orchestrator sends `POST /log` with tags `audit`, `proposal`, or `consensus`.
+1. **Log Entry Posted** → Agent or orchestrator sends `POST /log` with tags `audit`, `proposal`, `consensus`, or `execution` (or `pinTo0g: true`). Audit Oracle and Execution Hand post via `postToNerveCord()`; society posts the consensus blob after execution.
 
 2. **0G Check** → Server checks if entry should be pinned (tags match or `pinTo0g: true`).
 
@@ -135,7 +139,7 @@ curl -X POST http://localhost:9998/log \
 
 ```bash
 cd nerve-cord
-node 0g_Upload.js '{"from":"alpha-strategist","text":"Test proposal","tags":["audit"]}'
+node 0g_upload.js '{"from":"alpha-strategist","text":"Test proposal","tags":["audit"]}'
 ```
 
 **Expected:** `Upload OK` with `rootHash` (if testnet works) or error message (if contract reverts).
@@ -163,22 +167,17 @@ node 0g_Upload.js '{"from":"alpha-strategist","text":"Test proposal","tags":["au
 
 ### ✅ Working
 
-- 0G SDK integration (`MemData`, merkle tree, upload attempt).
-- Server calls 0G for tagged entries (`audit`, `proposal`, `consensus`).
-- Error handling: server continues and saves entry even if 0G fails.
-- Full decision blob support: when `body.details` has `proposalId`, uploads that blob instead of single entry.
+- 0G SDK integration (`MemData`, merkle tree, upload).
+- Server pins to 0G for tags `audit`, `proposal`, `consensus`, and `execution`.
+- Audit Oracle and Execution Hand post verdict/receipt to Nerve-Cord (pinned to 0G).
+- Society posts consensus/full decision blob to Nerve-Cord after execution (pinned to 0G).
+- Error handling: server continues and saves entry even if 0G upload fails.
+- Full decision blob: when `body.details` has `proposalId`, that blob is uploaded for Hedera `transcriptCid`.
 
-### ⚠️ Known Issue
+### ⚠️ Notes
 
-**Testnet Contract Revert:** Uploads to 0G testnet currently revert with `status: 0` (transaction execution reverted). This is a **0G testnet/contract issue**, not a bug in this integration.
-
-**Possible causes:**
-- Flow contract paused
-- Invalid submission format
-- Duplicate root hash
-- Testnet-specific requirements
-
-**Workaround:** Integration code is correct; will work when testnet issue is resolved. For testing without cost, use `SKIP_0G_UPLOAD=true` in `.env` (see below).
+- **Transient failures:** Some uploads (e.g. duplicate root hash or 0G rate limits) may fail; the log entry is still saved and the server logs `0G upload failed (continuing without cid)`.
+- **Hedera/agents:** Set `NERVE_CORD_SERVER` and `NERVE_CORD_TOKEN` (or `NERVE_SERVER` / `NERVE_TOKEN`) where the society and agents run so they can POST to Nerve-Cord.
 
 ---
 
@@ -191,7 +190,7 @@ To test the integration flow without spending 0G tokens:
    SKIP_0G_UPLOAD=true
    ```
 
-2. **Modify `0g_Upload.js`** (add at start of `uploadTo0g` function):
+2. **Modify `0g_upload.js`** (add at start of `uploadTo0g` function):
    ```javascript
    if (process.env.SKIP_0G_UPLOAD === 'true' || process.env.SKIP_0G_UPLOAD === '1') {
      const buf = Buffer.isBuffer(data) ? data : Buffer.from(String(data), 'utf8');
@@ -223,15 +222,14 @@ Install: `npm install` in `nerve-cord/`
 
 ## Integration with Hedera
 
-When Hedera HCS is added:
-
-- **0G stores:** Full evidence blob (proposalId, strategist, audit, execution).
-- **Hedera stores:** Short attestation with `transcriptCid` pointing to 0G blob.
+- **Hedera HCS:** Agents anchor intents (create_checkout, payment_handler, execution_receipt) to HCS.
+- **0G Storage:** Nerve-Cord pins proposal, audit verdict, execution receipt, and consensus blob to 0G; each returns a `cid`.
+- **Society flow:** After Execution Hand posts execution_receipt, `agentSociety.js` assembles the full decision blob (proposalId, strategist, audit, execution) and posts it to Nerve-Cord with tag `consensus`, which is pinned to 0G. That `cid` can be used as `transcriptCid` in Hedera attestations.
 
 **Flow:**
-1. Council reaches consensus → assemble full blob.
-2. Upload blob to 0G → get `cid` (rootHash).
-3. Send attestation to Hedera HCS with `transcriptCid: cid`.
+1. Proposal → Audit Oracle verdict → Execution Hand receipt (all anchored to HCS and posted to Nerve-Cord → 0G).
+2. Society posts consensus blob to Nerve-Cord → 0G; response includes `cid`.
+3. Use `cid` as `transcriptCid` when sending attestations to Hedera HCS.
 
 ---
 
@@ -258,9 +256,9 @@ When Hedera HCS is added:
 
 ## Summary
 
-**What we built:** 0G Storage integration that pins council decisions and audit evidence to decentralized storage, returning content IDs (`cid`) for use in Hedera attestations.
+**What we built:** 0G Storage integration that pins council decisions and audit evidence (proposal, audit verdict, execution receipt, consensus blob) to decentralized storage, returning content IDs (`cid`) for use in Hedera attestations. Audit Oracle and Execution Hand post to Nerve-Cord after HCS; the society posts the full consensus blob after execution.
 
-**Status:** Integration complete; testnet contract currently reverting (known issue).
+**Status:** Integration complete; upload and fetch verified on testnet.
 
-**Next:** Add Hedera HCS to store attestations with `transcriptCid` pointing to 0G blobs.
+**Optional:** Store Hedera HCS attestations with `transcriptCid` pointing to 0G blobs.
 
