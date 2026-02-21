@@ -10,17 +10,10 @@
 
 const fs = require('fs');
 const path = require('path');
-<<<<<<< HEAD
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '..', '.env') });
 
 const POSITIONS_FILE = process.env.POSITIONS_FILE || 
-  path.join(__dirname, '..', '..', '..', 'data', 'positions', 'open-positions.json');
-=======
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
-
-const POSITIONS_FILE = process.env.POSITIONS_FILE || 
-  path.join(process.env.HOME, 'S4D5', 'data', 'positions', 'open-positions.json');
->>>>>>> Og_integration
+  path.join(__dirname, '..', '..', '..', 'Backend', 'data', 'positions', 'open-positions.json');
 
 function ensurePositionsFile() {
   const dir = path.dirname(POSITIONS_FILE);
@@ -60,7 +53,7 @@ function addPosition(position) {
   
   // Generate ID if not present
   if (!position.id) {
-    position.id = `pos_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    position.id = `pos_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
   
   data.positions.push(position);
