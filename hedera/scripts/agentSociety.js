@@ -2,6 +2,7 @@ const { TopicMessageQuery } = require("@hashgraph/sdk");
 const { Client, PrivateKey } = require("@hashgraph/sdk");
 const { runAudit } = require("../../agents/AuditOracle/logic");
 const { runExecution } = require("../../agents/ExecutionHand/logic");
+const { payoutRiskFee } = require("./councilMeeting");
 require("dotenv").config();
 
 async function startSociety() {
@@ -48,6 +49,10 @@ async function startSociety() {
                 // 3. Loop Termination Logging
                 if (data.agent === "Execution Hand" && data.intent === "execution_receipt") {
                     console.log(`🏁 Full loop completed gracefully for Proposal: ${data.payload.responding_to_audit}`);
+
+                    // Trigger S4D5 Token Settlement
+                    console.log("🏦 Initiating Society Settlement...");
+                    await payoutRiskFee("Audit Oracle", 5.00); // 5.00 S4D5 tokens fee
                 }
 
             } catch (err) {

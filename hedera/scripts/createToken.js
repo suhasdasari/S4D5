@@ -19,7 +19,9 @@ async function createSocietyToken() {
         .freezeWith(client);
 
     // Sign with both the Operator and the Treasury (Strategist)
-    const signTx = await transaction.sign(PrivateKey.fromString(process.env.PRIVATE_KEY));
+    let signTx = await transaction.sign(PrivateKey.fromString(process.env.PRIVATE_KEY));
+    signTx = await signTx.sign(PrivateKey.fromString(process.env.ALPHA_STRATEGIST_KEY));
+
     const response = await signTx.execute(client);
     const receipt = await response.getReceipt(client);
 
