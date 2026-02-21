@@ -12,12 +12,38 @@ interface LogEntry {
   txHash?: string;
 }
 
+interface NerveCordMessage {
+  id: string;
+  from: string;
+  to: string;
+  subject: string;
+  body: string;
+  status: string;
+  created: string;
+}
+
+interface NerveCordLog {
+  id: string;
+  from: string;
+  text: string;
+  tags: string[];
+  created: string;
+}
+
 const AGENTS = [
-  { name: "ALPHA STRATEGIST", colorClass: "text-white", prefix: "α" },
-  { name: "RISK OFFICER", colorClass: "dynamic", prefix: "Ω" },
-  { name: "COMPLIANCE SCRIBE", colorClass: "text-white", prefix: "§" },
-  { name: "EXECUTIONER", colorClass: "dynamic", prefix: "✕" },
+  { name: "ALPHA STRATEGIST", colorClass: "text-white", prefix: "α", nerveName: "alpha-strategist" },
+  { name: "RISK OFFICER", colorClass: "dynamic", prefix: "Ω", nerveName: "audit-oracle" },
+  { name: "COMPLIANCE SCRIBE", colorClass: "text-white", prefix: "§", nerveName: "compliance-scribe" },
+  { name: "EXECUTIONER", colorClass: "dynamic", prefix: "✕", nerveName: "execution-hand" },
 ];
+
+// Map Nerve-Cord bot names to display names
+const NERVE_TO_AGENT: Record<string, { name: string; prefix: string; colorClass: string }> = {
+  "alpha-strategist": { name: "ALPHA STRATEGIST", prefix: "α", colorClass: "text-white" },
+  "audit-oracle": { name: "RISK OFFICER", prefix: "Ω", colorClass: "dynamic" },
+  "compliance-scribe": { name: "COMPLIANCE SCRIBE", prefix: "§", colorClass: "text-white" },
+  "execution-hand": { name: "EXECUTIONER", prefix: "✕", colorClass: "dynamic" },
+};
 
 // Strictly technical — zero geographic clichés
 const MESSAGES: (string | { text: string; approved: boolean })[][] = [
@@ -170,7 +196,128 @@ const playCrystalPing = () => {
 
 const AgentTerminal = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [useRealData, setUseRealData] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Convert Nerve-Cord message to LogEntry
+  const convertNerveMessage = useCallback((msg: NerveCordMessage): LogEntry => {
+    const agent = NERVE_TO_AGENT[msg.from] || { name: msg.from.toUpperCase(), prefix: "?", colorClass: "text-white" };
+    
+    // Extract proposal ID from subject or body
+    const propIdMatch = msg.subject.match(/PROP-\d+/) || msg.body.match(/PROP-\d+/);
+    const proposalId = propIdMatch ? propIdMatch[0] : `MSG-${msg.id.slice(-4)}`;
+    
+    // Determine message type and format
+    let message = msg.subject;
+    let colorClass = agent.colorClass;
+    let glowType: "positive" | "negative" | null = null;
+    
+    // Check for approval/rejection in subject or body
+    if (/approved|executed|passed/i.test(msg.subject) || /approved|executed|passed/i.test(msg.body)) {
+      colorClass = "text-positive";
+      glowType = "positive";
+    } else if (/rejected|vetoed|failed/i.test(msg.subject) || /rejected|vetoed|failed/i.test(msg.body)) {
+      colorClass = "text-negative";
+      glowType = "negative";
+    }
+    
+    // Extract tx hash if present
+    const txHashMatch = msg.body.match(/0x[a-fA-F0-9]{4,}/);
+    const txHash = txHashMatch ? `${txHashMatch[0].slice(0, 6)}...${txHashMatch[0].slice(-4)}` : undefined;
+    
+    const fullMessage = `[${proposalId}] [${agent.prefix}] ${message}`;
+    
+    if (glowType) tradeEventBus.emit(glowType);
+    
+    const proposalStatus = glowType === "positive" ? "PASSED" as const : glowType === "negative" ? "VETOED" as const : null;
+    proposalEventBus.emit(proposalId, proposalStatus);
+    
+    return {
+      agent: agent.name,
+      colorClass,
+      message: fullMessage,
+      timestamp: new Date(msg.created).toLocaleTimeString("en-US", { hour12: false }),
+      glowType,
+      proposalId,
+      txHash,
+    };
+  }, []);
+
+  // Convert Nerve-Cord log to LogEntry
+  const convertNerveLog = useCallback((log: NerveCordLog): LogEntry => {
+    const agent = NERVE_TO_AGENT[log.from] || { name: log.from.toUpperCase(), prefix: "?", colorClass: "text-white" };
+    
+    let colorClass = agent.colorClass;
+    let glowType: "positive" | "negative" | null = null;
+    
+    // Check for payment/proposal tags
+    if (log.tags.includes("payment") || log.tags.includes("proposal")) {
+      if (/paid|sent|success/i.test(log.text)) {
+        colorClass = "text-positive";
+        glowType = "positive";
+      } else if (/failed|error/i.test(log.text)) {
+        colorClass = "text-negative";
+        glowType = "negative";
+      }
+    }
+    
+    // Extract proposal ID
+    const propIdMatch = log.text.match(/PROP-\d+/);
+    const proposalId = propIdMatch ? propIdMatch[0] : `LOG-${log.id.slice(-4)}`;
+    
+    // Extract tx hash if present
+    const txHashMatch = log.text.match(/0x[a-fA-F0-9]{4,}/);
+    const txHash = txHashMatch ? `${txHashMatch[0].slice(0, 6)}...${txHashMatch[0].slice(-4)}` : undefined;
+    
+    const fullMessage = `[${proposalId}] [${agent.prefix}] ${log.text}`;
+    
+    if (glowType) tradeEventBus.emit(glowType);
+    
+    const proposalStatus = glowType === "positive" ? "PASSED" as const : glowType === "negative" ? "VETOED" as const : null;
+    proposalEventBus.emit(proposalId, proposalStatus);
+    
+    return {
+      agent: agent.name,
+      colorClass,
+      message: fullMessage,
+      timestamp: new Date(log.created).toLocaleTimeString("en-US", { hour12: false }),
+      glowType,
+      proposalId,
+      txHash,
+    };
+  }, []);
+
+  // Fetch real Nerve-Cord data
+  const fetchNerveData = useCallback(async () => {
+    try {
+      // Fetch both messages and logs
+      const [messagesRes, logsRes] = await Promise.all([
+        fetch("/api/nerve-cord/messages"),
+        fetch("/api/nerve-cord/log?limit=20"),
+      ]);
+
+      if (!messagesRes.ok || !logsRes.ok) {
+        console.error("Failed to fetch Nerve-Cord data");
+        return;
+      }
+
+      const messages: NerveCordMessage[] = await messagesRes.json();
+      const logs: NerveCordLog[] = await logsRes.json();
+
+      // Combine and convert to LogEntry format
+      const messageEntries = messages.slice(0, 10).map(convertNerveMessage);
+      const logEntries = logs.slice(0, 10).map(convertNerveLog);
+
+      // Merge and sort by timestamp
+      const allEntries = [...messageEntries, ...logEntries].sort(
+        (a, b) => new Date(`1970-01-01 ${a.timestamp}`).getTime() - new Date(`1970-01-01 ${b.timestamp}`).getTime()
+      );
+
+      setLogs(allEntries.slice(-20)); // Keep last 20 entries
+    } catch (error) {
+      console.error("Error fetching Nerve-Cord data:", error);
+    }
+  }, [convertNerveMessage, convertNerveLog]);
 
   const createEntry = useCallback((agentIdx: number, msgIdx: number, time: Date): LogEntry => {
     const agent = AGENTS[agentIdx];
@@ -216,49 +363,74 @@ const AgentTerminal = () => {
   }, []);
 
   useEffect(() => {
-    // Seed with standby entry first, then real entries
-    const standby: LogEntry = {
-      agent: "S4D5",
-      colorClass: "text-muted-foreground",
-      message: "[S4D5] STANDBY: SCANNING GLOBAL LIQUIDITY...",
-      timestamp: new Date(Date.now() - 9000).toLocaleTimeString("en-US", { hour12: false }),
-      glowType: null,
-      proposalId: "INIT",
-    };
+    if (useRealData) {
+      // Fetch real data immediately
+      fetchNerveData();
 
-    const initial: LogEntry[] = [standby];
-    for (let i = 0; i < 7; i++) {
-      const agentIdx = i % 4;
-      const msgIdx = Math.floor(Math.random() * MESSAGES[agentIdx].length);
-      initial.push(createEntry(agentIdx, msgIdx, new Date(Date.now() - (7 - i) * 3000)));
-    }
-    setLogs(initial);
+      // Poll every 5 seconds for updates
+      const interval = setInterval(fetchNerveData, 5000);
 
-    const interval = setInterval(() => {
-      const agentIdx = Math.floor(Math.random() * 4);
-      const msgIdx = Math.floor(Math.random() * MESSAGES[agentIdx].length);
-      const newEntry = createEntry(agentIdx, msgIdx, new Date());
-      setLogs((prev) => [...prev.slice(-19), newEntry]);
-    }, 2500);
+      // Subscribe to system logs
+      const sysUnsub = systemLogBus.subscribe((msg) => {
+        const entry: LogEntry = {
+          agent: "SYSTEM",
+          colorClass: "text-accent-foreground",
+          message: `[SYS] ${msg}`,
+          timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
+          glowType: null,
+          proposalId: "SYS-CMD",
+        };
+        setLogs((prev) => [...prev.slice(-19), entry]);
+      });
 
-    // Subscribe to system logs
-    const sysUnsub = systemLogBus.subscribe((msg) => {
-      const entry: LogEntry = {
-        agent: "SYSTEM",
-        colorClass: "text-accent-foreground",
-        message: `[SYS] ${msg}`,
-        timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
-        glowType: null,
-        proposalId: "SYS-CMD",
+      return () => {
+        clearInterval(interval);
+        sysUnsub();
       };
-      setLogs((prev) => [...prev.slice(-19), entry]);
-    });
+    } else {
+      // Fallback to dummy data
+      const standby: LogEntry = {
+        agent: "S4D5",
+        colorClass: "text-muted-foreground",
+        message: "[S4D5] STANDBY: SCANNING GLOBAL LIQUIDITY...",
+        timestamp: new Date(Date.now() - 9000).toLocaleTimeString("en-US", { hour12: false }),
+        glowType: null,
+        proposalId: "INIT",
+      };
 
-    return () => {
-      clearInterval(interval);
-      sysUnsub();
-    };
-  }, [createEntry]);
+      const initial: LogEntry[] = [standby];
+      for (let i = 0; i < 7; i++) {
+        const agentIdx = i % 4;
+        const msgIdx = Math.floor(Math.random() * MESSAGES[agentIdx].length);
+        initial.push(createEntry(agentIdx, msgIdx, new Date(Date.now() - (7 - i) * 3000)));
+      }
+      setLogs(initial);
+
+      const interval = setInterval(() => {
+        const agentIdx = Math.floor(Math.random() * 4);
+        const msgIdx = Math.floor(Math.random() * MESSAGES[agentIdx].length);
+        const newEntry = createEntry(agentIdx, msgIdx, new Date());
+        setLogs((prev) => [...prev.slice(-19), newEntry]);
+      }, 2500);
+
+      const sysUnsub = systemLogBus.subscribe((msg) => {
+        const entry: LogEntry = {
+          agent: "SYSTEM",
+          colorClass: "text-accent-foreground",
+          message: `[SYS] ${msg}`,
+          timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
+          glowType: null,
+          proposalId: "SYS-CMD",
+        };
+        setLogs((prev) => [...prev.slice(-19), entry]);
+      });
+
+      return () => {
+        clearInterval(interval);
+        sysUnsub();
+      };
+    }
+  }, [useRealData, fetchNerveData, createEntry]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -272,9 +444,15 @@ const AgentTerminal = () => {
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-white animate-pulse-glow" />
           <span className="font-display text-xs tracking-[0.25em] uppercase text-white/90">
-            Agent Council
+            Agent Council {useRealData && <span className="text-positive">● LIVE</span>}
           </span>
         </div>
+        <button
+          onClick={() => setUseRealData(!useRealData)}
+          className="text-[9px] font-display tracking-wider uppercase text-white/60 hover:text-white transition-colors"
+        >
+          {useRealData ? "DEMO MODE" : "LIVE MODE"}
+        </button>
       </div>
       <div
         ref={scrollRef}
