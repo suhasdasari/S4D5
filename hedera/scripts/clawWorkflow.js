@@ -1,35 +1,46 @@
-const path = require('path');
-const { postMessage } = require(path.join(__dirname, 'postToCouncil.js'));
+const { TopicMessageQuery } = require("@hashgraph/sdk");
+const { Client, PrivateKey } = require("@hashgraph/sdk");
 require("dotenv").config();
 
-async function runClawSequence(proposalData) {
-    console.log("🧩 Starting OpenClaw + Hedera Workflow...");
-    try {
-        console.log("\n📡 [1/3] AlphaStrategist anchoring proposal...");
-        const proposalId = "PROP-" + Date.now();
+// Import your agent logic
+const { runAudit } = require("../agents/AuditOracle/logic");
+const { runExecution } = require("../agents/ExecutionHand/logic");
 
-        await postMessage("Alpha Strategist", process.env.STRATEGIST_KEY, "create_checkout", {
-            proposal_id: proposalId,
-            content: proposalData,
-            status: "PENDING_RISK_REVIEW"
+async function startClawWorkflow() {
+    const client = Client.forTestnet().setOperator(
+        process.env.ACCOUNT_ID,
+        PrivateKey.fromString(process.env.PRIVATE_KEY)
+    );
+
+    console.log("🌊 ClawWorkflow: Society Heartbeat Active...");
+
+    new TopicMessageQuery()
+        .setTopicId(process.env.HEDERA_TOPIC_ID)
+        .subscribe(client, null, async (message) => {
+            const data = JSON.parse(Buffer.from(message.contents).toString());
+            const seq = message.sequenceNumber.toString();
+
+            switch (data.intent) {
+                case "create_checkout":
+                    console.log(`[HCS Seq #${seq}] 🔎 New Proposal from Alpha Strategist. Alerting Audit Oracle...`);
+                    // The workflow triggers the next agent automatically
+                    await runAudit(data.payload, seq);
+                    break;
+
+                case "payment_handler":
+                    if (data.payload.status === "APPROVED") {
+                        console.log(`[HCS Seq #${seq}] ✅ Audit Passed. Alerting Execution Hand...`);
+                        await runExecution(data.payload, seq);
+                    } else {
+                        console.log(`[HCS Seq #${seq}] ❌ Audit Vetoed. Workflow Terminated.`);
+                    }
+                    break;
+
+                case "execution_receipt":
+                    console.log(`[HCS Seq #${seq}] 🏁 Cycle Complete. Trade finalized on Base.`);
+                    break;
+            }
         });
-
-        await new Promise(r => setTimeout(r, 2000));
-
-        console.log("\n📡 [2/3] Risk Manager auditing ledger...");
-        const isSafe = Math.random() > 0.2;
-        const decision = isSafe ? "APPROVED" : "VETOED";
-
-        await postMessage("Risk Officer", process.env.RISK_KEY, "payment_handler", {
-            responding_to: proposalId,
-            decision: decision,
-            reason: isSafe ? "Risk parameters within expected range." : "Volatility threshold exceeded."
-        });
-
-        console.log("\n✅ State saved to Hedera. Decision: " + decision);
-    } catch (error) {
-        console.error("❌ Workflow Error:", error.message);
-    }
 }
 
-runClawSequence({ pair: "ETH/USDT", side: "LONG", amount: "500" });
+startClawWorkflow().catch(console.error);

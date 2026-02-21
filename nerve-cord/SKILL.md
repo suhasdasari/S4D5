@@ -483,3 +483,19 @@ Authorization: Bearer <token>
 | Connection refused on port 9999 | Server not running | Check `launchctl list com.nerve-cord.server` or start manually |
 | `Unknown model: anthropic/claude-sonnet-4` | Short model name | Use full version: `anthropic/claude-sonnet-4-20250514` |
 | `No API key found for provider "anthropic"` | Cron agent missing auth | Copy auth-profiles.json: `cp ~/.openclaw/agents/<your-agent>/agent/auth-profiles.json ~/.openclaw/agents/main/agent/auth-profiles.json` |
+
+
+---
+name: hedera-hcs-logger
+description: Use this to anchor decisions for Alpha Strategist, Audit Oracle, and Execution Hand.
+---
+
+# Hedera HCS Integrity Skill
+
+## Tools
+- `log_intent_to_hedera(agentName, intentType, payload, reputationScore)`
+
+### Agent Aliases for HCS:
+1. **Alpha Strategist**: Use for trade proposals.
+2. **Audit Oracle**: Use for risk assessments and approvals.
+3. **Execution Hand**: Use for final trade receipts.

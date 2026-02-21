@@ -1,43 +1,30 @@
-const { TokenCreateTransaction, Client, TokenType, TokenSupplyType, Hbar, PrivateKey } = require("@hashgraph/sdk");
+const { TokenCreateTransaction, TokenType, TokenSupplyType, PrivateKey, Client } = require("@hashgraph/sdk");
 require("dotenv").config();
 
-async function main() {
-    // 1. Setup the Client
+async function createSocietyToken() {
     const client = Client.forTestnet().setOperator(
-        process.env.HEDERA_OPERATOR_ID, 
-        process.env.HEDERA_OPERATOR_KEY
+        process.env.ACCOUNT_ID,
+        PrivateKey.fromString(process.env.PRIVATE_KEY)
     );
 
-    console.log("🛠️  Minting the S4D5 Council Reward Token (HTS)...");
+    const transaction = await new TokenCreateTransaction()
+        .setTokenName("S4D5 Reward Token")
+        .setTokenSymbol("S4D5")
+        .setTokenType(TokenType.FungibleCommon)
+        .setDecimals(2)
+        .setInitialSupply(1000000) // 10,000.00 tokens
+        .setTreasuryAccountId(process.env.ALPHA_STRATEGIST_ID)
+        .setAdminKey(PrivateKey.fromString(process.env.PRIVATE_KEY))
+        .setSupplyType(TokenSupplyType.Infinite)
+        .freezeWith(client);
 
-    try {
-        // 2. Define the Token
-        const transaction = await new TokenCreateTransaction()
-            .setTokenName("S4D5 Council Reward")
-            .setTokenSymbol("S4D5")
-            .setTokenType(TokenType.FungibleCommon)
-            .setDecimals(2)
-            .setInitialSupply(1000000) // Creates 10,000.00 tokens
-            .setTreasuryAccountId(process.env.HEDERA_OPERATOR_ID)
-            .setSupplyType(TokenSupplyType.Infinite)
-            .setMaxTransactionFee(new Hbar(30))
-            .freezeWith(client);
+    // Sign with both the Operator and the Treasury (Strategist)
+    const signTx = await transaction.sign(PrivateKey.fromString(process.env.PRIVATE_KEY));
+    const response = await signTx.execute(client);
+    const receipt = await response.getReceipt(client);
 
-        // 3. Sign and Execute
-        const signTx = await transaction.sign(PrivateKey.fromString(process.env.HEDERA_OPERATOR_KEY));
-        const txResponse = await signTx.execute(client);
-        const receipt = await txResponse.getReceipt(client);
-        
-        const tokenId = receipt.tokenId;
-
-        console.log("-----------------------------------");
-        console.log(`🚀 SUCCESS! Token ID: ${tokenId}`);
-        console.log(`👉 Add this to your .env: REWARD_TOKEN_ID=${tokenId}`);
-        console.log("-----------------------------------");
-
-    } catch (error) {
-        console.error("❌ Token Creation Failed:", error.message);
-    }
+    console.log(`🪙 Society Token Created! ID: ${receipt.tokenId}`);
+    console.log(`👉 ADD THIS TO .ENV: REWARD_TOKEN_ID=${receipt.tokenId}`);
 }
 
-main();
+createSocietyToken().catch(console.error);

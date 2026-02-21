@@ -1,24 +1,18 @@
 const { Client, TopicMessageQuery } = require("@hashgraph/sdk");
 require("dotenv").config();
 
-async function main() {
-    try {
-        const client = Client.forTestnet().setOperator(
-            process.env.HEDERA_OPERATOR_ID, 
-            process.env.HEDERA_OPERATOR_KEY
-        );
-        const topicId = process.env.HEDERA_TOPIC_ID;
+async function readCouncil() {
+    const client = Client.forTestnet();
+    console.log("🧐 AUDITOR: Reading history from Topic", process.env.HEDERA_TOPIC_ID);
 
-        console.log(`👂 Council Auditor is listening to: ${topicId}\n`);
-
-        new TopicMessageQuery()
-            .setTopicId(topicId)
-            .subscribe(client, null, (message) => {
-                const msg = Buffer.from(message.contents, "utf8").toString();
-                console.log(`📖 [Seq #${message.sequenceNumber}]: ${msg}`);
-            });
-    } catch (err) {
-        console.error("Error:", err.message);
-    }
+    new TopicMessageQuery()
+        .setTopicId(process.env.HEDERA_TOPIC_ID)
+        .setStartTime(0)
+        .subscribe(client, null, (message) => {
+            const data = JSON.parse(Buffer.from(message.contents).toString());
+            const seq = message.sequenceNumber.toString();
+            console.log(`[Seq #${seq}] ${data.agent} -> ${data.intent} (Rep: ${data.erc8004?.reputation_score})`);
+        });
 }
-main();
+
+readCouncil();

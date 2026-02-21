@@ -1,26 +1,19 @@
-const { Client, TopicCreateTransaction } = require("@hashgraph/sdk");
+const { Client, TopicCreateTransaction, PrivateKey } = require("@hashgraph/sdk");
 require("dotenv").config();
 
-async function main() {
-    try {
-        const operatorId = process.env.HEDERA_OPERATOR_ID;
-        const operatorKey = process.env.HEDERA_OPERATOR_KEY;
-        const client = Client.forTestnet().setOperator(operatorId, operatorKey);
+async function initHCS() {
+    const client = Client.forTestnet().setOperator(
+        process.env.ACCOUNT_ID,
+        PrivateKey.fromString(process.env.PRIVATE_KEY)
+    );
 
-        console.log("🛠️  Creating S4D5 Council Topic...");
+    const transaction = await new TopicCreateTransaction()
+        .setTopicMemo("S4D5 Autonomous Society Topic")
+        .execute(client);
 
-        const transaction = await new TopicCreateTransaction()
-            .setTopicMemo("S4D5 Agent Council - Immutable Audit Trail")
-            .execute(client);
-
-        const receipt = await transaction.getReceipt(client);
-        const topicId = receipt.topicId.toString();
-
-        console.log("\n✅ SUCCESS!");
-        console.log(`Your HCS Topic ID is: ${topicId}`);
-        console.log("\nNext: Add this ID to your .env file as HEDERA_TOPIC_ID");
-    } catch (error) {
-        console.error("\n❌ Failed to create topic:", error.message);
-    }
+    const receipt = await transaction.getReceipt(client);
+    console.log(`🚀 New Topic Created: ${receipt.topicId}`);
+    console.log(`👉 ADD THIS TO YOUR .ENV: HEDERA_TOPIC_ID=${receipt.topicId}`);
 }
-main();
+
+initHCS();

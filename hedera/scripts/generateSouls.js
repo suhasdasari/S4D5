@@ -1,28 +1,14 @@
-const { Client, PrivateKey, AccountCreateTransaction, Hbar } = require("@hashgraph/sdk");
-require("dotenv").config();
+const fs = require('fs');
 
-async function createAgent(client, agentName) {
-    const newKey = PrivateKey.generateED25519();
-    const transaction = new AccountCreateTransaction()
-        .setKey(newKey.publicKey)
-        .setInitialBalance(new Hbar(10))
-        .execute(client);
+const agents = ["Alpha Strategist", "Audit Oracle", "Execution Hand"];
 
-    const receipt = await (await transaction).getReceipt(client);
-    console.log(`--- ${agentName} Soul Created ---`);
-    console.log(`Account ID: ${receipt.accountId}`);
-    console.log(`Private Key: ${newKey.toString()}`);
-    console.log(`Public Key: ${newKey.publicKey.toString()}\n`);
-}
+agents.forEach(agent => {
+    const content = `## 🆔 Identity: ${agent}\n- You are a core member of the S4D5 Autonomous Society.\n- You MUST anchor every decision to HCS Topic ${process.env.HEDERA_TOPIC_ID}.`;
+    const path = `./agents/${agent.replace(/ /g, '')}/soul.md`;
 
-async function main() {
-    if (!process.env.HEDERA_OPERATOR_ID || !process.env.HEDERA_OPERATOR_KEY) {
-        console.error("Error: Please set HEDERA_OPERATOR_ID and HEDERA_OPERATOR_KEY in your .env file.");
-        return;
+    if (!fs.existsSync(`./agents/${agent.replace(/ /g, '')}`)) {
+        fs.mkdirSync(`./agents/${agent.replace(/ /g, '')}`, { recursive: true });
     }
-    const client = Client.forTestnet().setOperator(process.env.HEDERA_OPERATOR_ID, process.env.HEDERA_OPERATOR_KEY);
-    await createAgent(client, "Alpha Strategist");
-    await createAgent(client, "Risk Officer");
-    await createAgent(client, "Executioner");
-}
-main();
+    fs.writeFileSync(path, content);
+    console.log(`✨ Generated Soul for ${agent}`);
+});
