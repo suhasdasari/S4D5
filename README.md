@@ -96,9 +96,27 @@ We built and configured the following agents that plug into the Nerve-Cord:
 
 | Agent | Operator | Role |
 |-------|----------|------|
-| **Alpha Strategist** | Suhas | Analyzes market sentiment and proposes trades |
+| **Alpha Strategist** | Suhas | Analyzes real-time market data and proposes trades autonomously |
 | **AuditOracle** | Susmitha | Audits every proposal against volatility and liquidity constraints |
 | **ExecutionHand** | Karthik | Monitors the Nerve-Cord for "Approved" tags and places trades |
+
+### 🎯 Alpha Strategist - Autonomous Trading Agent
+
+Alpha Strategist is a fully autonomous AI trading agent built with OpenClaw that:
+- Analyzes real-time trade data from QuickNode Streams (BTC & ETH on Hyperliquid)
+- Calculates confidence scores (0-100%) using 5 signal types
+- Generates trading proposals when confidence ≥ 60%
+- Executes x402 micropayments on Kite AI for agent coordination
+- Operates 24/7 with disciplined risk management
+
+**Want to build your own?** See the complete guide: [Backend/helix/alpha-strategist.skill/README.md](Backend/helix/alpha-strategist.skill/README.md)
+
+**Key Features:**
+- Multi-signal analysis (trend, volume, pressure, momentum, consistency)
+- Confidence-based position sizing
+- Automated risk management (3% stop-loss, 6% take-profit)
+- Multi-chain wallet support (Base, Kite, Hedera, 0G)
+- Hedge fund CEO personality and decision framework
 
 ---
 
