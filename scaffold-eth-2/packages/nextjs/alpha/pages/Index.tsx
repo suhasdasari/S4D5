@@ -62,7 +62,7 @@ const Index = () => {
             <SnakeHUD />
 
             {/* Deposit / Withdraw — top-right, side-by-side, no header */}
-            <div className="absolute top-3 right-3 pointer-events-auto z-30">
+            <div className="absolute top-3 right-3 pointer-events-auto z-[60]">
               <VaultBar onDeposit={handleDeposit} onWithdraw={handleWithdraw} />
             </div>
           </div>

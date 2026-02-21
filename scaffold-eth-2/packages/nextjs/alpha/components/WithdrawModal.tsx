@@ -17,6 +17,7 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
   const [amount, setAmount] = useState("");
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const { data: userShares } = useScaffoldReadContract({
     contractName: "S4D5Vault",
@@ -48,13 +49,15 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
     if (!amount || !connectedAddress) return;
 
     try {
+      setError(null);
       setIsWithdrawing(true);
       const amountInUsdc = parseUnits(amount, 6);
 
-      await withdrawFromVault({
+      const withdrawTx = await withdrawFromVault({
         functionName: "withdraw",
         args: [amountInUsdc, connectedAddress, connectedAddress],
       });
+      console.log("Withdraw tx:", withdrawTx);
 
       setSuccess(true);
       setTimeout(() => {
@@ -63,8 +66,9 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
         setSuccess(false);
         onClose();
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Withdraw failed:", error);
+      setError(error?.message || "Transaction failed. Please try again.");
       setIsWithdrawing(false);
     }
   };
@@ -89,6 +93,18 @@ const WithdrawModal = ({ isOpen, onClose }: WithdrawModalProps) => {
 
             {!isWithdrawing && !success ? (
               <>
+                {error && (
+                  <div className="mb-3 p-2 bg-red-500/20 border border-red-500/40 rounded text-[10px] text-red-400">
+                    {error}
+                  </div>
+                )}
+
+                {!connectedAddress && (
+                  <div className="mb-3 p-2 bg-yellow-500/20 border border-yellow-500/40 rounded text-[10px] text-yellow-400">
+                    Please connect your wallet first
+                  </div>
+                )}
+
                 <div className="mb-2">
                   <p className="text-[10px] font-display tracking-wider uppercase text-white/60">
                     Available: ${maxWithdraw.toFixed(2)} USDC

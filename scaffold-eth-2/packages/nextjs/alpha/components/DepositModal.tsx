@@ -18,6 +18,7 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
   const [isDepositing, setIsDepositing] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
   const VAULT_ADDRESS = "0xed8E9E422D4681E177423BCe0Ebaf03BF413a83B";
@@ -86,25 +87,28 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
     if (!amount || !connectedAddress) return;
 
     try {
+      setError(null);
       const amountInUsdc = parseUnits(amount, 6);
 
       if (!allowance || allowance < amountInUsdc) {
         setIsApproving(true);
-        await approveUsdc({
+        const approveTx = await approveUsdc({
           address: USDC_ADDRESS,
           abi: ERC20_ABI,
           functionName: "approve",
           args: [VAULT_ADDRESS, amountInUsdc],
           chainId: 8453,
         });
+        console.log("Approval tx:", approveTx);
         setIsApproving(false);
       }
 
       setIsDepositing(true);
-      await depositToVault({
+      const depositTx = await depositToVault({
         functionName: "deposit",
         args: [amountInUsdc, connectedAddress],
       });
+      console.log("Deposit tx:", depositTx);
 
       setSuccess(true);
       setTimeout(() => {
@@ -113,8 +117,9 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
         setSuccess(false);
         onClose();
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Deposit failed:", error);
+      setError(error?.message || "Transaction failed. Please try again.");
       setIsDepositing(false);
       setIsApproving(false);
     }
@@ -140,6 +145,18 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
 
             {!isApproving && !isDepositing && !success ? (
               <>
+                {error && (
+                  <div className="mb-3 p-2 bg-red-500/20 border border-red-500/40 rounded text-[10px] text-red-400">
+                    {error}
+                  </div>
+                )}
+
+                {!connectedAddress && (
+                  <div className="mb-3 p-2 bg-yellow-500/20 border border-yellow-500/40 rounded text-[10px] text-yellow-400">
+                    Please connect your wallet first
+                  </div>
+                )}
+
                 <div className="mb-2">
                   <p className="text-[10px] font-display tracking-wider uppercase text-white/60">
                     Wallet Balance: ${maxDeposit.toFixed(2)} USDC
