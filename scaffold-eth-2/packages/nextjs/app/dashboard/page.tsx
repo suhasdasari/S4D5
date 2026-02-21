@@ -59,22 +59,22 @@ export default function Dashboard() {
         {/* 2x2 Grid for 4 chains */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* KITE AI - Top Left */}
-          <div className="card bg-gradient-to-br from-purple-900 to-purple-700 shadow-xl">
+          <div className="card bg-black border border-white shadow-xl">
             <div className="card-body p-4">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="card-title text-lg">🪁 Kite AI</h2>
-                <span className="badge badge-sm">x402 Payments</span>
+                <h2 className="card-title text-lg text-white">🪁 Kite AI</h2>
+                <span className="badge badge-sm bg-white text-black">x402 Payments</span>
               </div>
 
               {/* Agent Balances - Compact */}
               <div className="space-y-1 mb-3">
                 {AGENTS.map(agent => (
-                  <div key={agent.address} className="flex justify-between items-center text-xs">
+                  <div key={agent.address} className="flex justify-between items-center text-xs text-white">
                     <a
                       href={`${KITE_EXPLORER}/address/${agent.address}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:text-primary flex items-center gap-1"
+                      className="hover:text-green-400 flex items-center gap-1"
                     >
                       {agent.name}
                       <ArrowTopRightOnSquareIcon className="h-3 w-3" />
@@ -87,22 +87,22 @@ export default function Dashboard() {
               </div>
 
               {/* Payment Flow */}
-              <div className="bg-black/20 rounded p-2 mb-2">
-                <div className="text-xs font-bold mb-1">Payment Flow:</div>
-                <div className="text-xs space-y-0.5">
+              <div className="bg-white/10 rounded p-2 mb-2">
+                <div className="text-xs font-bold mb-1 text-white">Payment Flow:</div>
+                <div className="text-xs space-y-0.5 text-white">
                   <div>💰 Alpha → Audit (0.001 KITE)</div>
-                  <div className="text-gray-300">Risk analysis service</div>
+                  <div className="text-gray-400">Risk analysis service</div>
                 </div>
               </div>
 
               {/* Recent Transaction */}
-              <div className="bg-black/20 rounded p-2">
-                <div className="text-xs font-bold mb-1">Recent TX:</div>
+              <div className="bg-white/10 rounded p-2">
+                <div className="text-xs font-bold mb-1 text-white">Recent TX:</div>
                 <a
                   href={`${KITE_EXPLORER}/tx/0x673533bcc22f07572426809066823edd5b362df6342ce8608a6e58750adaa0ed`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs hover:text-primary flex items-center gap-1"
+                  className="text-xs hover:text-green-400 flex items-center gap-1 text-white"
                 >
                   Alpha → AuditOracle
                   <ArrowTopRightOnSquareIcon className="h-3 w-3" />
@@ -113,34 +113,34 @@ export default function Dashboard() {
           </div>
 
           {/* HEDERA - Top Right */}
-          <div className="card bg-gradient-to-br from-blue-900 to-blue-700 shadow-xl">
+          <div className="card bg-black border border-white shadow-xl">
             <div className="card-body p-4">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="card-title text-lg">ℏ Hedera</h2>
-                <span className="badge badge-sm">Governance</span>
+                <h2 className="card-title text-lg text-white">ℏ Hedera</h2>
+                <span className="badge badge-sm bg-white text-black">Governance</span>
               </div>
 
               {/* HCS Topic */}
               <div className="space-y-1 mb-3">
-                <div className="flex justify-between items-center text-xs">
+                <div className="flex justify-between items-center text-xs text-white">
                   <span>HCS Topic:</span>
                   <a
                     href="https://hashscan.io/mainnet/topic/0.0.7987903"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-primary flex items-center gap-1 font-mono"
+                    className="hover:text-green-400 flex items-center gap-1 font-mono"
                   >
                     0.0.7987903
                     <ArrowTopRightOnSquareIcon className="h-3 w-3" />
                   </a>
                 </div>
-                <div className="flex justify-between items-center text-xs">
+                <div className="flex justify-between items-center text-xs text-white">
                   <span>HTS Token:</span>
                   <a
                     href="https://hashscan.io/mainnet/token/0.0.7988233"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-primary flex items-center gap-1 font-mono"
+                    className="hover:text-green-400 flex items-center gap-1 font-mono"
                   >
                     0.0.7988233
                     <ArrowTopRightOnSquareIcon className="h-3 w-3" />
@@ -149,9 +149,9 @@ export default function Dashboard() {
               </div>
 
               {/* Purpose */}
-              <div className="bg-black/20 rounded p-2 mb-2">
-                <div className="text-xs font-bold mb-1">Purpose:</div>
-                <div className="text-xs space-y-0.5">
+              <div className="bg-white/10 rounded p-2 mb-2">
+                <div className="text-xs font-bold mb-1 text-white">Purpose:</div>
+                <div className="text-xs space-y-0.5 text-white">
                   <div>📨 Agent messaging (HCS)</div>
                   <div>🪙 Internal rewards ($S4D5)</div>
                   <div>🏛️ Council governance</div>
@@ -159,25 +159,25 @@ export default function Dashboard() {
               </div>
 
               {/* Status */}
-              <div className="bg-black/20 rounded p-2">
-                <div className="text-xs font-bold mb-1">Status:</div>
+              <div className="bg-white/10 rounded p-2">
+                <div className="text-xs font-bold mb-1 text-white">Status:</div>
                 <div className="text-xs text-green-400">✓ Live on Mainnet</div>
               </div>
             </div>
           </div>
 
           {/* 0G STORAGE - Bottom Left */}
-          <div className="card bg-gradient-to-br from-green-900 to-green-700 shadow-xl">
+          <div className="card bg-black border border-white shadow-xl">
             <div className="card-body p-4">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="card-title text-lg">📦 0G Storage</h2>
-                <span className="badge badge-sm">Audit Trail</span>
+                <h2 className="card-title text-lg text-white">📦 0G Storage</h2>
+                <span className="badge badge-sm bg-white text-black">Audit Trail</span>
               </div>
 
               {/* Purpose */}
-              <div className="bg-black/20 rounded p-2 mb-2">
-                <div className="text-xs font-bold mb-1">Purpose:</div>
-                <div className="text-xs space-y-0.5">
+              <div className="bg-white/10 rounded p-2 mb-2">
+                <div className="text-xs font-bold mb-1 text-white">Purpose:</div>
+                <div className="text-xs space-y-0.5 text-white">
                   <div>📝 Decision audit trail</div>
                   <div>🔗 Returns CID for attestations</div>
                   <div>💾 Immutable storage</div>
@@ -185,9 +185,9 @@ export default function Dashboard() {
               </div>
 
               {/* Workflow */}
-              <div className="bg-black/20 rounded p-2 mb-2">
-                <div className="text-xs font-bold mb-1">Workflow:</div>
-                <div className="text-xs space-y-0.5">
+              <div className="bg-white/10 rounded p-2 mb-2">
+                <div className="text-xs font-bold mb-1 text-white">Workflow:</div>
+                <div className="text-xs space-y-0.5 text-white">
                   <div>1. Council decision made</div>
                   <div>2. Upload to 0G → Get CID</div>
                   <div>3. Use CID in Hedera HCS</div>
@@ -195,30 +195,30 @@ export default function Dashboard() {
               </div>
 
               {/* Status */}
-              <div className="bg-black/20 rounded p-2">
-                <div className="text-xs font-bold mb-1">Status:</div>
+              <div className="bg-white/10 rounded p-2">
+                <div className="text-xs font-bold mb-1 text-white">Status:</div>
                 <div className="text-xs text-green-400">✓ Integrated</div>
               </div>
             </div>
           </div>
 
           {/* BASE - Bottom Right */}
-          <div className="card bg-gradient-to-br from-blue-600 to-blue-800 shadow-xl">
+          <div className="card bg-black border border-white shadow-xl">
             <div className="card-body p-4">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="card-title text-lg">🔵 Base</h2>
-                <span className="badge badge-sm">Execution</span>
+                <h2 className="card-title text-lg text-white">🔵 Base</h2>
+                <span className="badge badge-sm bg-white text-black">Execution</span>
               </div>
 
               {/* Smart Contract */}
               <div className="space-y-1 mb-3">
-                <div className="flex justify-between items-center text-xs">
+                <div className="flex justify-between items-center text-xs text-white">
                   <span>S4D5Vault:</span>
                   <a
                     href="https://basescan.org/address/0xed8E9E422D4681E177423BCe0Ebaf03BF413a83B"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-primary flex items-center gap-1 font-mono text-xs"
+                    className="hover:text-green-400 flex items-center gap-1 font-mono text-xs"
                   >
                     0xed8E...a83B
                     <ArrowTopRightOnSquareIcon className="h-3 w-3" />
@@ -227,9 +227,9 @@ export default function Dashboard() {
               </div>
 
               {/* Purpose */}
-              <div className="bg-black/20 rounded p-2 mb-2">
-                <div className="text-xs font-bold mb-1">Purpose:</div>
-                <div className="text-xs space-y-0.5">
+              <div className="bg-white/10 rounded p-2 mb-2">
+                <div className="text-xs font-bold mb-1 text-white">Purpose:</div>
+                <div className="text-xs space-y-0.5 text-white">
                   <div>💵 USDC vault for trading</div>
                   <div>📊 Trade execution</div>
                   <div>🔒 Smart contract security</div>
@@ -237,15 +237,15 @@ export default function Dashboard() {
               </div>
 
               {/* Status */}
-              <div className="bg-black/20 rounded p-2">
-                <div className="text-xs font-bold mb-1">Status:</div>
+              <div className="bg-white/10 rounded p-2">
+                <div className="text-xs font-bold mb-1 text-white">Status:</div>
                 <div className="text-xs text-green-400">✓ Live on Mainnet</div>
                 <div className="text-xs text-gray-400 mt-1">
                   <a
                     href="https://s4-d5.vercel.app"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-primary"
+                    className="hover:text-green-400"
                   >
                     View Frontend →
                   </a>
@@ -256,24 +256,24 @@ export default function Dashboard() {
         </div>
 
         {/* Architecture Overview */}
-        <div className="card bg-base-100 shadow-xl mt-6">
+        <div className="card bg-black border border-white shadow-xl mt-6">
           <div className="card-body p-4">
-            <h3 className="card-title text-lg mb-2">Multi-Chain Architecture</h3>
-            <div className="text-sm space-y-2">
+            <h3 className="card-title text-lg mb-2 text-white">Multi-Chain Architecture</h3>
+            <div className="text-sm space-y-2 text-white">
               <div className="flex items-center gap-2">
-                <span className="badge badge-primary badge-sm">Kite AI</span>
+                <span className="badge badge-sm bg-white text-black">Kite AI</span>
                 <span>→ Agent payments & identity</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="badge badge-info badge-sm">Hedera</span>
+                <span className="badge badge-sm bg-white text-black">Hedera</span>
                 <span>→ Agent messaging & governance</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="badge badge-success badge-sm">0G</span>
+                <span className="badge badge-sm bg-white text-black">0G</span>
                 <span>→ Audit trail storage</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="badge badge-accent badge-sm">Base</span>
+                <span className="badge badge-sm bg-white text-black">Base</span>
                 <span>→ Trade execution with USDC</span>
               </div>
             </div>
