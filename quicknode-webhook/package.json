@@ -1,0 +1,24 @@
+{
+  "name": "quicknode-webhook",
+  "version": "1.0.0",
+  "description": "QuickNode Streams webhook receiver for Hyperliquid trade data",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "quicknode",
+    "streams",
+    "webhook",
+    "hyperliquid",
+    "trading"
+  ],
+  "author": "S4D5 Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=16.x"
+  }
+}
