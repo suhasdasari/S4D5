@@ -33,8 +33,57 @@
       "name": "streaming-analysis",
       "description": "Analyze real-time Hyperliquid trade data from QuickNode Streams",
       "file": "STREAMING-ANALYSIS-SKILL.md",
+      "enabled": false,
+      "priority": "high",
+      "note": "Replaced by LLM-powered skill"
+    },
+    {
+      "name": "alpha-strategist-llm",
+      "description": "LLM-powered autonomous trading agent with reasoning capabilities",
+      "file": "OPENCLAW-LLM-SKILL.md",
       "enabled": true,
-      "priority": "high"
+      "priority": "critical",
+      "llm_config": {
+        "provider": "openai",
+        "model": "gpt-4",
+        "temperature": 0.7,
+        "max_tokens": 2000,
+        "system_role": "You are Alpha Strategist, an elite AI trading agent"
+      },
+      "tools": [
+        {
+          "name": "fetch_market_data",
+          "command": "node",
+          "args": ["openclaw-tools/fetch-market-data.js"],
+          "description": "Fetch real-time market data from QuickNode Streams",
+          "timeout": 10000
+        },
+        {
+          "name": "check_balance",
+          "command": "node",
+          "args": ["openclaw-tools/check-balance.js"],
+          "description": "Check Kite wallet balance",
+          "timeout": 5000
+        },
+        {
+          "name": "send_proposal",
+          "command": "node",
+          "args": ["openclaw-tools/send-proposal.js"],
+          "description": "Send trading proposal to AuditOracle with x402 payment",
+          "timeout": 30000
+        }
+      ],
+      "schedule": {
+        "type": "interval",
+        "intervalSeconds": 30,
+        "task": "Analyze market data and make trading decisions"
+      },
+      "error_handling": {
+        "retry_on_failure": true,
+        "max_retries": 3,
+        "backoff_strategy": "exponential",
+        "base_delay_ms": 1000
+      }
     }
   ],
   "data_sources": [
@@ -47,11 +96,19 @@
     }
   ],
   "decision_making": {
-    "mode": "autonomous",
-    "confidence_threshold": 60,
+    "mode": "llm-powered",
+    "reasoning_engine": "openai-gpt4",
+    "confidence_threshold": "dynamic",
     "cooldown_period": 60,
+    "context_management": {
+      "enabled": true,
+      "storage_file": "data/decision-context.json",
+      "max_context_size": 100,
+      "summarize_old_entries": true
+    },
     "risk_parameters": {
-      "max_position_size": 100,
+      "base_position_size": 100,
+      "max_position_size": 400,
       "max_leverage": 2,
       "stop_loss_pct": 3,
       "take_profit_pct": 6
@@ -80,10 +137,20 @@
       "name": "stream-analyzer",
       "type": "continuous",
       "script": "scripts/stream-analyzer.js",
+      "autostart": false,
+      "restart_on_failure": true,
+      "max_retries": -1,
+      "description": "Legacy hardcoded analyzer (disabled, replaced by LLM agent)",
+      "note": "Keep for comparison during hybrid deployment phase"
+    },
+    {
+      "name": "llm-agent",
+      "type": "openclaw-skill",
+      "skill": "alpha-strategist-llm",
       "autostart": true,
       "restart_on_failure": true,
       "max_retries": -1,
-      "description": "Continuously poll webhook API, analyze data, and generate proposals"
+      "description": "LLM-powered autonomous trading agent"
     }
   ],
   "logging": {
