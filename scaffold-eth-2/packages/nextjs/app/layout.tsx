@@ -8,8 +8,8 @@ import { getMetadata } from "~~/utils/scaffold-eth/getMetadata";
 
 
 export const metadata = getMetadata({
-  title: 'Scaffold-ETH 2 App',
-  description: 'Built with 🏗 Scaffold-ETH 2'
+  title: 'S4D5 - AI Hedge Fund Council',
+  description: 'Multi-Agent AI Hedge Fund - Three AI agents collaborate to analyze markets, manage risk, and execute trades autonomously'
 });
 
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
