@@ -13,7 +13,11 @@
 
 2. **Strategist Pipeline
    - [ ] Connect QuickNode Hyperliquid + Polymarket data fetchers.
+<<<<<<< HEAD
    - [ ] Add Kite x402 handler for paid research bursts.
+=======
+   - [ ] Add Kite x402 handler for paid research bursts (respect $100 cap).
+>>>>>>> Og_integration
    - [ ] Swap LLM calls to Bedrock Claude Sonnet 4.6 (Haiku fallback) via AWS creds.
    - [ ] Emit proposal JSON + audit log to shared queue (to be consumed by AuditOracle).
 

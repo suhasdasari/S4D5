@@ -9,6 +9,7 @@
 > [!CAUTION]
 > **ALL** inter-bot communication must use the Nerve-Cord terminal scripts (`npm run send / check / ping`) located in the `nerve-cord/` directory.
 
+
 ---
 
 ## 🏛️ System Architecture
@@ -96,6 +97,7 @@ We built and configured the following agents that plug into the Nerve-Cord:
 
 | Agent | Operator | Role |
 |-------|----------|------|
+<<<<<<< HEAD
 | **Alpha Strategist** | Suhas | Analyzes real-time market data and proposes trades autonomously |
 | **AuditOracle** | Susmitha | Audits every proposal against volatility and liquidity constraints |
 | **ExecutionHand** | Karthik | Monitors the Nerve-Cord for "Approved" tags and places trades |
@@ -172,6 +174,17 @@ Dashboard: `http://localhost:9999/stats`
 ### 4. Start Frontend (Dashboard)
 
 In a new terminal:
+=======
+| **Alpha Strategist** | Suhas | Analyzes market sentiment and proposes trades |
+| **AuditOracle** | Susmitha | Audits every proposal against volatility and liquidity constraints |
+| **ExecutionHand** | Karthik | Monitors the Nerve-Cord for "Approved" tags and places trades |
+
+---
+
+## 🚀 Quick Start
+
+### Frontend (Dashboard)
+>>>>>>> Og_integration
 
 ```bash
 cd scaffold-eth-2
@@ -181,6 +194,7 @@ yarn start
 
 Visit: `http://localhost:3000`
 
+<<<<<<< HEAD
 ### 5. Run Alpha Strategist (Trading Bot)
 
 In a new terminal:
@@ -231,6 +245,17 @@ BOTNAME=execution-hand npm run ping
 After pinging, the bots will appear in the Nerve-Cord dashboard at `http://localhost:9999/stats` under "Active Bots".
 
 **Note**: On EC2 instances, if you have systemd services running (`nerve-poll@<botname>.service`), they automatically send heartbeats and register the bots.
+=======
+### Nerve-Cord (Message Broker)
+
+```bash
+cd nerve-cord
+npm install
+PORT=9999 TOKEN=your-secret node server.js
+```
+
+Dashboard: `http://localhost:9999/stats`
+>>>>>>> Og_integration
 
 ---
 

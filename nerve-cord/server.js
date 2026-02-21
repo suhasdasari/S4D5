@@ -6,6 +6,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { nanoid } = require('nanoid');
+const { uploadTo0g } = require('./0g_Upload');
 
 const PORT = parseInt(process.env.PORT || '9999', 10);
 const TOKEN = process.env.TOKEN || 'nerve-cord-default-token';
@@ -617,6 +618,26 @@ const server = http.createServer(async (req, res) => {
         details: body.details || null,
         created: new Date().toISOString(),
       };
+      const shouldPinTo0g = (body.tags && (body.tags.includes('audit') || body.tags.includes('proposal') || body.tags.includes('consensus'))) || body.pinTo0g === true;
+      if (shouldPinTo0g) {
+        try {
+          // Prefer full decision blob for 0G (Hedera transcriptCid will point to this)
+          let payloadToUpload = entry;
+          if (body.details && typeof body.details === 'object' && body.details.proposalId) {
+            payloadToUpload = {
+              proposalId: body.details.proposalId,
+              strategist: body.details.strategist || null,
+              audit: body.details.audit || null,
+              execution: body.details.execution || null,
+              created: body.details.created || entry.created,
+            };
+          }
+          const result = await uploadTo0g(JSON.stringify(payloadToUpload));
+          entry.cid = result.rootHash;
+        } catch (err) {
+          console.error('0G upload failed (continuing without cid):', err.message);
+        }
+      }
       appendLogEntry(entry);
       return json(res, 201, entry);
     } catch (e) { return json(res, 400, { error: e.message }); }

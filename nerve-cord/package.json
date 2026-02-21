@@ -12,6 +12,8 @@
     "prio": "node priority.js"
   },
   "dependencies": {
+    "@0glabs/0g-ts-sdk": "^0.3.3",
+    "ethers": "^6.13.1",
     "nanoid": "^5.0.0"
   }
 }

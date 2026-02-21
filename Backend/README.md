@@ -44,4 +44,3 @@ After initialization, wallet addresses are saved in each bot's `config/wallet.js
 - Alpha Strategist: `helix/alpha-strategist.skill/config/wallet.json`
 - AuditOracle: `auditoracle/config/wallet.json`
 - ExecutionHand: `executionhand/config/wallet.json`
-

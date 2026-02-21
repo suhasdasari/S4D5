@@ -10,10 +10,17 @@
 
 const fs = require('fs');
 const path = require('path');
+<<<<<<< HEAD
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '..', '.env') });
 
 const POSITIONS_FILE = process.env.POSITIONS_FILE || 
   path.join(__dirname, '..', '..', '..', 'data', 'positions', 'open-positions.json');
+=======
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+
+const POSITIONS_FILE = process.env.POSITIONS_FILE || 
+  path.join(process.env.HOME, 'S4D5', 'data', 'positions', 'open-positions.json');
+>>>>>>> Og_integration
 
 function ensurePositionsFile() {
   const dir = path.dirname(POSITIONS_FILE);

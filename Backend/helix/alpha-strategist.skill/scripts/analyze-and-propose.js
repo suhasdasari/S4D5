@@ -7,12 +7,19 @@
  * Example: node analyze-and-propose.js BTC,ETH
  */
 
+<<<<<<< HEAD
 const { analyzeOrderBook } = require('./analyze-orderbook');
 const { listPositions } = require('./track-positions');
 const axios = require('axios');
 require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '..', '.env') });
 
 const BINANCE_US_API = 'https://api.binance.us/api/v3';
+=======
+const { fetchMarketData } = require('./fetch-market-data');
+const { fetchSentiment } = require('./fetch-sentiment');
+const { listPositions } = require('./track-positions');
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+>>>>>>> Og_integration
 
 const TARGET_ASSETS = (process.env.TARGET_ASSETS || 'BTC,ETH').split(',');
 const MIN_CONFIDENCE = parseFloat(process.env.MIN_CONFIDENCE || '60');
@@ -116,6 +123,7 @@ async function analyzeAndPropose(assets = TARGET_ASSETS) {
       try {
         console.error(`Analyzing ${asset}...`);
         
+<<<<<<< HEAD
         // Get symbol for Binance.US
         const symbol = `${asset.replace('-USD', '')}USDT`;
         
@@ -143,6 +151,17 @@ async function analyzeAndPropose(assets = TARGET_ASSETS) {
         const confidence = parseFloat(orderBookAnalysis.confidence);
         
         console.error(`${asset}: orderbook=${orderBookSentiment.toFixed(2)}, momentum=${priceMomentum.toFixed(2)}, combined=${sentimentScore.toFixed(2)}, confidence=${confidence.toFixed(1)}%, threshold=${MIN_CONFIDENCE}%`);
+=======
+        // Fetch market data
+        const marketData = await fetchMarketData(asset);
+        
+        // Fetch sentiment (use asset name as keyword)
+        const assetKeywords = [asset.replace('-USD', '').toLowerCase(), 'crypto'];
+        const sentimentData = await fetchSentiment(assetKeywords);
+        
+        const sentimentScore = sentimentData.aggregateScore;
+        const confidence = Math.abs(sentimentScore) * 100;
+>>>>>>> Og_integration
         
         // Check existing positions for this asset
         const existingPosition = openPositions.find(p => p.asset === asset);
@@ -152,7 +171,11 @@ async function analyzeAndPropose(assets = TARGET_ASSETS) {
           const closeReasons = shouldClosePosition(
             existingPosition,
             sentimentScore,
+<<<<<<< HEAD
             currentPrice
+=======
+            marketData.price.current
+>>>>>>> Og_integration
           );
           
           if (closeReasons.length > 0) {
@@ -161,7 +184,11 @@ async function analyzeAndPropose(assets = TARGET_ASSETS) {
               positionId: existingPosition.id,
               asset: asset,
               reasons: closeReasons,
+<<<<<<< HEAD
               currentPrice: currentPrice,
+=======
+              currentPrice: marketData.price.current,
+>>>>>>> Og_integration
               timestamp: Date.now()
             });
           }
@@ -177,6 +204,7 @@ async function analyzeAndPropose(assets = TARGET_ASSETS) {
               direction: direction,
               leverage: leverage,
               size: positionSize,
+<<<<<<< HEAD
               entryPrice: currentPrice,
               stopLoss: direction === 'LONG' 
                 ? currentPrice * (1 - STOP_LOSS_PCT / 100)
@@ -197,6 +225,23 @@ async function analyzeAndPropose(assets = TARGET_ASSETS) {
                 spread: orderBookAnalysis.orderBook.spread,
                 trend: orderBookAnalysis.analysis.trend
               },
+=======
+              entryPrice: marketData.price.current,
+              stopLoss: direction === 'LONG' 
+                ? marketData.price.current * (1 - STOP_LOSS_PCT / 100)
+                : marketData.price.current * (1 + STOP_LOSS_PCT / 100),
+              takeProfit: direction === 'LONG'
+                ? marketData.price.current * (1 + TAKE_PROFIT_PCT / 100)
+                : marketData.price.current * (1 - TAKE_PROFIT_PCT / 100),
+              confidence: confidence,
+              sentimentScore: sentimentScore,
+              marketData: {
+                price: marketData.price.current,
+                volume24h: marketData.volume.volume24h,
+                change24h: marketData.price.change24h
+              },
+              sentimentSignals: sentimentData.signals.slice(0, 3), // Top 3 signals
+>>>>>>> Og_integration
               timestamp: Date.now()
             });
           }

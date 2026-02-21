@@ -2,12 +2,16 @@
 /**
  * Send Proposals to ExecutionHand via Nerve-Cord
  * This script runs the analysis and sends proposals via Nerve-Cord
+<<<<<<< HEAD
  * Includes x402 micropayments to AuditOracle for risk analysis
+=======
+>>>>>>> Og_integration
  * Usage: node send-proposals.js
  */
 
 const { execSync } = require('child_process');
 const path = require('path');
+<<<<<<< HEAD
 const { KiteWalletManager } = require('../lib/kite-wallet');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '..', '.env') });
 
@@ -41,6 +45,25 @@ try {
   console.error('   Proposals will be sent without x402 payments');
 }
 
+=======
+
+// Run analysis
+console.error('Running market analysis...');
+const analysisOutput = execSync('node scripts/analyze-and-propose.js', {
+  cwd: path.join(__dirname, '..'),
+  encoding: 'utf8'
+});
+
+const result = JSON.parse(analysisOutput);
+
+if (result.proposals.length === 0) {
+  console.log('No proposals generated');
+  process.exit(0);
+}
+
+console.error(`Generated ${result.proposals.length} proposals`);
+
+>>>>>>> Og_integration
 // Send each proposal via Nerve-Cord
 for (const proposal of result.proposals) {
   let message = '';
@@ -63,11 +86,16 @@ Market Data:
 
 Sentiment Score: ${proposal.sentimentScore.toFixed(2)} (${proposal.sentimentScore > 0 ? 'Bullish' : 'Bearish'})
 
+<<<<<<< HEAD
 Order Book Analysis:
 - Buy Pressure: ${proposal.orderBookAnalysis.buyPressure}%
 - Sell Pressure: ${proposal.orderBookAnalysis.sellPressure}%
 - Spread: ${proposal.orderBookAnalysis.spread}%
 - Trend: ${proposal.orderBookAnalysis.trend}
+=======
+Top Signals:
+${proposal.sentimentSignals.map(s => `- ${s.question} (${(s.probability * 100).toFixed(0)}%)`).join('\n')}
+>>>>>>> Og_integration
 
 Timestamp: ${new Date(proposal.timestamp).toISOString()}`;
   } else if (proposal.action === 'CLOSE') {
@@ -82,14 +110,22 @@ ${proposal.reasons.map(r => `- ${r.type}: ${r.detail}`).join('\n')}
 Timestamp: ${new Date(proposal.timestamp).toISOString()}`;
   }
   
+<<<<<<< HEAD
   // Send via Nerve-Cord to AuditOracle for review
   try {
     console.error(`Sending proposal to audit-oracle: ${subject}`);
     execSync(`npm run send audit-oracle "${subject}" "${message}"`, {
+=======
+  // Send via Nerve-Cord
+  try {
+    console.error(`Sending proposal to execution-hand: ${subject}`);
+    execSync(`npm run send execution-hand "${subject}" "${message}"`, {
+>>>>>>> Og_integration
       cwd: path.join(__dirname, '..', '..', '..', '..', 'nerve-cord'),
       stdio: 'inherit'
     });
     console.error('✓ Sent successfully');
+<<<<<<< HEAD
     
     // Send x402 micropayment to AuditOracle for risk analysis service
     if (kiteWallet) {
@@ -162,11 +198,14 @@ Timestamp: ${new Date(proposal.timestamp).toISOString()}`;
       cwd: path.join(__dirname, '..', '..', '..', '..', 'nerve-cord'),
       stdio: 'inherit'
     });
+=======
+>>>>>>> Og_integration
   } catch (error) {
     console.error(`✗ Failed to send: ${error.message}`);
   }
 }
 
+<<<<<<< HEAD
 console.log(`Sent ${result.proposals.length} proposals to audit-oracle for review`);
 }
 
@@ -175,3 +214,6 @@ main().catch(error => {
   console.error('Error:', error.message);
   process.exit(1);
 });
+=======
+console.log(`Sent ${result.proposals.length} proposals to execution-hand`);
+>>>>>>> Og_integration

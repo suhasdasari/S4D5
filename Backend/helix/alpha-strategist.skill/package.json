@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "alpha-strategist",
   "version": "1.0.0",
   "description": "AI-powered trading strategy bot for S4D5 AI Hedge Fund",
@@ -19,5 +20,24 @@
     "dotenv": "^16.3.0",
     "ethers": "^6.9.0",
     "express": "^4.18.2"
+=======
+  "name": "alpha-strategist-skill",
+  "version": "1.0.0",
+  "description": "Market analysis skill for Alpha Strategist bot - analyzes Hyperliquid markets and Polymarket sentiment",
+  "main": "scripts/analyze-and-propose.js",
+  "scripts": {
+    "fetch-market": "node scripts/fetch-market-data.js",
+    "fetch-sentiment": "node scripts/fetch-sentiment.js",
+    "track-positions": "node scripts/track-positions.js",
+    "analyze": "node scripts/analyze-and-propose.js",
+    "send-proposals": "node scripts/send-proposals.js"
+  },
+  "keywords": ["hyperliquid", "polymarket", "trading", "sentiment-analysis"],
+  "author": "S4D5 Team",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.0"
+>>>>>>> Og_integration
   }
 }
