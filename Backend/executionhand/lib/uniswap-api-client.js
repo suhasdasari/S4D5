@@ -79,16 +79,27 @@ class UniswapAPIClient {
       const latency = Date.now() - startTime;
       this.metricsCollector.recordAPIRequest(endpoint, latency, true, response.status);
 
+      // Log the full response to debug
+      console.log('Swap API response:', JSON.stringify(response.data, null, 2));
+
       return {
-        calldata: response.data.calldata,
+        calldata: response.data.calldata || response.data.data,
         to: response.data.to,
         value: response.data.value || '0',
-        gasLimit: response.data.gasLimit || '300000',
+        gasLimit: response.data.gasLimit || response.data.gas || '300000',
         quoteId: params.rawQuote.quoteId
       };
     } catch (error) {
       const latency = Date.now() - startTime;
       this.metricsCollector.recordAPIRequest(endpoint, latency, false, error.response?.status);
+      
+      // Log error details
+      console.error('Swap API error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      
       throw new Error(`Swap calldata generation failed: ${error.message}`);
     }
   }
