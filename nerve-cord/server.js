@@ -781,13 +781,19 @@ const server = http.createServer(async (req, res) => {
 });
 
 // --- Start ---
-console.log('Loading data from disk...');
+process.stdout.write('Loading data from disk...\n');
 load();
-console.log('Setting up periodic save interval...');
+process.stdout.write('Setting up periodic save interval...\n');
 setInterval(() => { expire(); save(); }, SAVE_INTERVAL);
-console.log(`Starting HTTP server on 0.0.0.0:${PORT}...`);
+process.stdout.write(`Starting HTTP server on 0.0.0.0:${PORT}...\n`);
+
+server.on('error', (err) => {
+  process.stderr.write(`Server error: ${err.message}\n`);
+  process.exit(1);
+});
+
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Nerve cord broker listening on 0.0.0.0:${PORT}`);
-  console.log(`Health check endpoint: http://0.0.0.0:${PORT}/health`);
-  console.log(`Stats dashboard: http://0.0.0.0:${PORT}/stats`);
+  process.stdout.write(`✅ Nerve cord broker listening on 0.0.0.0:${PORT}\n`);
+  process.stdout.write(`Health check endpoint: http://0.0.0.0:${PORT}/health\n`);
+  process.stdout.write(`Stats dashboard: http://0.0.0.0:${PORT}/stats\n`);
 });
