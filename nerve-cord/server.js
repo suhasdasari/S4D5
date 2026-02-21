@@ -159,6 +159,12 @@ const server = http.createServer(async (req, res) => {
   const p = url.pathname;
 
   // Public endpoints (no auth)
+  
+  // GET /health - Public healthcheck for Railway
+  if (req.method === 'GET' && p === '/health') {
+    return json(res, 200, { ok: true, messages: messages.size, bots: bots.size, uptime: process.uptime() });
+  }
+  
   if (req.method === 'GET' && p === '/stats') {
     expire();
     const now = Date.now();
@@ -596,11 +602,6 @@ const server = http.createServer(async (req, res) => {
     messages.delete(delMatch[1]);
     save();
     return json(res, 200, { deleted: true });
-  }
-
-  // GET /health
-  if (req.method === 'GET' && p === '/health') {
-    return json(res, 200, { ok: true, messages: messages.size, bots: bots.size, uptime: process.uptime() });
   }
 
   // --- Activity Log ---
