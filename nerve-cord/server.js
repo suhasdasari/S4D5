@@ -781,8 +781,13 @@ const server = http.createServer(async (req, res) => {
 });
 
 // --- Start ---
+console.log('Loading data from disk...');
 load();
+console.log('Setting up periodic save interval...');
 setInterval(() => { expire(); save(); }, SAVE_INTERVAL);
+console.log(`Starting HTTP server on 0.0.0.0:${PORT}...`);
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Nerve cord broker listening on 0.0.0.0:${PORT}`);
+  console.log(`✅ Nerve cord broker listening on 0.0.0.0:${PORT}`);
+  console.log(`Health check endpoint: http://0.0.0.0:${PORT}/health`);
+  console.log(`Stats dashboard: http://0.0.0.0:${PORT}/stats`);
 });
